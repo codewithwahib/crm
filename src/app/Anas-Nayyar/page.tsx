@@ -1,4 +1,4 @@
-import Sidebar from '@/app/Components/sidebar'
+import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 
 export default function Home() {
   return (
