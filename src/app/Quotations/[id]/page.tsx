@@ -429,23 +429,24 @@ export default async function QuotationDetailPage({ params }: PageProps) {
         </div>
 
         {/* ✅ Attachments */}
-        {(quotationAttachments.length > 0 || drawingAttachments.length > 0 || sldDocument) && (
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-              Attachments
-            </h2>
+        {/* ✅ Safe Attachments Section */}
+{(quotationAttachments?.length > 0 || drawingAttachments?.length > 0 || sldDocument) && (
+  <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+    <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
+      Attachments
+    </h2>
 
-            <div className="grid tracking-wide grid-cols-1 md:grid-cols-2 gap-6">
-              {quotationAttachments.length > 0 && (
-                <AttachmentList title="Quotation Documents" files={quotationAttachments} />
-              )}
-              {drawingAttachments.length > 0 && (
-                <AttachmentList title="Technical Drawings" files={drawingAttachments} />
-              )}
-              {sldDocument && <AttachmentList title="Single Line Diagram (SLD)" files={[sldDocument]} />}
-            </div>
-          </div>
-        )}
+    <div className="grid tracking-wide grid-cols-1 md:grid-cols-2 gap-6">
+      {quotationAttachments?.length > 0 && (
+        <AttachmentList title="Quotation Documents" files={quotationAttachments} />
+      )}
+      {drawingAttachments?.length > 0 && (
+        <AttachmentList title="Technical Drawings" files={drawingAttachments} />
+      )}
+      {sldDocument && <AttachmentList title="Single Line Diagram (SLD)" files={[sldDocument]} />}
+    </div>
+  </div>
+)}
       </main>
     </div>
   )
