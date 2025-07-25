@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { writeClient } from "@/sanity/lib/sanity.client"
-import { parseFormData } from "@/utils/parseFormData" // Only import what's needed
+import { parseFormData } from "@/utils/parseFormData"
 
 interface WorkOrderSection {
   [key: string]: unknown
@@ -21,7 +21,6 @@ interface WorkOrderDocument {
   purchaseOrderSection: PurchaseOrderSection
 }
 
-// GROQ fetch query
 const WORK_ORDER_QUERY = `
   *[_type == "workOrderSalesOrder" && _id == $id][0]{
     _id,
@@ -31,60 +30,71 @@ const WORK_ORDER_QUERY = `
   }
 `
 
-// GET: Fetch existing work order by ID
+// ✅ FIXED: context.params is now a Promise in Next.js 15
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
   try {
-    const workOrderId = params.id
+    const { id: workOrderId } = await context.params
 
     if (!workOrderId) {
-      return NextResponse.json({ error: "Missing work order ID" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing work order ID" },
+        { status: 400 }
+      )
     }
 
-    const workOrder = await writeClient.fetch<WorkOrderDocument | null>(WORK_ORDER_QUERY, { id: workOrderId })
+    const workOrder = await writeClient.fetch<WorkOrderDocument | null>(
+      WORK_ORDER_QUERY,
+      { id: workOrderId }
+    )
 
     if (!workOrder) {
-      return NextResponse.json({ error: "Work order not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Work order not found" },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(workOrder)
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to fetch work order"
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to fetch work order"
     console.error("Error fetching work order:", errorMessage)
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    )
   }
 }
 
-// PUT: Update existing work order
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
   try {
-    const workOrderId = params.id
-
-    // Parse incoming FormData (JSON + files)
-    const { jsonData, files } = await parseFormData(req)
+    const { id: workOrderId } = await context.params
+    const { jsonData, files } = await parseFormData(request)
 
     if (!jsonData) {
-      return NextResponse.json({ error: "Missing JSON data" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing JSON data" },
+        { status: 400 }
+      )
     }
 
-    const parsedData: {
-      workOrderSection: WorkOrderSection,
-      salesOrderSection: SalesOrderSection,
+    const parsedData = JSON.parse(jsonData) as {
+      workOrderSection: WorkOrderSection
+      salesOrderSection: SalesOrderSection
       purchaseOrderSection: PurchaseOrderSection
-    } = JSON.parse(jsonData)
+    }
 
-    // Handle file uploads if needed
     if (files.length > 0) {
       console.log("Received files:", files.map(f => f.filename))
-      // Add your file handling logic here
+      // TODO: handle file uploads if needed
     }
 
-    // Update Sanity document
     await writeClient
       .patch(workOrderId)
       .set({
@@ -94,10 +104,17 @@ export async function PUT(
       })
       .commit()
 
-    return NextResponse.json({ success: true, message: "Work order updated successfully" })
+    return NextResponse.json({
+      success: true,
+      message: "Work order updated successfully",
+    })
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to update work order"
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to update work order"
     console.error("Error updating work order:", errorMessage)
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    )
   }
 }

@@ -1,87 +1,88 @@
-export const dynamic = 'force-dynamic' // ✅ Ensures fresh Sanity data every render
+export const dynamic = "force-dynamic"; // ✅ Ensures fresh Sanity data every render
 
-import { client } from '@/sanity/lib/client'
-import { notFound } from 'next/navigation'
-import { DM_Sans } from 'next/font/google'
-import Sidebar from '@/app/Components/sidebar'
+import { client } from "@/sanity/lib/client";
+import { notFound } from "next/navigation";
+import { DM_Sans } from "next/font/google";
+import Sidebar from "@/app/Components/sidebar";
 
+/* ✅ Google Font */
 const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-dm-sans',
-})
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-dm-sans",
+});
 
-interface Params {
-  params: { id: string }
+/* ✅ Next.js 15 proper PageProps */
+interface PageProps {
+  params: {
+    id: string;
+  };
 }
 
-type QuotationStatus = 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Expired'
+/* ✅ Status types */
+type QuotationStatus = "Draft" | "Sent" | "Accepted" | "Rejected" | "Expired";
 
+/* ✅ Interfaces */
 interface Product {
-  itemName?: string
-  description?: string
-  quantity: number
-  unitPrice: number
-  totalPrice?: number
+  itemName?: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice?: number;
 }
 
 interface FileAttachment {
   asset?: {
-    url?: string
-    originalFilename?: string
-    size?: number
-  }
+    url?: string;
+    originalFilename?: string;
+    size?: number;
+  };
 }
 
 interface TermsAndConditions {
-  _type: string
-  children: {
-    _type: string
-    marks: string[]
-    text: string
-  }[]
+  _type: string;
+  children: { _type: string; marks: string[]; text: string }[];
 }
 
 interface Notes {
-  _type: string
-  children: {
-    _type: string
-    marks: string[]
-    text: string
-  }[]
+  _type: string;
+  children: { _type: string; marks: string[]; text: string }[];
 }
 
 interface QuotationData {
-  quotationId: string
-  referenceNo: string
-  ferencNumber?: string
-  date?: string
-  client?: string
-  company?: string
-  customerEmail?: string
-  customerPhone?: string
-  address?: string
-  projectName?: string
-  subject?: string
-  sentDate?: string
-  receivingDate?: string
-  revision?: string
-  revisionDate?: string
-  salesPerson?: string
-  preparedBy?: string
-  products?: Product[]
-  subtotal?: number
-  gst?: number
-  totalPrice?: number
-  termsAndConditions?: TermsAndConditions
-  notes?: Notes
-  quotationAttachments?: FileAttachment[]
-  drawingAttachments?: FileAttachment[]
-  sldDocument?: FileAttachment
-  status?: string
+  quotationId: string;
+  referenceNo: string;
+  ferencNumber?: string;
+  date?: string;
+  client?: string;
+  company?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  address?: string;
+  projectName?: string;
+  subject?: string;
+  sentDate?: string;
+  receivingDate?: string;
+  revision?: string;
+  revisionDate?: string;
+  salesPerson?: string;
+  preparedBy?: string;
+  products?: Product[];
+  subtotal?: number;
+  gst?: number;
+  totalPrice?: number;
+  termsAndConditions?: TermsAndConditions;
+  notes?: Notes;
+  quotationAttachments?: FileAttachment[];
+  drawingAttachments?: FileAttachment[];
+  sldDocument?: FileAttachment;
+  status?: string;
 }
 
-export default async function QuotationDetailPage({ params }: Params) {
+export default async function QuotationDetailPage({ params }: PageProps) {
+  const { id } = params;
+
+  /* ✅ GROQ Query */
   const query = `
     *[_type == "quotation" && quotationId == $id][0] {
       quotationId,
@@ -118,12 +119,14 @@ export default async function QuotationDetailPage({ params }: Params) {
       sldDocument{..., asset->},
       notes
     }
-  `
+  `;
 
-  const data: QuotationData | null = await client.fetch(query, { id: params.id })
-  if (!data) return notFound()
+  const data: QuotationData | null = await client.fetch(query, { id });
 
-   const {
+  if (!data) return notFound();
+
+  /* ✅ Destructure safely with defaults */
+  const {
     quotationId,
     referenceNo,
     ferencNumber,
@@ -134,15 +137,11 @@ export default async function QuotationDetailPage({ params }: Params) {
     subject,
     preparedBy,
     salesPerson,
-    status = 'Draft',
+    status = "Draft",
     revision,
     sentDate,
     receivingDate,
     revisionDate,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    termsAndConditions: _termsAndConditions, // Marked as intentionally unused
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    notes: _notes, // Marked as intentionally unused
     customerEmail,
     customerPhone,
     address,
@@ -153,96 +152,113 @@ export default async function QuotationDetailPage({ params }: Params) {
     quotationAttachments = [],
     drawingAttachments = [],
     sldDocument,
-  } = data
+  } = data;
 
+  /* ✅ Status color mapping */
   const statusColors: Record<QuotationStatus, string> = {
-    Draft: 'bg-yellow-100 text-yellow-700',
-    Sent: 'bg-blue-100 text-blue-700',
-    Accepted: 'bg-green-100 text-green-700',
-    Rejected: 'bg-red-100 text-red-700',
-    Expired: 'bg-gray-100 text-gray-700',
-  }
+    Draft: "bg-yellow-100 text-yellow-700",
+    Sent: "bg-blue-100 text-blue-700",
+    Accepted: "bg-green-100 text-green-700",
+    Rejected: "bg-red-100 text-red-700",
+    Expired: "bg-gray-100 text-gray-700",
+  };
 
-  const safeStatus: QuotationStatus =
-    ['Draft', 'Sent', 'Accepted', 'Rejected', 'Expired'].includes(status as QuotationStatus)
-      ? (status as QuotationStatus)
-      : 'Draft'
+  /* ✅ Validate status */
+  const safeStatus: QuotationStatus = [
+    "Draft",
+    "Sent",
+    "Accepted",
+    "Rejected",
+    "Expired",
+  ].includes(status as QuotationStatus)
+    ? (status as QuotationStatus)
+    : "Draft";
 
-  const statusColor = statusColors[safeStatus]
+  const statusColor = statusColors[safeStatus];
 
+  /* ✅ Date Formatter */
   const formatDate = (d?: string) =>
     d
-      ? new Date(d).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
+      ? new Date(d).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         })
-      : '—'
+      : "—";
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-        {/* ✅ Header Section */}
+        {/* ✅ HEADER */}
         <div className="flex justify-between items-start border-b pb-6">
           <div className="space-y-2">
-            <h1 className={`text-4xl font-bold pt-10 tracking-wide text-[#8B5E3C] ${dmSans.className}`}>{quotationId}</h1>
+            <h1
+              className={`text-4xl font-bold pt-10 tracking-wide text-[#8B5E3C] ${dmSans.className}`}
+            >
+              {quotationId}
+            </h1>
 
             {subject && (
               <h2 className={`text-xl text-gray-600 ${dmSans.className}`}>
-                <span className={`font-semibold tracking-wide text-[#8B5E3C] ${dmSans.className}`}>Subject:</span> {subject}
+                <span className="font-semibold text-[#8B5E3C]">
+                  Subject:
+                </span>{" "}
+                {subject}
               </h2>
             )}
 
-            <div className={`flex items-center gap-2 ${dmSans.className}`}>
-              <span className={`font-semibold tracking-wide text-[#8B5E3C] ${dmSans.className}`}>Status:</span>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColor} ${dmSans.className}`}>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[#8B5E3C]">Status:</span>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+              >
                 {safeStatus}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ✅ Client & Quotation Info */}
+        {/* ✅ CLIENT + QUOTATION INFO */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Client Information */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
+            <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
               Client Information
             </h2>
             <div className="space-y-3">
               {clientName && (
                 <div>
-                  <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Client Name:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{clientName}</p>
+                  <p className="text-xl font-bold text-gray-600">Client Name:</p>
+                  <p className="text-lg">{clientName}</p>
                 </div>
               )}
               {company && (
                 <div>
-                  <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Company:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{company}</p>
+                  <p className="text-xl font-bold text-gray-600">Company:</p>
+                  <p className="text-lg">{company}</p>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 {customerEmail && (
                   <div>
-                    <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Email:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{customerEmail}</p>
+                    <p className="text-xl font-bold text-gray-600">Email:</p>
+                    <p className="text-lg">{customerEmail}</p>
                   </div>
                 )}
                 {customerPhone && (
                   <div>
-                    <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Phone:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{customerPhone}</p>
+                    <p className="text-xl font-bold text-gray-600">Phone:</p>
+                    <p className="text-lg">{customerPhone}</p>
                   </div>
                 )}
               </div>
 
               {address && (
                 <div>
-                  <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Address:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{address}</p>
+                  <p className="text-xl font-bold text-gray-600">Address:</p>
+                  <p className="text-lg">{address}</p>
                 </div>
               )}
             </div>
@@ -250,32 +266,30 @@ export default async function QuotationDetailPage({ params }: Params) {
 
           {/* Quotation Details */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-              Quotation Details
-            </h2>
+            <h2 className="text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2">Quotation Details</h2>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Reference No:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{referenceNo}</p>
+                  <p className="text-xl font-bold text-gray-600">Reference No:</p>
+                  <p className="text-lg">{referenceNo}</p>
                 </div>
                 {ferencNumber && (
                   <div>
-                    <p className={`text-xl  tracking-wide font-bold text-gray-600 ${dmSans.className}`}>FERENC No:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{ferencNumber}</p>
+                    <p className="text-xl font-bold text-gray-600">FERENC No:</p>
+                    <p className="text-lg">{ferencNumber}</p>
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Date:</p>
-                  <p className={`text-lg tracking-wide  ${dmSans.className}`}>{formatDate(date)}</p>
+                  <p className="text-xl font-bold text-gray-600">Date:</p>
+                  <p className="text-lg">{formatDate(date)}</p>
                 </div>
                 {sentDate && (
                   <div>
-                    <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Sent Date:</p>
-                    <p className={`text-lg tracking-wide${dmSans.className}`}>{formatDate(sentDate)}</p>
+                    <p className="text-xl font-bold text-gray-600">Sent Date:</p>
+                    <p className="text-lg">{formatDate(sentDate)}</p>
                   </div>
                 )}
               </div>

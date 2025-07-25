@@ -64,15 +64,17 @@ const Sidebar = () => {
         } ${dmsans.className} hide-scrollbar flex flex-col`}
       >
         {/* Company Logo/Header */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-center">
-          <Image
-            src="/logo.png"
-            alt="VoltEdge Logo"
-            className="h-16 w-auto"
-            width={64}
-            height={64}
-          />
-        </div>
+<div className="p-4 border-b border-gray-200 flex items-center justify-center">
+  <Image
+    src="/logo.png"
+    alt="VoltEdge Logo"
+    width={64}        // From your original code
+    height={64}       // From your original code
+    priority          // Added for better loading
+    unoptimized       // Added to prevent blur
+    className="h-16 w-auto"  // From your original code
+  />
+</div>
 
         {/* Admin Mode Toggle */}
         <div className="p-4 border-b border-gray-200">
