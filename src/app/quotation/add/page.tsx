@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
@@ -10,10 +11,93 @@ const dmSans = DM_Sans({
   weight: ['400', '500', '700'],
 })
 
+interface FormData {
+  quotationId: string
+  referenceNo: string
+  ferencNumber: string
+  date: string
+  status: string
+  client: string
+  company: string
+  customerEmail: string
+  customerPhone: string
+  address: string
+  projectName: string
+  subject: string
+  sentDate: string
+  receivingDate: string
+  revision: string
+  revisionDate: string
+  salesPerson: string
+  preparedBy: string
+  subtotal: number
+  gst: number
+  totalPrice: number
+  termsAndConditions: string
+  notes: string
+}
+
+interface Product {
+  itemName: string
+  description: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string
+  fontClass: string
+}
+
+interface TextareaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string
+  fontClass: string
+}
+
+interface SelectFieldProps {
+  label: string
+  name: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  options: string[]
+  fontClass: string
+}
+
+interface ProductsSectionProps {
+  products: Product[]
+  onChange: (index: number, field: string, value: string | number) => void
+  onAdd: () => void
+  onRemove: (index: number) => void
+  subtotal: number
+  gst: number
+  total: number
+  onGSTChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  fontClass: string
+}
+
+interface AttachmentsSectionProps {
+  quotationDocs: File[]
+  technicalDrawings: File[]
+  sldFile: File | null
+  onQuotationUpload: (files: FileList | null) => void
+  onDrawingUpload: (files: FileList | null) => void
+  onSldUpload: (file: File | null) => void
+  fontClass: string
+}
+
+interface FileUploadProps {
+  label: string
+  multiple?: boolean
+  files: File[]
+  onUpload: (files: FileList | null) => void
+  fontClass: string
+}
+
 export default function AddQuotation() {
   const router = useRouter()
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     quotationId: '',
     referenceNo: '',
     ferencNumber: '',
@@ -39,7 +123,7 @@ export default function AddQuotation() {
     notes: ''
   })
 
-  const [products, setProducts] = useState([
+  const [products, setProducts] = useState<Product[]>([
     { itemName: '', description: '', quantity: 1, unitPrice: 0, totalPrice: 0 }
   ])
 
@@ -131,10 +215,11 @@ export default function AddQuotation() {
 
       toast.success('Quotation saved successfully!', { duration: 4000, position: 'top-center' })
       router.push('/quotation')
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving quotation:', err)
-      setError(err.message || 'Failed to save quotation')
-      toast.error(err.message || 'Failed to save quotation')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save quotation'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -232,9 +317,9 @@ export default function AddQuotation() {
             quotationDocs={quotationDocs}
             technicalDrawings={technicalDrawings}
             sldFile={sldFile}
-            onQuotationUpload={(f) => handleFileUpload(setQuotationDocs, f)}
-            onDrawingUpload={(f) => handleFileUpload(setTechnicalDrawings, f)}
-            onSldUpload={(f) => handleSldUpload(f?.[0] || null)}
+            onQuotationUpload={(f: FileList | null) => handleFileUpload(setQuotationDocs, f)}
+            onDrawingUpload={(f: FileList | null) => handleFileUpload(setTechnicalDrawings, f)}
+            onSldUpload={(f: File | null) => handleSldUpload(f)}
             fontClass={`${dmSans.className} tracking-wide`}
           />
 
@@ -261,8 +346,7 @@ export default function AddQuotation() {
   )
 }
 
-/* ✅ Helper Components */
-function InputField({ label, fontClass, ...props }: any) {
+function InputField({ label, fontClass, ...props }: InputFieldProps) {
   return (
     <div className={`${fontClass} tracking-wide`}>
       <label className="block text-sm font-medium mb-1 tracking-wide">{label}</label>
@@ -270,7 +354,8 @@ function InputField({ label, fontClass, ...props }: any) {
     </div>
   )
 }
-function TextareaField({ label, fontClass, ...props }: any) {
+
+function TextareaField({ label, fontClass, ...props }: TextareaFieldProps) {
   return (
     <div className={`sm:col-span-2 ${fontClass} tracking-wide`}>
       <label className="block text-sm font-medium mb-1 tracking-wide">{label}</label>
@@ -278,23 +363,25 @@ function TextareaField({ label, fontClass, ...props }: any) {
     </div>
   )
 }
-function SelectField({ label, name, value, onChange, options, fontClass }: any) {
+
+function SelectField({ label, name, value, onChange, options, fontClass }: SelectFieldProps) {
   return (
     <div className={`${fontClass} tracking-wide`}>
       <label className="block text-sm font-medium mb-1 tracking-wide">{label}</label>
       <select name={name} value={value} onChange={onChange} className={`w-full border rounded-md p-2 ${fontClass} tracking-wide`}>
-        {options.map((opt: string) => (
+        {options.map((opt) => (
           <option key={opt} value={opt} className={`${fontClass} tracking-wide`}>{opt}</option>
         ))}
       </select>
     </div>
   )
 }
-function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, total, onGSTChange, fontClass }: any) {
+
+function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, total, onGSTChange, fontClass }: ProductsSectionProps) {
   return (
     <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
       <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${fontClass} tracking-wide`}>Quoted Products</h2>
-      {products.map((p: any, idx: number) => (
+      {products.map((p, idx) => (
         <div key={idx} className={`grid grid-cols-1 sm:grid-cols-5 gap-2 mb-2 ${fontClass} tracking-wide`}>
           <input placeholder="Item Name" value={p.itemName} onChange={(e) => onChange(idx, 'itemName', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} required />
           <input placeholder="Description" value={p.description} onChange={(e) => onChange(idx, 'description', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} />
@@ -328,24 +415,31 @@ function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, t
     </div>
   )
 }
-function AttachmentsSection({ quotationDocs, technicalDrawings, sldFile, onQuotationUpload, onDrawingUpload, onSldUpload, fontClass }: any) {
+
+function AttachmentsSection({ quotationDocs, technicalDrawings, sldFile, onQuotationUpload, onDrawingUpload, onSldUpload, fontClass }: AttachmentsSectionProps) {
   return (
     <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
       <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${fontClass} tracking-wide`}>Attachments</h2>
       <FileUpload label="Quotation Documents" multiple files={quotationDocs} onUpload={onQuotationUpload} fontClass={fontClass} />
       <FileUpload label="Technical Drawings" multiple files={technicalDrawings} onUpload={onDrawingUpload} fontClass={fontClass} />
-      <FileUpload label="Single Line Diagram (SLD)" files={sldFile ? [sldFile] : []} onUpload={onSldUpload} fontClass={fontClass} />
+      <FileUpload label="Single Line Diagram (SLD)" files={sldFile ? [sldFile] : []} onUpload={(files) => onSldUpload(files?.[0] || null)} fontClass={fontClass} />
     </div>
   )
 }
-function FileUpload({ label, multiple, files, onUpload, fontClass }: any) {
+
+function FileUpload({ label, multiple, files, onUpload, fontClass }: FileUploadProps) {
   return (
     <div className={`mb-4 ${fontClass} tracking-wide`}>
       <label className={`block font-medium text-sm mb-1 tracking-wide`}>{label}</label>
-      <input type="file" multiple={multiple} onChange={(e) => onUpload(e.target.files)} className={`block w-full text-sm border rounded p-2 ${fontClass} tracking-wide`} />
+      <input 
+        type="file" 
+        multiple={multiple} 
+        onChange={(e) => onUpload(e.target.files)} 
+        className={`block w-full text-sm border rounded p-2 ${fontClass} tracking-wide`} 
+      />
       {files?.length > 0 && (
         <ul className={`mt-2 text-sm text-gray-600 ${fontClass} tracking-wide`}>
-          {files.map((f: any, i: number) => (
+          {files.map((f, i) => (
             <li key={i} className="tracking-wide">📄 {f.name}</li>
           ))}
         </ul>

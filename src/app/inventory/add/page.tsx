@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
-import { ArrowLeftIcon } from 'lucide-react'
-import Link from 'next/link'
 import { DM_Sans } from 'next/font/google'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -117,12 +115,13 @@ export default function AddInventoryItem() {
 
       router.push('/inventory')
       router.refresh()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error adding item:', err)
-      setError(err.message || 'Failed to add item. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add item. Please try again.'
+      setError(errorMessage)
       
       // Show error notification
-      toast.error(err.message || 'Failed to add item', {
+      toast.error(errorMessage, {
         duration: 4000,
         position: 'top-center',
         icon: '❌',
@@ -149,7 +148,7 @@ export default function AddInventoryItem() {
         {/* Header Section */}
         <div className="flex justify-between items-start pb-4">
           <div className="space-y-1">
-            <h1 className={`text-2xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
+            <h1 className={`text-2xl font-bold pt-12 pl-4 text-[#8B5E3C] ${dmSans.className}`}>
               Add New Inventory Item
             </h1>
           </div>

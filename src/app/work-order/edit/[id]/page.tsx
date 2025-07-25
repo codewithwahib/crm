@@ -12,7 +12,57 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
 })
 
-// Define types for our form data
+interface ProductItem {
+  serialNumber?: string
+  itemDescription: string
+  quantity: number
+  remarks?: string
+}
+
+interface POItem {
+  description: string
+  unit: string
+  quantity: number
+  unitRatePKR: number
+  totalAmountPKR: number
+}
+
+interface CustomerInfo {
+  customerName: string
+  salesPerson?: string
+  contactPerson?: string
+  mobileNo?: string
+  phoneNo?: string
+  email?: string
+}
+
+interface OrderDetails {
+  productType?: string
+  poNumber?: string
+  poDate?: string
+  poValue?: string
+  deliveryDate?: string
+  shopDrawingApproval: boolean
+  shopDrawingApprovalDate?: string
+  expectedCompletionDate?: string
+  specialInstructions?: string
+}
+
+interface TermsAndConditions {
+  paymentType?: string
+  pricesIncludeGST: boolean
+  deliveryMethod?: string
+  warrantyPeriod?: string
+}
+
+interface RequiredDocuments {
+  quotationWithFinalPrice?: File | null
+  approvedShopDrawing?: File | null
+  componentList?: File | null
+  customerPOCopy?: File | null
+  technicalSpecifications?: File | null
+}
+
 interface WorkOrderFormData {
   workOrderSection: {
     workOrderNumber: string
@@ -21,56 +71,17 @@ interface WorkOrderFormData {
     clientPONumber?: string
     date?: string
     deliveryDate?: string
-    products: Array<{
-      serialNumber?: string
-      itemDescription: string
-      quantity: number
-      remarks?: string
-    }>
+    products: ProductItem[]
   }
   salesOrderSection: {
-    customerInfo: {
-      customerName: string
-      salesPerson?: string
-      contactPerson?: string
-      mobileNo?: string
-      phoneNo?: string
-      email?: string
-    }
-    orderDetails: {
-      productType?: string
-      poNumber?: string
-      poDate?: string
-      poValue?: string
-      deliveryDate?: string
-      shopDrawingApproval: boolean
-      shopDrawingApprovalDate?: string
-      expectedCompletionDate?: string
-      specialInstructions?: string
-    }
-    termsAndConditions: {
-      paymentType?: string
-      pricesIncludeGST: boolean
-      deliveryMethod?: string
-      warrantyPeriod?: string
-    }
-    requiredDocuments: {
-      quotationWithFinalPrice?: File | null
-      approvedShopDrawing?: File | null
-      componentList?: File | null
-      customerPOCopy?: File | null
-      technicalSpecifications?: File | null
-    }
+    customerInfo: CustomerInfo
+    orderDetails: OrderDetails
+    termsAndConditions: TermsAndConditions
+    requiredDocuments: RequiredDocuments
     authorizedBy?: string
   }
   purchaseOrderSection: {
-    poTable: Array<{
-      description: string
-      unit: string
-      quantity: number
-      unitRatePKR: number
-      totalAmountPKR: number
-    }>
+    poTable: POItem[]
     shipTo?: string
     paymentTerms?: string
     deliveryTerms?: string
@@ -86,7 +97,6 @@ export default function EditWorkOrderSalesPage() {
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize with default values
   const [formData, setFormData] = useState<WorkOrderFormData>({
     workOrderSection: {
       workOrderNumber: "",
@@ -140,18 +150,17 @@ export default function EditWorkOrderSalesPage() {
     },
   })
 
-  // Fetch existing work order
   useEffect(() => {
     const fetchWorkOrder = async () => {
       try {
         const res = await fetch(`/api/work-order/${workOrderId}`)
         if (!res.ok) throw new Error("Failed to load work order data")
 
-        const data = await res.json()
+        const data = await res.json() as WorkOrderFormData
         setFormData(data)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching work order:", err)
-        setError(err.message)
+        setError(err instanceof Error ? err.message : "An unknown error occurred")
         toast.error("Failed to load work order")
       } finally {
         setFetching(false)
@@ -161,30 +170,66 @@ export default function EditWorkOrderSalesPage() {
     if (workOrderId) fetchWorkOrder()
   }, [workOrderId])
 
-  // Handle form field changes with proper typing
+  // Generic handler for top-level fields
   const handleChange = <
     T extends keyof WorkOrderFormData,
     K extends keyof WorkOrderFormData[T]
   >(
     section: T,
     key: K,
-    value: WorkOrderFormData[T][K],
-    nested?: keyof WorkOrderFormData[T] extends object ? keyof WorkOrderFormData[T][K] : never
+    value: WorkOrderFormData[T][K]
   ) => {
-    setFormData(prev => {
-      const updated = { ...prev }
-      if (nested && typeof updated[section] === 'object') {
-        ;(updated[section] as any)[nested][key] = value
-      } else {
-        ;(updated[section] as any)[key] = value
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value
       }
-      return updated
-    })
+    }))
   }
 
-  // Handle file uploads
+  // Specialized handlers for nested objects
+  const handleCustomerInfoChange = (field: keyof CustomerInfo, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      salesOrderSection: {
+        ...prev.salesOrderSection,
+        customerInfo: {
+          ...prev.salesOrderSection.customerInfo,
+          [field]: value
+        }
+      }
+    }))
+  }
+
+  const handleOrderDetailsChange = (field: keyof OrderDetails, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      salesOrderSection: {
+        ...prev.salesOrderSection,
+        orderDetails: {
+          ...prev.salesOrderSection.orderDetails,
+          [field]: value
+        }
+      }
+    }))
+  }
+
+  const handleTermsChange = (field: keyof TermsAndConditions, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      salesOrderSection: {
+        ...prev.salesOrderSection,
+        termsAndConditions: {
+          ...prev.salesOrderSection.termsAndConditions,
+          [field]: value
+        }
+      }
+    }))
+  }
+
   const handleFileChange = (
-    field: keyof WorkOrderFormData['salesOrderSection']['requiredDocuments'],
+    field: keyof RequiredDocuments,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0] || null
@@ -200,7 +245,6 @@ export default function EditWorkOrderSalesPage() {
     }))
   }
 
-  // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -209,14 +253,12 @@ export default function EditWorkOrderSalesPage() {
     try {
       const formDataToSend = new FormData()
       
-      // Add files to FormData
       Object.entries(formData.salesOrderSection.requiredDocuments).forEach(([key, file]) => {
         if (file instanceof File) {
           formDataToSend.append(`salesOrderSection.requiredDocuments.${key}`, file)
         }
       })
 
-      // Add the JSON data
       formDataToSend.append('jsonData', JSON.stringify(formData))
 
       const res = await fetch(`/api/work-order/${workOrderId}`, {
@@ -224,21 +266,22 @@ export default function EditWorkOrderSalesPage() {
         body: formDataToSend,
       })
 
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error || "Failed to update work order")
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || "Failed to update work order")
+      }
 
       toast.success("Work order updated successfully!", { duration: 4000, position: 'top-center' })
       router.push("/work-orders")
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating work order:", err)
-      setError(err.message)
-      toast.error(err.message || "Failed to update work order")
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      toast.error(err instanceof Error ? err.message : "Failed to update work order")
     } finally {
       setLoading(false)
     }
   }
 
-  // Product list handlers
   const addProduct = () => {
     setFormData(prev => ({ 
       ...prev, 
@@ -267,7 +310,7 @@ export default function EditWorkOrderSalesPage() {
     }))
   }
 
-  const updateProduct = (index: number, field: string, value: any) => {
+  const updateProduct = (index: number, field: keyof ProductItem, value: string | number) => {
     setFormData(prev => {
       const products = [...prev.workOrderSection.products]
       products[index] = { ...products[index], [field]: value }
@@ -278,7 +321,6 @@ export default function EditWorkOrderSalesPage() {
     })
   }
 
-  // PO Table handlers
   const addPOItem = () => {
     setFormData(prev => ({ 
       ...prev, 
@@ -308,7 +350,7 @@ export default function EditWorkOrderSalesPage() {
     }))
   }
 
-  const updatePOItem = (index: number, field: string, value: any) => {
+  const updatePOItem = (index: number, field: keyof POItem, value: string | number) => {
     setFormData(prev => {
       const poTable = [...prev.purchaseOrderSection.poTable]
       poTable[index] = { ...poTable[index], [field]: value }
@@ -398,16 +440,12 @@ export default function EditWorkOrderSalesPage() {
             </div>
           </div>
 
-          {/* Rest of your form components... */}
-          {/* (Keep all the other sections like Products, Sales Order, etc. the same) */}
-
-
           {/* Work Order Products */}
           <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
             <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
               Work Order - Products List
             </h2>
-            {formData.workOrderSection.products?.map((prod: any, index: number) => (
+            {formData.workOrderSection.products.map((prod, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-3 border p-3 rounded mb-3">
                 <InputField 
                   label="Serial No" 
@@ -461,38 +499,38 @@ export default function EditWorkOrderSalesPage() {
               <InputField 
                 label="Customer Name" 
                 value={formData.salesOrderSection.customerInfo.customerName} 
-                onChange={(v) => handleChange("salesOrderSection", "customerName", v, "customerInfo")} 
+                onChange={(v) => handleCustomerInfoChange("customerName", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Sales Person" 
-                value={formData.salesOrderSection.customerInfo.salesPerson} 
-                onChange={(v) => handleChange("salesOrderSection", "salesPerson", v, "customerInfo")} 
+                value={formData.salesOrderSection.customerInfo.salesPerson || ""} 
+                onChange={(v) => handleCustomerInfoChange("salesPerson", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Contact Person" 
-                value={formData.salesOrderSection.customerInfo.contactPerson} 
-                onChange={(v) => handleChange("salesOrderSection", "contactPerson", v, "customerInfo")} 
+                value={formData.salesOrderSection.customerInfo.contactPerson || ""} 
+                onChange={(v) => handleCustomerInfoChange("contactPerson", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Email" 
                 type="email" 
-                value={formData.salesOrderSection.customerInfo.email} 
-                onChange={(v) => handleChange("salesOrderSection", "email", v, "customerInfo")} 
+                value={formData.salesOrderSection.customerInfo.email || ""} 
+                onChange={(v) => handleCustomerInfoChange("email", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Mobile No" 
-                value={formData.salesOrderSection.customerInfo.mobileNo} 
-                onChange={(v) => handleChange("salesOrderSection", "mobileNo", v, "customerInfo")} 
+                value={formData.salesOrderSection.customerInfo.mobileNo || ""} 
+                onChange={(v) => handleCustomerInfoChange("mobileNo", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Phone No" 
-                value={formData.salesOrderSection.customerInfo.phoneNo} 
-                onChange={(v) => handleChange("salesOrderSection", "phoneNo", v, "customerInfo")} 
+                value={formData.salesOrderSection.customerInfo.phoneNo || ""} 
+                onChange={(v) => handleCustomerInfoChange("phoneNo", v)} 
                 fontClass={dmSans.className}
               />
             </div>
@@ -506,63 +544,63 @@ export default function EditWorkOrderSalesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField 
                 label="Product Type" 
-                value={formData.salesOrderSection.orderDetails.productType} 
-                onChange={(v) => handleChange("salesOrderSection", "productType", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.productType || ""} 
+                onChange={(v) => handleOrderDetailsChange("productType", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="PO Number" 
-                value={formData.salesOrderSection.orderDetails.poNumber} 
-                onChange={(v) => handleChange("salesOrderSection", "poNumber", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.poNumber || ""} 
+                onChange={(v) => handleOrderDetailsChange("poNumber", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="PO Date" 
                 type="date" 
-                value={formData.salesOrderSection.orderDetails.poDate} 
-                onChange={(v) => handleChange("salesOrderSection", "poDate", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.poDate || ""} 
+                onChange={(v) => handleOrderDetailsChange("poDate", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="PO Value" 
                 type="number" 
-                value={formData.salesOrderSection.orderDetails.poValue} 
-                onChange={(v) => handleChange("salesOrderSection", "poValue", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.poValue || ""} 
+                onChange={(v) => handleOrderDetailsChange("poValue", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Delivery Date" 
                 type="date" 
-                value={formData.salesOrderSection.orderDetails.deliveryDate} 
-                onChange={(v) => handleChange("salesOrderSection", "deliveryDate", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.deliveryDate || ""} 
+                onChange={(v) => handleOrderDetailsChange("deliveryDate", v)} 
                 fontClass={dmSans.className}
               />
               <InputField 
                 label="Expected Completion Date" 
                 type="date" 
-                value={formData.salesOrderSection.orderDetails.expectedCompletionDate} 
-                onChange={(v) => handleChange("salesOrderSection", "expectedCompletionDate", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.expectedCompletionDate || ""} 
+                onChange={(v) => handleOrderDetailsChange("expectedCompletionDate", v)} 
                 fontClass={dmSans.className}
               />
               <TextareaField 
                 label="Special Instructions" 
-                value={formData.salesOrderSection.orderDetails.specialInstructions} 
-                onChange={(v) => handleChange("salesOrderSection", "specialInstructions", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.specialInstructions || ""} 
+                onChange={(v) => handleOrderDetailsChange("specialInstructions", v)} 
                 fontClass={dmSans.className}
               />
               <div className={`flex items-center gap-2 col-span-2 ${dmSans.className} tracking-wide`}>
                 <input 
                   type="checkbox" 
                   checked={formData.salesOrderSection.orderDetails.shopDrawingApproval} 
-                  onChange={(e) => handleChange("salesOrderSection", "shopDrawingApproval", e.target.checked, "orderDetails")} 
+                  onChange={(e) => handleOrderDetailsChange("shopDrawingApproval", e.target.checked)} 
                 />
                 <label>Shop Drawing Approved?</label>
               </div>
-              <InputField 
+              <InputField  
                 label="Approval Date" 
                 type="date" 
-                value={formData.salesOrderSection.orderDetails.shopDrawingApprovalDate} 
-                onChange={(v) => handleChange("salesOrderSection", "shopDrawingApprovalDate", v, "orderDetails")} 
+                value={formData.salesOrderSection.orderDetails.shopDrawingApprovalDate || ""} 
+                onChange={(v) => handleOrderDetailsChange("shopDrawingApprovalDate", v)} 
                 fontClass={dmSans.className}
               />
             </div>
@@ -576,8 +614,8 @@ export default function EditWorkOrderSalesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SelectField
                 label="Payment Type"
-                value={formData.salesOrderSection.termsAndConditions.paymentType}
-                onChange={(v) => handleChange("salesOrderSection", "paymentType", v, "termsAndConditions")}
+                value={formData.salesOrderSection.termsAndConditions.paymentType || ""}
+                onChange={(v) => handleTermsChange("paymentType", v)}
                 options={[
                   { label: "Before Delivery", value: "beforeDelivery" },
                   { label: "After Delivery", value: "afterDelivery" },
@@ -587,8 +625,8 @@ export default function EditWorkOrderSalesPage() {
               />
               <SelectField
                 label="Delivery Method"
-                value={formData.salesOrderSection.termsAndConditions.deliveryMethod}
-                onChange={(v) => handleChange("salesOrderSection", "deliveryMethod", v, "termsAndConditions")}
+                value={formData.salesOrderSection.termsAndConditions.deliveryMethod || ""}
+                onChange={(v) => handleTermsChange("deliveryMethod", v)}
                 options={[
                   { label: "By Company", value: "company" },
                   { label: "By Customer", value: "customer" },
@@ -598,8 +636,8 @@ export default function EditWorkOrderSalesPage() {
               />
               <SelectField
                 label="Warranty Period"
-                value={formData.salesOrderSection.termsAndConditions.warrantyPeriod}
-                onChange={(v) => handleChange("salesOrderSection", "warrantyPeriod", v, "termsAndConditions")}
+                value={formData.salesOrderSection.termsAndConditions.warrantyPeriod || ""}
+                onChange={(v) => handleTermsChange("warrantyPeriod", v)}
                 options={[
                   { label: "1 Year", value: "1year" },
                   { label: "2 Years", value: "2years" },
@@ -612,13 +650,13 @@ export default function EditWorkOrderSalesPage() {
                 <input
                   type="checkbox"
                   checked={formData.salesOrderSection.termsAndConditions.pricesIncludeGST}
-                  onChange={(e) => handleChange("salesOrderSection", "pricesIncludeGST", e.target.checked, "termsAndConditions")}
+                  onChange={(e) => handleTermsChange("pricesIncludeGST", e.target.checked)}
                 />
                 <label>Prices Include GST?</label>
               </div>
               <InputField 
                 label="Authorized By" 
-                value={formData.salesOrderSection.authorizedBy} 
+                value={formData.salesOrderSection.authorizedBy || ""} 
                 onChange={(v) => handleChange("salesOrderSection", "authorizedBy", v)} 
                 fontClass={dmSans.className}
               />
@@ -663,7 +701,7 @@ export default function EditWorkOrderSalesPage() {
             <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
               Purchase Order - Items List
             </h2>
-            {formData.purchaseOrderSection.poTable?.map((item: any, index: number) => (
+            {formData.purchaseOrderSection.poTable.map((item, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 border p-3 rounded mb-3">
                 <TextareaField 
                   label="Description" 
@@ -723,19 +761,19 @@ export default function EditWorkOrderSalesPage() {
             </h2>
             <TextareaField 
               label="Ship To" 
-              value={formData.purchaseOrderSection.shipTo} 
+              value={formData.purchaseOrderSection.shipTo || ""} 
               onChange={(v) => handleChange("purchaseOrderSection", "shipTo", v)} 
               fontClass={dmSans.className}
             />
             <TextareaField 
               label="Payment Terms" 
-              value={formData.purchaseOrderSection.paymentTerms} 
+              value={formData.purchaseOrderSection.paymentTerms || ""} 
               onChange={(v) => handleChange("purchaseOrderSection", "paymentTerms", v)} 
               fontClass={dmSans.className}
             />
             <TextareaField 
               label="Delivery Terms" 
-              value={formData.purchaseOrderSection.deliveryTerms} 
+              value={formData.purchaseOrderSection.deliveryTerms || ""} 
               onChange={(v) => handleChange("purchaseOrderSection", "deliveryTerms", v)} 
               fontClass={dmSans.className}
             />
@@ -886,6 +924,3 @@ function FileField({
     </div>
   )
 }
-
-
-

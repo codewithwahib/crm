@@ -21,6 +21,16 @@ interface Contact {
   customerPhone?: string
 }
 
+interface Quotation {
+  _id: string
+  name?: string
+  client?: string
+  customerEmail?: string
+  customerPhone?: string
+  company?: string
+  address?: string
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -40,15 +50,15 @@ export default function ContactsPage() {
             client
           } | order(_createdAt desc)
         `
-        const quotations: Contact[] = await client.fetch(query)
+        const quotations: Quotation[] = await client.fetch(query)
         
-        const transformedContacts = quotations.map(quote => ({
-          _id: quote._id,
-          name: quote.name || quote.client || 'Unnamed Contact',
-          email: quote.customerEmail || 'No email',
-          phone: quote.customerPhone || 'No phone',
-          company: quote.company || 'No company',
-          address: quote.address || 'No address'
+        const transformedContacts = quotations.map((quote) => ({
+          _id: quote._id ?? 'No ID',
+          name: quote.name ?? quote.client ?? 'Unnamed Contact',
+          email: quote.customerEmail ?? 'No email',
+          phone: quote.customerPhone ?? 'No phone',
+          company: quote.company ?? 'No company',
+          address: quote.address ?? 'No address',
         }))
         
         setContacts(transformedContacts)
@@ -61,6 +71,7 @@ export default function ContactsPage() {
 
     fetchContacts()
   }, [])
+
 
   const filteredContacts = contacts.filter(contact => {
     const searchLower = searchTerm.toLowerCase()

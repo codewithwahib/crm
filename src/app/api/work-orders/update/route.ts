@@ -1,9 +1,24 @@
 import { NextResponse } from 'next/server'
 import { writeClient } from '@/sanity/lib/client'
 
+interface WorkOrderSection {
+  workOrderNumber?: string
+  clientName?: string
+  jobReference?: string
+  clientPONumber?: string
+  date?: string
+  deliveryDate?: string
+  products?: unknown[]
+}
+
+interface RequestData {
+  _id: string
+  workOrderSection?: WorkOrderSection
+}
+
 export async function POST(req: Request) {
   try {
-    const data = await req.json()
+    const data: RequestData = await req.json()
 
     if (!data._id) {
       return NextResponse.json({ error: 'Missing work order ID' }, { status: 400 })
@@ -24,8 +39,9 @@ export async function POST(req: Request) {
     await writeClient.patch(data._id).set(patchData).commit()
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to update work order:', err)
-    return NextResponse.json({ error: err.message || 'Failed to update' }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : 'Failed to update'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

@@ -4,16 +4,17 @@ import { usePathname } from 'next/navigation'
 import { DM_Sans } from 'next/font/google';
 import { useState } from 'react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { FaBorderAll, FaUserClock, FaUsersCog, FaCog } from "react-icons/fa";
+import { FaBorderAll, FaUserClock } from "react-icons/fa";
 import { IoIosContacts } from "react-icons/io";
 import { RiStore2Line } from "react-icons/ri";
-import { MdPayment, MdAdminPanelSettings } from "react-icons/md";
+import { MdAdminPanelSettings } from "react-icons/md";
 import { GrDocumentStore } from "react-icons/gr";
 import { SiStatuspal } from "react-icons/si";
 import {
   HomeIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline'
+import Image from 'next/image';
 
 const dmsans = DM_Sans({ 
   subsets: ['latin'],
@@ -64,10 +65,12 @@ const Sidebar = () => {
       >
         {/* Company Logo/Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-center">
-          <img
+          <Image
             src="/logo.png"
             alt="VoltEdge Logo"
             className="h-16 w-auto"
+            width={64}
+            height={64}
           />
         </div>
 
@@ -130,13 +133,13 @@ const Sidebar = () => {
           </Link>
         
           <Link
-  href="/work-order-status"
-  className={`${navItemClasses('/work-order-status')} ${dmsans.className}`}
-  onClick={() => setIsOpen(false)}
->
-  <SiStatuspal className="h-5 w-5 mr-3" />
-  <span>Work Order Status</span>
-</Link>
+            href="/work-orders-status"
+            className={`${navItemClasses('/work-orders-status')} ${dmsans.className}`}
+            onClick={() => setIsOpen(false)}
+          >
+            <SiStatuspal className="h-5 w-5 mr-3" />
+            <span>Work Order Status</span>
+          </Link>
 
           <Link href="/sales-visit-log" className={`${navItemClasses('/sales-visit-log')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <FaUserClock className="h-5 w-5 mr-3" />
@@ -147,11 +150,6 @@ const Sidebar = () => {
             <GrDocumentStore className="h-5 w-5 mr-3" />
             <span>Documents</span>
           </Link>
-
-          {/* <Link href="/payment-details" className={`${navItemClasses('/payment-details')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-            <MdPayment className="h-5 w-5 mr-3" />
-            <span>Payment Details</span>
-          </Link> */}
 
           <Link href="/inventory" className={`${navItemClasses('/inventory')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <RiStore2Line className="h-5 w-5 mr-3" />
@@ -165,36 +163,25 @@ const Sidebar = () => {
                 Admin Panel
               </p>
               
-
               <Link href="/quotation/add" className={`${navItemClasses('/quotation/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <DocumentTextIcon className="h-5 w-5 mr-3" />
                 <span>Manage Quotations</span>
               </Link>
 
-
-
- <Link href="/work-orders/add" className={`${navItemClasses('/work-orders/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
+              <Link href="/work-orders/add" className={`${navItemClasses('/work-orders/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <FaBorderAll className="h-5 w-5 mr-3" />
                 <span>Manage Work Orders</span>
               </Link>
-
 
               <Link href="/inventory/add" className={`${navItemClasses('/inventory/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <RiStore2Line className="h-5 w-5 mr-3" />
                 <span>Manage Inventory</span>
               </Link>
 
-
-               <Link href="/documents/add" className={`${navItemClasses('/documents/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
+              <Link href="/documents/add" className={`${navItemClasses('/documents/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <FaBorderAll className="h-5 w-5 mr-3" />
                 <span>Manage Documents</span>
               </Link>
-              
-
-              {/* <Link href="/payment-details" className={`${navItemClasses('/payment-details')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-                <MdPayment className="h-5 w-5 mr-3" />
-                <span>Manage Payment</span>
-              </Link> */}
             </div>
           )}
         </nav>

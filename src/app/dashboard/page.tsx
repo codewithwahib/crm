@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
@@ -35,8 +34,6 @@ interface WorkOrder {
   }
 }
 
-// Color palette for charts
-const COLORS = ['#8B5E3C', '#A78B6F', '#C5B8A8', '#E3DCD2', '#F1ECE6'];
 const STATUS_COLORS = {
   Draft: '#FBBF24',
   Sent: '#60A5FA',
@@ -433,28 +430,32 @@ export default function CombinedDashboard() {
                 <h2 className={`text-lg sm:text-xl font-bold text-black mb-3 sm:mb-4 ${dmSans.className}`}>
                   Quotation Status Distribution
                 </h2>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={quotationStatusData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={isMobile ? 70 : 80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {quotationStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => [`${value} quotations`, 'Count']} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="h-64">
+  <ResponsiveContainer width="100%" height="100%">
+    <PieChart>
+      <Pie
+        data={Array.isArray(quotationStatusData) ? quotationStatusData : []}
+        cx="50%"
+        cy="50%"
+        labelLine={false}
+        outerRadius={isMobile ? 70 : 80}
+        fill="#8884d8"
+        dataKey="value"
+        label={({ name, percent }) => {
+          const safePercent = percent ? (percent * 100).toFixed(0) : 0;
+          return `${name || 'Unknown'}: ${safePercent}%`;
+        }}
+      >
+        {(quotationStatusData || []).map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={entry?.color || '#ccc'} />
+        ))}
+      </Pie>
+      <Tooltip formatter={(value: number) => [`${value ?? 0} quotations`, 'Count']} />
+      <Legend />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
+
               </div>
 
               {/* Monthly Trend Bar Chart */}

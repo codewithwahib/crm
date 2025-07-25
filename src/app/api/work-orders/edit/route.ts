@@ -15,8 +15,8 @@ export async function POST(req: Request) {
       .commit();
 
     return NextResponse.json({ message: "Work order updated", updatedDoc });
-  } catch (err: any) {
-    console.error("Update error:", err.message);
+  } catch (err: unknown) {
+    console.error("Update error:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Failed to update work order" }, { status: 500 });
   }
 }

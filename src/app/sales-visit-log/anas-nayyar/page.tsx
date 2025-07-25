@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
@@ -81,10 +81,8 @@ export default function AnasAttendanceForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [showSummaryGuide, setShowSummaryGuide] = useState(false)
-  const [showFollowUpGuide, setShowFollowUpGuide] = useState(false)
 
-  const fetchAttendanceList = async () => {
+  const fetchAttendanceList = useCallback(async () => {
     setLoadingAttendance(true)
     try {
       const query = `*[_type == "attendance" && employee.name == "Anas Nayyar"]{
@@ -122,7 +120,7 @@ export default function AnasAttendanceForm() {
     } finally {
       setLoadingAttendance(false)
     }
-  }
+  }, [timeFilter])
 
   const filterData = (data: AttendanceRecord[], filter: TimeFilter) => {
     const now = new Date()
@@ -212,7 +210,7 @@ export default function AnasAttendanceForm() {
     getLocation()
     updateCurrentTime()
     fetchAttendanceList()
-  }, [])
+  }, [fetchAttendanceList])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -343,7 +341,7 @@ export default function AnasAttendanceForm() {
         {/* Sales Visit Form */}
         <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
           <h2 className={`text-2xl font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
-            Today's Sales Visit Log
+            Today&apos;s Sales Visit Log
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -480,11 +478,8 @@ export default function AnasAttendanceForm() {
                 <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
                   {newRecord.summaryOfWork?.length || 0}/500
                 </span>
-                
               </div>
             </div>
-            
-            
             
             <textarea
               className={`border w-full rounded p-2 tracking-wide ${dmSans.className}`}
@@ -495,7 +490,6 @@ export default function AnasAttendanceForm() {
               rows={5}
               required
               minLength={50}
-              
             />
           </div>
 
@@ -509,11 +503,8 @@ export default function AnasAttendanceForm() {
                 <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
                   {newRecord.followUps?.length || 0}/300
                 </span>
-                
               </div>
             </div>
-            
-
             
             <textarea
               className={`border w-full rounded p-2 tracking-wide ${dmSans.className}`}

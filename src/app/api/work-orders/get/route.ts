@@ -70,8 +70,8 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(result);
-  } catch (err: any) {
-    console.error("GET work order error:", err.message);
+  } catch (err: unknown) {
+    console.error("GET work order error:", err instanceof Error ? err.message : String(err));
     return NextResponse.json(
       { error: "Failed to fetch work order" },
       { status: 500 }

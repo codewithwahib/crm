@@ -41,14 +41,14 @@ export default async function InventoryPage() {
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.className}`}>
       <Sidebar />
       
-      <main className="ml-16 mr-8 pl-8"> {/* Added ml-64 for sidebar width and pl-8 for additional padding */}
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
+      <main className="ml-1 mr-2 pt-20 sm:mr-5 md:mr-6  lg:mr-8 lg:pl-8">
+        <div className="max-w-7xl mx-auto px-2 py-6 sm:px-3 md:px-4">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#8B5E3C]">
+              <h1 className="text-2xl sm:text-3xl sm:pl-3 md:text-3xl font-bold text-[#8B5E3C]">
                 Electrical Components Inventory
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 {validatedItems.length} items in stock • Last updated: {validatedItems[0]?.lastUpdated || 'Recently'}
               </p>
             </div>

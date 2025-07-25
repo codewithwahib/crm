@@ -513,26 +513,54 @@ import { notFound } from 'next/navigation'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
 
-// ✅ Fonts can still be used in Server Components
 const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '700'],
   variable: '--font-dm-sans',
 })
 
-// ✅ Forces dynamic rendering (important for live Sanity data)
 export const dynamic = 'force-dynamic'
 
-export default async function WorkOrderDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  // ✅ GROQ query
+// TypeScript interfaces
+interface Product {
+  serialNumber?: string
+  itemDescription: string
+  quantity: number
+  remarks?: string
+}
+
+interface POItem {
+  description: string
+  unit: string
+  quantity: number
+  unitRatePKR?: number | string | null
+  totalAmountPKR?: number | string | null
+}
+
+// ✅ Helper: Safe number formatter
+const formatCurrency = (value?: number | string | null): string => {
+  if (value === undefined || value === null) return '0.00'
+  const num = Number(value)
+  return isNaN(num) ? '0.00' : num.toFixed(2)
+}
+
+// ✅ Helper: Safe date formatter
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+export default async function WorkOrderDetailPage({ params }: { params: { id: string } }) {
   const query = `
     *[_type == "workOrderSalesOrder" && _id == $id][0] {
       _id,
       _createdAt,
+      
       workOrderSection{
         workOrderNumber,
         clientName,
@@ -547,6 +575,7 @@ export default async function WorkOrderDetailPage({
           remarks
         }
       },
+      
       salesOrderSection{
         customerInfo{
           customerName,
@@ -587,6 +616,7 @@ export default async function WorkOrderDetailPage({
         },
         authorizedBy
       },
+      
       purchaseOrderSection{
         poTable[]{
           description,
@@ -602,43 +632,29 @@ export default async function WorkOrderDetailPage({
     }
   `
 
-  // ✅ Fetch data from Sanity
   const data = await client.fetch(query, { id: params.id })
-
   if (!data) return notFound()
 
   const {
     workOrderSection,
     salesOrderSection,
     purchaseOrderSection,
-    _createdAt,
+    _createdAt
   } = data
 
-  // ✅ Compute PO total safely
+  // ✅ Safe total calculation
   const poTotal =
-    purchaseOrderSection?.poTable?.reduce(
-      (sum: number, item: any) => sum + (item.totalAmountPKR || 0),
-      0
-    ) || 0
-
-  // ✅ Format date helper
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+    purchaseOrderSection?.poTable?.reduce((sum: number, item: POItem) => {
+      const val = Number(item.totalAmountPKR || 0)
+      return sum + (isNaN(val) ? 0 : val)
+    }, 0) || 0
 
   return (
-    <div
-      className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}
-    >
+    <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-        {/* Header Section */}
+
+        {/* HEADER */}
         <div className="flex justify-between items-start border-b pb-6">
           <div className="space-y-2">
             <h1 className={`text-3xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
@@ -665,9 +681,9 @@ export default async function WorkOrderDetailPage({
           </div>
         </div>
 
-        {/* Client & Order Info */}
+        {/* CLIENT & ORDER INFO */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Client Information */}
+          {/* CLIENT INFO */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
               Client Information
@@ -679,7 +695,7 @@ export default async function WorkOrderDetailPage({
                   {workOrderSection?.clientName || salesOrderSection?.customerInfo?.customerName || 'N/A'}
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {salesOrderSection?.customerInfo?.contactPerson && (
                   <div>
@@ -694,7 +710,7 @@ export default async function WorkOrderDetailPage({
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {salesOrderSection?.customerInfo?.email && (
                   <div>
@@ -712,7 +728,7 @@ export default async function WorkOrderDetailPage({
             </div>
           </div>
 
-          {/* Order Details */}
+          {/* ORDER DETAILS */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
             <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
               Order Details
@@ -728,7 +744,7 @@ export default async function WorkOrderDetailPage({
                   <p className={`text-lg ${dmSans.className}`}>{workOrderSection?.clientPONumber || 'N/A'}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {salesOrderSection?.orderDetails?.productType && (
                   <div>
@@ -740,19 +756,17 @@ export default async function WorkOrderDetailPage({
                   <div>
                     <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>PO Value:</p>
                     <p className={`text-lg ${dmSans.className}`}>
-Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
+                      Rs. {formatCurrency(salesOrderSection.orderDetails.poValue)}
                     </p>
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {workOrderSection?.deliveryDate && (
                   <div>
                     <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Delivery Date:</p>
-                    <p className={`text-lg ${dmSans.className}`}>
-                      {formatDate(workOrderSection.deliveryDate)}
-                    </p>
+                    <p className={`text-lg ${dmSans.className}`}>{formatDate(workOrderSection.deliveryDate)}</p>
                   </div>
                 )}
                 {salesOrderSection?.orderDetails?.expectedCompletionDate && (
@@ -764,7 +778,7 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                   </div>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Drawing Approved:</p>
@@ -781,25 +795,21 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                   </div>
                 )}
               </div>
-              
+
               {salesOrderSection?.orderDetails?.specialInstructions && (
                 <div>
                   <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Special Instructions:</p>
-                  <p className={`text-lg ${dmSans.className}`}>
-                    {salesOrderSection.orderDetails.specialInstructions}
-                  </p>
+                  <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.orderDetails.specialInstructions}</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Work Order Products */}
+        {/* WORK ORDER PRODUCTS */}
         {workOrderSection?.products?.length > 0 && (
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>
-              Work Order 
-            </h2>
+            <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>Work Order</h2>
             <div className="overflow-x-auto">
               <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
                 <thead className="bg-gray-50">
@@ -812,7 +822,7 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {workOrderSection.products.map((product: any, i: number) => (
+                  {workOrderSection.products.map((product: Product, i: number) => (
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-6 py-4">{i + 1}.</td>
                       <td className="px-6 py-4 font-medium">{product.serialNumber || '-'}</td>
@@ -827,13 +837,12 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
           </div>
         )}
 
-        {/* Purchase Order Section */}
+        {/* PURCHASE ORDER SECTION */}
         {purchaseOrderSection?.poTable?.length > 0 && (
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>
-              Purchase Order 
-            </h2>
-            
+            <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>Purchase Order</h2>
+
+            {/* Purchase Order Meta */}
             <div className="px-6 pb-4 space-y-4">
               {purchaseOrderSection.shipTo && (
                 <div>
@@ -841,14 +850,12 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                   <p className={`${dmSans.className}`}>{purchaseOrderSection.shipTo}</p>
                 </div>
               )}
-              
               {purchaseOrderSection.paymentTerms && (
                 <div>
                   <p className={`text-lg font-semibold ${dmSans.className}`}>Payment Terms:</p>
                   <p className={`${dmSans.className}`}>{purchaseOrderSection.paymentTerms}</p>
                 </div>
               )}
-              
               {purchaseOrderSection.deliveryTerms && (
                 <div>
                   <p className={`text-lg font-semibold ${dmSans.className}`}>Delivery Terms:</p>
@@ -856,7 +863,8 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                 </div>
               )}
             </div>
-            
+
+            {/* Purchase Order Table */}
             <div className="overflow-x-auto">
               <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
                 <thead className="bg-gray-50">
@@ -869,13 +877,13 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {purchaseOrderSection.poTable.map((item: any, i: number) => (
+                  {purchaseOrderSection.poTable.map((item: POItem, i: number) => (
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-6 py-4">{item.description}</td>
                       <td className="px-6 py-4">{item.unit}</td>
                       <td className="px-6 py-4 text-right">{item.quantity}</td>
-                      <td className="px-6 py-4 text-right">{item.unitRatePKR?.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-right font-medium">{item.totalAmountPKR?.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right">{formatCurrency(item.unitRatePKR)}</td>
+                      <td className="px-6 py-4 text-right font-medium">{formatCurrency(item.totalAmountPKR)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -893,6 +901,7 @@ Rs. {Number(salesOrderSection.orderDetails.poValue || 0).toFixed(2)}
             </div>
           </div>
         )}
+
 
         {/* Terms & Conditions */}
         {salesOrderSection?.termsAndConditions && (

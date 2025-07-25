@@ -36,9 +36,10 @@ export async function GET(req: Request) {
       _id: data._id,
       ...data.workOrderSection
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err)
-    return NextResponse.json({ error: 'Failed to fetch work order' }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : 'Failed to fetch work order'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
@@ -69,8 +70,9 @@ export async function PUT(req: Request) {
     await writeClient.patch(id).set(patchData).commit()
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Update error:', err)
-    return NextResponse.json({ error: err.message || 'Failed to update work order' }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : 'Failed to update work order'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

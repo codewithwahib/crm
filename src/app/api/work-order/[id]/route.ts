@@ -1,86 +1,103 @@
-// import { NextResponse } from "next/server";
-// import { client } from "@/sanity/lib/client"; // ✅ Your sanity read client
-// import { writeClient } from "@/sanity/lib/sanity.client"; // ✅ If you use a write client
-// import { parseFormData } from "@/utils/parseFormData";
+import { NextResponse } from "next/server"
+import { writeClient } from "@/sanity/lib/sanity.client"
+import { parseFormData } from "@/utils/parseFormData" // Only import what's needed
 
-// // ----------------------
-// // ✅ GET /api/work-order/[id]
-// // ----------------------
-// export async function GET(
-//   req: Request,
-//   { params }: { params: { id: string } }
-// ) {
-//   const id = params.id;
+interface WorkOrderSection {
+  [key: string]: unknown
+}
 
-//   if (!id) {
-//     return NextResponse.json({ error: "Missing work order ID" }, { status: 400 });
-//   }
+interface SalesOrderSection {
+  [key: string]: unknown
+}
 
-//   try {
-//     const query = `*[_type == "workOrderSalesOrder" && _id == $id][0]{
-//       _id,
-//       workOrderSection,
-//       salesOrderSection,
-//       purchaseOrderSection
-//     }`;
+interface PurchaseOrderSection {
+  [key: string]: unknown
+}
 
-//     const workOrder = await client.fetch(query, { id });
+interface WorkOrderDocument {
+  _id: string
+  workOrderSection: WorkOrderSection
+  salesOrderSection: SalesOrderSection
+  purchaseOrderSection: PurchaseOrderSection
+}
 
-//     if (!workOrder) {
-//       return NextResponse.json({ error: "Work order not found" }, { status: 404 });
-//     }
+// GROQ fetch query
+const WORK_ORDER_QUERY = `
+  *[_type == "workOrderSalesOrder" && _id == $id][0]{
+    _id,
+    workOrderSection,
+    salesOrderSection,
+    purchaseOrderSection
+  }
+`
 
-//     return NextResponse.json(workOrder);
-//   } catch (error: any) {
-//     console.error("GET work order error:", error);
-//     return NextResponse.json({ error: error.message }, { status: 500 });
-//   }
-// }
+// GET: Fetch existing work order by ID
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const workOrderId = params.id
 
-// // ----------------------
-// // ✅ PUT /api/work-order/[id]
-// // ----------------------
-// export async function PUT(
-//   req: Request,
-//   { params }: { params: { id: string } }
-// ) {
-//   const id = params.id;
+    if (!workOrderId) {
+      return NextResponse.json({ error: "Missing work order ID" }, { status: 400 })
+    }
 
-//   if (!id) {
-//     return NextResponse.json({ error: "Missing work order ID" }, { status: 400 });
-//   }
+    const workOrder = await writeClient.fetch<WorkOrderDocument | null>(WORK_ORDER_QUERY, { id: workOrderId })
 
-//   try {
-//     const { jsonData, files } = await parseFormData(req);
+    if (!workOrder) {
+      return NextResponse.json({ error: "Work order not found" }, { status: 404 })
+    }
 
-//     if (!jsonData) {
-//       return NextResponse.json({ error: "Missing jsonData" }, { status: 400 });
-//     }
+    return NextResponse.json(workOrder)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to fetch work order"
+    console.error("Error fetching work order:", errorMessage)
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  }
+}
 
-//     const parsedData = JSON.parse(jsonData);
+// PUT: Update existing work order
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const workOrderId = params.id
 
-//     // ✅ Upload files somewhere if needed
-//     for (const file of files) {
-//       console.log("Received file:", file.filename, file.mimetype, file.buffer.length);
-//       // Example: Upload to Sanity asset
-//       /*
-//       const sanityAsset = await writeClient.assets.upload('file', file.buffer, {
-//         filename: file.filename,
-//         contentType: file.mimetype,
-//       });
-//       console.log("Sanity file uploaded:", sanityAsset);
-//       */
-//     }
+    // Parse incoming FormData (JSON + files)
+    const { jsonData, files } = await parseFormData(req)
 
-//     // ✅ Update Sanity document
-//     await writeClient
-//       .patch(id)
-//       .set(parsedData) // set fields like workOrderSection, salesOrderSection
-//       .commit();
+    if (!jsonData) {
+      return NextResponse.json({ error: "Missing JSON data" }, { status: 400 })
+    }
 
-//     return NextResponse.json({ success: true });
-//   } catch (error: any) {
-//     console.error("PUT work order error:", error);
-//     return NextResponse.json({ error: error.message }, { status: 500 });
-//   }
-// }
+    const parsedData: {
+      workOrderSection: WorkOrderSection,
+      salesOrderSection: SalesOrderSection,
+      purchaseOrderSection: PurchaseOrderSection
+    } = JSON.parse(jsonData)
+
+    // Handle file uploads if needed
+    if (files.length > 0) {
+      console.log("Received files:", files.map(f => f.filename))
+      // Add your file handling logic here
+    }
+
+    // Update Sanity document
+    await writeClient
+      .patch(workOrderId)
+      .set({
+        workOrderSection: parsedData.workOrderSection,
+        salesOrderSection: parsedData.salesOrderSection,
+        purchaseOrderSection: parsedData.purchaseOrderSection,
+      })
+      .commit()
+
+    return NextResponse.json({ success: true, message: "Work order updated successfully" })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to update work order"
+    console.error("Error updating work order:", errorMessage)
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  }
+}

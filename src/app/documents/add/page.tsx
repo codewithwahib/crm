@@ -71,13 +71,13 @@ export default function AddDocumentPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-white ${dmSans.variable} font-sans`}>
+    <div className={`min-h-screen bg-white ${dmSans.className} font-sans`}>
       <Sidebar />
       <Toaster position="top-right" />
 
       <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
         {/* ✅ Page Heading */}
-        <h1 className={`text-3xl font-bold text-[#8B5E3C] mb-8 ${dmSans.className} tracking-wide`}>
+        <h1 className={`text-3xl font-bold pt-9 text-[#8B5E3C] mb-8 ${dmSans.className} tracking-wide`}>
           Upload New Document
         </h1>
 

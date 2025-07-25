@@ -12,10 +12,11 @@ export async function POST(req: Request) {
     await writeClient.delete(id)
 
     return NextResponse.json({ success: true, message: '✅ Work order deleted!' })
-  } catch (err: any) {
-    console.error('❌ Delete failed:', err.message || err)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    console.error('❌ Delete failed:', errorMessage)
     return NextResponse.json(
-      { error: 'Failed to delete work order', details: err.message || err },
+      { error: 'Failed to delete work order', details: errorMessage },
       { status: 500 }
     )
   }

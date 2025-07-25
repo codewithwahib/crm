@@ -33,6 +33,24 @@ interface FileAttachment {
   }
 }
 
+interface TermsAndConditions {
+  _type: string
+  children: {
+    _type: string
+    marks: string[]
+    text: string
+  }[]
+}
+
+interface Notes {
+  _type: string
+  children: {
+    _type: string
+    marks: string[]
+    text: string
+  }[]
+}
+
 interface QuotationData {
   quotationId: string
   referenceNo: string
@@ -55,8 +73,8 @@ interface QuotationData {
   subtotal?: number
   gst?: number
   totalPrice?: number
-  termsAndConditions?: any
-  notes?: any
+  termsAndConditions?: TermsAndConditions
+  notes?: Notes
   quotationAttachments?: FileAttachment[]
   drawingAttachments?: FileAttachment[]
   sldDocument?: FileAttachment
@@ -105,7 +123,7 @@ export default async function QuotationDetailPage({ params }: Params) {
   const data: QuotationData | null = await client.fetch(query, { id: params.id })
   if (!data) return notFound()
 
-  const {
+   const {
     quotationId,
     referenceNo,
     ferencNumber,
@@ -121,8 +139,10 @@ export default async function QuotationDetailPage({ params }: Params) {
     sentDate,
     receivingDate,
     revisionDate,
-    termsAndConditions,
-    notes,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    termsAndConditions: _termsAndConditions, // Marked as intentionally unused
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    notes: _notes, // Marked as intentionally unused
     customerEmail,
     customerPhone,
     address,
@@ -166,7 +186,7 @@ export default async function QuotationDetailPage({ params }: Params) {
         {/* ✅ Header Section */}
         <div className="flex justify-between items-start border-b pb-6">
           <div className="space-y-2">
-            <h1 className={`text-4xl font-bold tracking-wide text-[#8B5E3C] ${dmSans.className}`}>{quotationId}</h1>
+            <h1 className={`text-4xl font-bold pt-10 tracking-wide text-[#8B5E3C] ${dmSans.className}`}>{quotationId}</h1>
 
             {subject && (
               <h2 className={`text-xl text-gray-600 ${dmSans.className}`}>
@@ -332,20 +352,38 @@ export default async function QuotationDetailPage({ params }: Params) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className={`px-6 py-4 ${dmSans.className}`}>{i + 1}.</td>
-                    <td className={`px-6 py-4 text-gray-500 ${dmSans.className}`}>
-                      {item.description || item.itemName}
-                    </td>
-                    <td className={`px-6 py-4 text-right ${dmSans.className}`}>{item.quantity}</td>
-                    <td className={`px-6 py-4 text-right ${dmSans.className}`}>{item.unitPrice.toFixed(2)}</td>
-                    <td className={`px-6 py-4 text-right font-medium ${dmSans.className}`}>
-                      {(item.totalPrice ?? item.unitPrice * item.quantity).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+  {Array.isArray(products) && products.length > 0 ? (
+    products.map((item, i) => {
+      const quantity = Number(item.quantity ?? 0);
+      const unitPrice = Number(item.unitPrice ?? 0);
+      const totalPrice = item.totalPrice ?? unitPrice * quantity;
+
+      return (
+        <tr key={i} className="hover:bg-gray-50">
+          <td className={`px-6 py-4 ${dmSans.className}`}>{i + 1}.</td>
+          <td className={`px-6 py-4 text-gray-500 ${dmSans.className}`}>
+            {item.description || item.itemName || "N/A"}
+          </td>
+          <td className={`px-6 py-4 text-right ${dmSans.className}`}>{quantity}</td>
+          <td className={`px-6 py-4 text-right ${dmSans.className}`}>{unitPrice.toFixed(2)}</td>
+          <td className={`px-6 py-4 text-right font-medium ${dmSans.className}`}>
+            {totalPrice.toFixed(2)}
+          </td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td
+        colSpan={5}
+        className="px-6 py-4 text-center text-gray-400 italic"
+      >
+        No products available
+      </td>
+    </tr>
+  )}
+</tbody>
+
               <tfoot className="bg-gray-50">
                 <tr>
                   <td colSpan={4} className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-500 ${dmSans.className}`}>

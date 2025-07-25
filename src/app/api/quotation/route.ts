@@ -2,6 +2,41 @@ import { NextResponse } from 'next/server'
 import { writeClient } from '@/sanity/lib/sanity.client'
 import { v4 as uuidv4 } from 'uuid'
 
+interface Product {
+  itemName: string
+  description?: string
+  quantity?: number
+  unitPrice?: number
+  totalPrice?: number
+}
+
+interface QuotationData {
+  quotationId: string
+  referenceNo: string
+  ferencNumber?: string
+  date?: string
+  status?: string
+  client: string
+  company?: string
+  customerEmail?: string
+  customerPhone?: string
+  address?: string
+  projectName?: string
+  subject?: string
+  sentDate?: string
+  receivingDate?: string
+  revision?: string
+  revisionDate?: string
+  salesPerson?: string
+  preparedBy?: string
+  subtotal?: number
+  gst?: number
+  totalPrice?: number
+  termsAndConditions?: string
+  notes?: string
+  products?: Product[]
+}
+
 // ✅ Enable edge runtime if you want faster API
 export const runtime = 'nodejs' 
 
@@ -14,7 +49,7 @@ export async function POST(req: Request) {
     if (!dataStr) {
       return NextResponse.json({ error: 'Missing quotation data' }, { status: 400 })
     }
-    const parsedData = JSON.parse(dataStr)
+    const parsedData: QuotationData = JSON.parse(dataStr)
 
     // ✅ Extract file uploads
     const quotationDocs = formData.getAll('quotationDocs') as File[]
@@ -96,14 +131,14 @@ export async function POST(req: Request) {
       notes: parsedData.notes || '',
 
       // ✅ Products array
-      products: (parsedData.products || []).map((p: any) => ({
+      products: (parsedData.products || []).map((p: Product) => ({
         _key: uuidv4(),
         _type: 'object',
         itemName: p.itemName,
         description: p.description || '',
         quantity: p.quantity || 1,
         unitPrice: p.unitPrice || 0,
-        totalPrice: p.totalPrice || p.quantity * p.unitPrice
+        totalPrice: p.totalPrice || (p.quantity || 1) * (p.unitPrice || 0)
       })),
 
       // ✅ Attachments
@@ -116,10 +151,11 @@ export async function POST(req: Request) {
     const createdQuotation = await writeClient.create(quotationDoc)
 
     return NextResponse.json({ success: true, quotation: createdQuotation })
-  } catch (err: any) {
-    console.error('❌ Quotation API error:', err)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to save quotation'
+    console.error('❌ Quotation API error:', errorMessage)
     return NextResponse.json(
-      { error: err.message || 'Failed to save quotation' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

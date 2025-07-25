@@ -70,14 +70,12 @@ export default function AttendancePage() {
   const [showForm, setShowForm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Work location color mapping
   const locationTypeColors: Record<string, string> = {
     office: 'bg-purple-100 text-purple-700',
     remote: 'bg-indigo-100 text-indigo-700',
     client_visit: 'bg-teal-100 text-teal-700',
   }
 
-  // Fetch attendance records
   const fetchAttendance = useCallback(async () => {
     setIsLoading(true)
     setError(null)
@@ -116,7 +114,6 @@ export default function AttendancePage() {
     fetchAttendance()
   }, [fetchAttendance])
 
-  // Update current time function
   const updateCurrentTime = () => {
     const now = new Date()
     setNewRecord(prev => ({
@@ -126,14 +123,12 @@ export default function AttendancePage() {
     }))
   }
 
-  // Toggle form visibility and update time
   const toggleForm = () => {
     updateCurrentTime()
     setShowForm(prev => !prev)
-    setSuccess(null) // Clear success message when toggling form
+    setSuccess(null)
   }
 
-  // Handle work location type change
   const handleWorkLocationChange = (type: 'office' | 'remote' | 'client_visit') => {
     setNewRecord(prev => ({
       ...prev,
@@ -143,7 +138,6 @@ export default function AttendancePage() {
     }))
   }
 
-  // Secretly get user location when form is shown
   useEffect(() => {
     if (showForm) {
       const getLocation = async () => {
@@ -182,7 +176,6 @@ export default function AttendancePage() {
     }
   }, [showForm])
 
-  // Submit attendance
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -190,12 +183,10 @@ export default function AttendancePage() {
     setSuccess(null)
     
     try {
-      // Validate employee name
       if (!newRecord.employee.name.trim()) {
         throw new Error('Employee name is required')
       }
 
-      // Format checkIn time with current date
       const checkInTime = newRecord.checkIn
         ? new Date(`${newRecord.date}T${newRecord.checkIn}`).toISOString()
         : new Date().toISOString()
@@ -235,10 +226,7 @@ export default function AttendancePage() {
         ...prev
       ])
 
-      // Set success message
       setSuccess(`Attendance record for ${newRecord.employee.name.trim()} created successfully!`)
-
-      // Reset form with empty employee name but keep other defaults
       setNewRecord({
         employee: { name: '' },
         date: new Date().toISOString().split('T')[0],
@@ -246,7 +234,6 @@ export default function AttendancePage() {
         workLocationType: 'office'
       })
       
-      // Auto-hide form after 3 seconds
       setTimeout(() => {
         setShowForm(false)
       }, 3000)
@@ -258,7 +245,6 @@ export default function AttendancePage() {
     }
   }
 
-  // Clear all attendance records
   const handleClearAllRecords = async () => {
     if (!confirm('Are you sure you want to delete ALL attendance records? This cannot be undone.')) {
       return
@@ -309,19 +295,19 @@ export default function AttendancePage() {
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
         {/* Header Section */}
-        <div className="flex justify-between items-start border-b pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start border-b pb-6 gap-4">
           <div className="space-y-2">
-            <h1 className={`text-3xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
+            <h1 className={`text-2xl md:text-3xl pt-9 font-bold text-[#8B5E3C] ${dmSans.className}`}>
               Sales Visit Log
             </h1>
-            <p className={`text-gray-600 ${dmSans.className}`}>
+            <p className={`text-gray-600 text-sm md:text-base ${dmSans.className}`}>
               {filteredRecords.length} records {searchTerm && `matching "${searchTerm}"`}
             </p>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             <button
               onClick={toggleForm}
-              className={`bg-[#8B5E3C] text-white px-4 py-2 rounded ${dmSans.className}`}
+              className={`bg-[#8B5E3C] text-white px-4 py-2 rounded text-sm md:text-base ${dmSans.className} flex-1 md:flex-none`}
             >
               {showForm ? 'Cancel' : 'Add Record'}
             </button>
@@ -329,7 +315,7 @@ export default function AttendancePage() {
               <button
                 onClick={handleClearAllRecords}
                 disabled={isDeleting}
-                className={`bg-red-600 text-white px-4 py-2 rounded ${dmSans.className} disabled:opacity-50`}
+                className={`bg-red-600 text-white px-4 py-2 rounded text-sm md:text-base ${dmSans.className} disabled:opacity-50 flex-1 md:flex-none`}
               >
                 {isDeleting ? 'Deleting...' : 'Clear All'}
               </button>
@@ -337,24 +323,23 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        {/* Error */}
+        {/* Messages */}
         {error && (
-          <div className={`bg-red-100 text-red-700 p-3 rounded ${dmSans.className}`}>
+          <div className={`bg-red-100 text-red-700 p-3 rounded text-sm md:text-base ${dmSans.className}`}>
             {error}
           </div>
         )}
 
-        {/* Success */}
         {success && (
-          <div className={`bg-green-100 text-green-700 p-3 rounded ${dmSans.className}`}>
+          <div className={`bg-green-100 text-green-700 p-3 rounded text-sm md:text-base ${dmSans.className}`}>
             {success}
           </div>
         )}
 
         {/* Form */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] ${dmSans.className}`}>
+          <form onSubmit={handleSubmit} className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm space-y-4">
+            <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] ${dmSans.className}`}>
               Add Sales Visit Log
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -363,7 +348,7 @@ export default function AttendancePage() {
                   Employee Name *
                 </label>
                 <input
-                  className={`border w-full px-3 py-2 rounded ${dmSans.className}`}
+                  className={`border w-full px-3 py-2 rounded text-sm md:text-base ${dmSans.className}`}
                   value={newRecord.employee.name}
                   onChange={e =>
                     setNewRecord(prev => ({
@@ -381,35 +366,35 @@ export default function AttendancePage() {
                 </label>
                 <input
                   type="date"
-                  className={`border w-full px-3 py-2 rounded bg-gray-100 ${dmSans.className}`}
+                  className={`border w-full px-3 py-2 rounded bg-gray-100 text-sm md:text-base ${dmSans.className}`}
                   value={newRecord.date}
                   readOnly
                   required
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className={`block text-sm font-medium text-gray-700 mb-1 ${dmSans.className}`}>
                   Work Location Type *
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => handleWorkLocationChange('office')}
-                    className={`px-3 py-1 rounded ${newRecord.workLocationType === 'office' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
+                    className={`px-3 py-1 rounded text-sm md:text-base ${newRecord.workLocationType === 'office' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
                   >
                     Office
                   </button>
                   <button
                     type="button"
                     onClick={() => handleWorkLocationChange('remote')}
-                    className={`px-3 py-1 rounded ${newRecord.workLocationType === 'remote' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
+                    className={`px-3 py-1 rounded text-sm md:text-base ${newRecord.workLocationType === 'remote' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
                   >
                     Remote
                   </button>
                   <button
                     type="button"
                     onClick={() => handleWorkLocationChange('client_visit')}
-                    className={`px-3 py-1 rounded ${newRecord.workLocationType === 'client_visit' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
+                    className={`px-3 py-1 rounded text-sm md:text-base ${newRecord.workLocationType === 'client_visit' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'}`}
                   >
                     Client Visit
                   </button>
@@ -422,7 +407,7 @@ export default function AttendancePage() {
                       Client Name *
                     </label>
                     <input
-                      className={`border w-full px-3 py-2 rounded ${dmSans.className}`}
+                      className={`border w-full px-3 py-2 rounded text-sm md:text-base ${dmSans.className}`}
                       value={newRecord.clientName || ''}
                       onChange={e => setNewRecord(prev => ({ ...prev, clientName: e.target.value }))}
                       required
@@ -434,7 +419,7 @@ export default function AttendancePage() {
                       Client Location *
                     </label>
                     <input
-                      className={`border w-full px-3 py-2 rounded ${dmSans.className}`}
+                      className={`border w-full px-3 py-2 rounded text-sm md:text-base ${dmSans.className}`}
                       value={newRecord.clientLocation || ''}
                       onChange={e => setNewRecord(prev => ({ ...prev, clientLocation: e.target.value }))}
                       required
@@ -450,7 +435,7 @@ export default function AttendancePage() {
                 <div className="flex gap-2">
                   <input
                     type="time"
-                    className={`border w-full px-3 py-2 rounded bg-gray-100 ${dmSans.className}`}
+                    className={`border w-full px-3 py-2 rounded bg-gray-100 text-sm md:text-base ${dmSans.className}`}
                     value={newRecord.checkIn || ''}
                     readOnly
                     required
@@ -458,7 +443,7 @@ export default function AttendancePage() {
                   <button
                     type="button"
                     onClick={updateCurrentTime}
-                    className="bg-gray-200 hover:bg-gray-300 px-3 rounded"
+                    className="bg-gray-200 hover:bg-gray-300 px-3 rounded text-sm md:text-base"
                   >
                     Now
                   </button>
@@ -471,7 +456,7 @@ export default function AttendancePage() {
                 Summary of Work Done / Visits
               </label>
               <textarea
-                className={`border w-full rounded p-2 ${dmSans.className}`}
+                className={`border w-full rounded p-2 text-sm md:text-base ${dmSans.className}`}
                 value={newRecord.summaryOfWork || ''}
                 onChange={e => setNewRecord(prev => ({ ...prev, summaryOfWork: e.target.value }))}
                 rows={3}
@@ -484,7 +469,7 @@ export default function AttendancePage() {
                 Follow-ups Planned for Next Day
               </label>
               <textarea
-                className={`border w-full rounded p-2 ${dmSans.className}`}
+                className={`border w-full rounded p-2 text-sm md:text-base ${dmSans.className}`}
                 value={newRecord.followUps || ''}
                 onChange={e => setNewRecord(prev => ({ ...prev, followUps: e.target.value }))}
                 rows={2}
@@ -497,7 +482,7 @@ export default function AttendancePage() {
                 Additional Notes
               </label>
               <textarea
-                className={`border w-full rounded p-2 ${dmSans.className}`}
+                className={`border w-full rounded p-2 text-sm md:text-base ${dmSans.className}`}
                 value={newRecord.notes || ''}
                 onChange={e => setNewRecord(prev => ({ ...prev, notes: e.target.value }))}
                 rows={2}
@@ -508,23 +493,23 @@ export default function AttendancePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`bg-[#8B5E3C] text-white px-6 py-3 rounded-lg ${dmSans.className} disabled:opacity-50`}
+              className={`bg-[#8B5E3C] text-white px-6 py-3 rounded-lg text-sm md:text-base ${dmSans.className} disabled:opacity-50 w-full md:w-auto`}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Attendance'}
             </button>
           </form>
         )}
 
-        {/* Records Table */}
+        {/* Records Section */}
         <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-          <div className="flex justify-between items-center p-6 pb-4">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] ${dmSans.className}`}>
+          <div className="flex flex-col md:flex-row justify-between items-center p-4 md:p-6 pb-4 gap-4">
+            <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] ${dmSans.className}`}>
               Sales Visit Log
             </h2>
-            <div className="relative w-64">
+            <div className="relative w-full md:w-64">
               <input
                 type="text"
-                className={`border rounded px-4 py-2 w-full ${dmSans.className} pl-10`}
+                className={`border rounded px-4 py-2 w-full text-sm md:text-base ${dmSans.className} pl-10`}
                 placeholder="Search logs..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -557,86 +542,167 @@ export default function AttendancePage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Employee</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Work Location</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Check In</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Client Details</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Work Summary</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Follow-ups</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRecords.map(rec => (
-                    <tr key={rec._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{rec.employee.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {new Date(rec.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Location</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check In</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Summary</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-ups</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredRecords.map(rec => (
+                      <tr key={rec._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium">{rec.employee.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm">
+                            {new Date(rec.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {rec.workLocationType && (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${locationTypeColors[rec.workLocationType] || 'bg-gray-100 text-gray-800'}`}>
+                              {rec.workLocationType === 'office' ? 'Office' : 
+                              rec.workLocationType === 'remote' ? 'Remote' : 'Client Visit'}
+                            </span>
+                          )}
+                          {rec.location?.address && (
+                            <div className="mt-1 text-xs text-gray-500">
+                              <a
+                                href={`https://maps.google.com?q=${rec.location.coordinates?.lat},${rec.location.coordinates?.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {rec.location.address.slice(0, 20)}...
+                              </a>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm">
+                            {rec.checkIn ? new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {rec.workLocationType === 'client_visit' ? (
+                            <>
+                              <div className="text-sm font-medium">{rec.clientName || '—'}</div>
+                              <div className="text-xs text-gray-500">{rec.clientLocation || '—'}</div>
+                            </>
+                          ) : (
+                            <div className="text-sm">—</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {rec.summaryOfWork ? (
+                            <details className="text-sm">
+                              <summary className="cursor-pointer text-blue-600">View Summary</summary>
+                              <p className="mt-1 text-gray-700">{rec.summaryOfWork}</p>
+                            </details>
+                          ) : <div className="text-sm">—</div>}
+                        </td>
+                        <td className="px-6 py-4">
+                          {rec.followUps ? (
+                            <details className="text-sm">
+                              <summary className="cursor-pointer text-blue-600">View Follow-ups</summary>
+                              <p className="mt-1 text-gray-700">{rec.followUps}</p>
+                            </details>
+                          ) : <div className="text-sm">—</div>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3 p-4">
+                {filteredRecords.map(rec => (
+                  <div key={rec._id} className="bg-white border rounded-lg shadow-sm p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-[#8B5E3C]">{rec.employee.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(rec.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div>
                         {rec.workLocationType && (
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${locationTypeColors[rec.workLocationType] || 'bg-gray-100 text-gray-800'}`}>
                             {rec.workLocationType === 'office' ? 'Office' : 
                              rec.workLocationType === 'remote' ? 'Remote' : 'Client Visit'}
                           </span>
                         )}
-                        {rec.location?.address && (
-                          <div className="mt-1 text-xs text-gray-500">
-                            <a
-                              href={`https://maps.google.com?q=${rec.location.coordinates?.lat},${rec.location.coordinates?.lng}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {rec.location.address.slice(0, 20)}...
-                            </a>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-gray-500">Check In</p>
+                        <p>{rec.checkIn ? new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</p>
+                      </div>
+                      {rec.workLocationType === 'client_visit' && (
+                        <>
+                          <div>
+                            <p className="text-xs text-gray-500">Client</p>
+                            <p>{rec.clientName || '—'}</p>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {rec.checkIn ? new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
-                      </td>
-                      <td className="px-6 py-4">
-                        {rec.workLocationType === 'client_visit' ? (
-                          <>
-                            <div className="font-medium">{rec.clientName || '—'}</div>
-                            <div className="text-sm text-gray-500">{rec.clientLocation || '—'}</div>
-                          </>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {rec.summaryOfWork ? (
-                          <details>
-                            <summary className="cursor-pointer text-blue-600">View Summary</summary>
-                            <p className="mt-1 text-gray-700">{rec.summaryOfWork}</p>
-                          </details>
-                        ) : '—'}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {rec.followUps ? (
-                          <details>
-                            <summary className="cursor-pointer text-blue-600">View Follow-ups</summary>
-                            <p className="mt-1 text-gray-700">{rec.followUps}</p>
-                          </details>
-                        ) : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Location</p>
+                            <p>{rec.clientLocation || '—'}</p>
+                          </div>
+                        </>
+                      )}
+                      {rec.location?.address && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">Location</p>
+                          <a
+                            href={`https://maps.google.com?q=${rec.location.coordinates?.lat},${rec.location.coordinates?.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            {rec.location.address.slice(0, 40)}...
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {rec.summaryOfWork && (
+                      <div className="text-sm">
+                        <p className="text-xs text-gray-500">Work Summary</p>
+                        <p className="line-clamp-2">{rec.summaryOfWork}</p>
+                      </div>
+                    )}
+
+                    {rec.followUps && (
+                      <div className="text-sm">
+                        <p className="text-xs text-gray-500">Follow-ups</p>
+                        <p className="line-clamp-2">{rec.followUps}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>

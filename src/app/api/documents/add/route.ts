@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 import { writeClient } from '@/sanity/lib/sanity.client'
-import { createReadStream } from 'node:fs'
 import { createClient } from '@sanity/client'
-import { tmpdir } from 'os'
-import { writeFile } from 'fs/promises'
-import path from 'path'
 
 // Sanity client for asset uploads
 const sanityUploadClient = createClient({
@@ -14,6 +10,24 @@ const sanityUploadClient = createClient({
   useCdn: false,
   apiVersion: '2025-07-01',
 })
+
+interface DocumentData {
+  _type: string
+  title: string
+  documentType: string
+  uploadedDate: string
+  uploadedBy: string
+  relatedCustomer?: string
+  relatedProject?: string
+  notes?: string
+  uploadedFile: {
+    _type: string
+    asset: {
+      _type: string
+      _ref: string
+    }
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -39,13 +53,13 @@ export async function POST(req: Request) {
     // Upload to sanity
     const asset = await sanityUploadClient.assets.upload(
       "file",
-      buffer, // ✅ Directly upload buffer (no tmp file)
+      buffer,
       { filename: file.name }
     )
     console.log("✅ Sanity asset uploaded:", asset._id)
 
     // Create doc
-    const newDoc = {
+    const newDoc: DocumentData = {
       _type: "documentFile",
       title,
       documentType,
@@ -67,8 +81,9 @@ export async function POST(req: Request) {
     console.log("✅ Document created:", created._id)
 
     return NextResponse.json({ success: true, document: created })
-  } catch (error: any) {
-    console.error("❌ Upload API Error:", error.message, error)
-    return NextResponse.json({ error: error.message || "Upload failed" }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Upload failed"
+    console.error("❌ Upload API Error:", errorMessage, error)
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

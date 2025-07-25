@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
-import Link from 'next/link'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -30,7 +29,8 @@ export default function DocumentFilesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState('all')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [filterType, _setFilterType] = useState('all')
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -118,7 +118,7 @@ export default function DocumentFilesPage() {
   return (
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
-      <main className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+      <main className="max-w-6xl pt-16 pl-5 sm:pl-4 mx-auto px-4 py-10 space-y-6">
         {/* Header Section */}
         <div className="flex justify-between items-center border-b pb-6">
           <div>
@@ -129,7 +129,7 @@ export default function DocumentFilesPage() {
               Manage and access all uploaded document files
             </p>
           </div>
-          <Link 
+          {/* <Link 
             href="/studio/structure/documentFile"
             className="px-4 py-2 bg-[#8B5E3C] text-white rounded-md hover:bg-[#A78B6F] transition flex items-center gap-2"
           >
@@ -137,7 +137,7 @@ export default function DocumentFilesPage() {
               <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
             Upload New
-          </Link>
+          </Link> */}
         </div>
 
         {/* Stats Overview - Moved to top */}

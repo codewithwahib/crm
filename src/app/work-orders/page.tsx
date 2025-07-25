@@ -159,7 +159,7 @@ export default function WorkOrderList() {
         {/* Header Section - Improved for mobile */}
         <div className="flex flex-col gap-6 border-b pb-6">
           <div className="space-y-2">
-            <h1 className={`text-2xl sm:text-3xl font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+            <h1 className={`text-2xl sm:text-3xl pt-8 font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
               Work Orders
             </h1>
             <p className={`text-gray-600 tracking-wide ${dmSans.className}`}>

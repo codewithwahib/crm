@@ -92,10 +92,10 @@ export default function QuotationsListPage() {
     <div className={`min-h-screen bg-white text-black ${dmSans.className} tracking-wide`}>
       <Sidebar />
 
-      <main className="max-w-6xl mx-auto px-4 py-6 lg:ml-72 lg:pl-8">
+      <main className="max-w-6xl mx-auto px-4 py-6 lg:pl-8">
         {/* Header with search */}
         <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-4 sm:pt-0">
-          <h1 className={`text-2xl sm:text-3xl font-bold text-[#8B5E3C]`}>
+          <h1 className={`text-2xl sm:text-3xl pt-9 font-bold text-[#8B5E3C]`}>
             All Quotations
           </h1>
 

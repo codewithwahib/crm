@@ -1,32 +1,41 @@
-// // ✅ No external dependencies needed
-// export async function parseFormData(req: Request) {
-//   const formData = await req.formData();
+// src/utils/parseFormData.ts
+import { Readable } from 'stream';
 
-//   let jsonData: string | null = null;
-//   const files: {
-//     field: string;
-//     filename: string;
-//     buffer: Buffer;
-//     mimetype: string;
-//   }[] = [];
+export interface FileData {
+  filename: string;
+  mimetype: string;
+  encoding: string;
+  stream: Readable;
+  [key: string]: unknown;
+}
 
-//   for (const [field, value] of formData.entries()) {
-//     // ✅ JSON payload
-//     if (field === "jsonData" && typeof value === "string") {
-//       jsonData = value;
-//     }
+export interface ParsedFormData {
+  jsonData?: string;
+  files: FileData[];
+}
 
-//     // ✅ File uploads
-//     else if (value instanceof File) {
-//       const arrayBuffer = await value.arrayBuffer();
-//       files.push({
-//         field,
-//         filename: value.name,
-//         mimetype: value.type,
-//         buffer: Buffer.from(arrayBuffer),
-//       });
-//     }
-//   }
+export async function parseFormData(request: Request): Promise<ParsedFormData> {
+  const formData = await request.formData();
+  const result: ParsedFormData = { files: [] };
 
-//   return { jsonData, files };
-// }
+  // Using Array.from() to safely iterate over FormData entries
+  const entries = Array.from(formData.entries());
+  
+  for (const [key, value] of entries) {
+    if (typeof value === 'string') {
+      if (key === 'jsonData') {
+        result.jsonData = value;
+      }
+    } else {
+      const file: FileData = {
+        filename: value.name,
+        mimetype: value.type,
+        encoding: '7bit',
+        stream: Readable.from(Buffer.from(await value.arrayBuffer()))
+      };
+      result.files.push(file);
+    }
+  }
+
+  return result;
+}
