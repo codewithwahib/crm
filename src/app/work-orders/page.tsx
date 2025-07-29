@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
+// import ProtectedPage from '../Components/ProtectedPage'
 import Sidebar from '@/app/Components/sidebar'
 import Link from 'next/link'
 import { HiSearch, HiX } from 'react-icons/hi'

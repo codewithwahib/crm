@@ -192,6 +192,15 @@ export default defineType({
               initialValue: true 
             }),
             defineField({
+              name: 'gstPercentage',
+              title: 'GST Percentage',
+              type: 'number',
+              initialValue: 17,
+              validation: (Rule) => Rule.min(0).max(100).precision(2),
+              description: 'GST percentage to be applied (e.g., 17 for 17%)',
+              hidden: ({ parent }) => !parent?.pricesIncludeGST
+            }),
+            defineField({
               name: 'deliveryMethod',
               title: 'Delivery Method',
               type: 'string',
@@ -321,6 +330,30 @@ export default defineType({
                   validation: (Rule) => Rule.required().positive().error('Unit rate must be positive')
                 }),
                 defineField({ 
+                  name: 'gstApplicable', 
+                  title: 'GST Applicable', 
+                  type: 'boolean',
+                  initialValue: true,
+                  description: 'Whether GST applies to this item'
+                }),
+                defineField({ 
+                  name: 'gstPercentage', 
+                  title: 'GST Percentage', 
+                  type: 'number',
+                  initialValue: 17,
+                  validation: (Rule) => Rule.min(0).max(100).precision(2),
+                  description: 'GST percentage for this item (e.g., 17 for 17%)',
+                  hidden: ({ parent }) => !parent?.gstApplicable
+                }),
+                defineField({ 
+                  name: 'gstAmount', 
+                  title: 'GST Amount (PKR)', 
+                  type: 'number',
+                  readOnly: true,
+                  description: 'Automatically calculated GST amount',
+                  initialValue: 0
+                }),
+                defineField({ 
                   name: 'totalAmountPKR', 
                   title: 'Total Amount (PKR)', 
                   type: 'number',
@@ -330,6 +363,40 @@ export default defineType({
             }),
           ],
         }),
+        
+        // GST Summary
+        defineField({
+          name: 'gstSummary',
+          title: 'GST Summary',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'subtotal',
+              title: 'Subtotal (Before GST)',
+              type: 'number',
+              readOnly: true,
+              description: 'Sum of all items before GST',
+              initialValue: 0
+            }),
+            defineField({
+              name: 'totalGST',
+              title: 'Total GST Amount',
+              type: 'number',
+              readOnly: true,
+              description: 'Sum of all GST amounts',
+              initialValue: 0
+            }),
+            defineField({
+              name: 'grandTotal',
+              title: 'Grand Total (Including GST)',
+              type: 'number',
+              readOnly: true,
+              description: 'Subtotal + GST',
+              initialValue: 0
+            }),
+          ]
+        }),
+        
         defineField({
           name: 'shipTo',
           title: 'Ship To',
@@ -362,15 +429,27 @@ export default defineType({
       subtitle: 'salesOrderSection.customerInfo.customerName',
       poNumber: 'salesOrderSection.orderDetails.poNumber',
       poDate: 'salesOrderSection.orderDetails.poDate',
+      poValue: 'salesOrderSection.orderDetails.poValue',
+      includesGST: 'salesOrderSection.termsAndConditions.pricesIncludeGST',
     },
-    prepare({ title, subtitle, poNumber, poDate }) {
+    prepare({ title, subtitle, poNumber, poDate, poValue, includesGST }) {
       const formattedPoDate = poDate ? new Date(poDate).toLocaleDateString() : 'No PO date'
+      const formattedValue = poValue ? 
+        new Intl.NumberFormat('en-PK', { 
+          style: 'currency', 
+          currency: 'PKR',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(poValue).replace('PKR', 'Rs ') : 'No value'
+      
       return {
         title: title || 'Work/Sales/PO',
         subtitle: [
           subtitle ? `Customer: ${subtitle}` : 'No customer info',
           poNumber ? `PO: ${poNumber}` : 'No PO number',
-          `PO Date: ${formattedPoDate}`
+          `PO Date: ${formattedPoDate}`,
+          `Value: ${formattedValue}`,
+          includesGST ? '(incl. GST)' : '(excl. GST)'
         ].join(' | ')
       }
     },

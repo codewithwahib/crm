@@ -23,6 +23,9 @@ interface POItem {
   unit: string
   quantity: number
   unitRatePKR: number
+  gstApplicable: boolean
+  gstPercentage: number
+  gstAmount: number
   totalAmountPKR: number
 }
 
@@ -320,7 +323,10 @@ export default function AddWorkOrderSalesPage() {
             description: "", 
             unit: "", 
             quantity: 1, 
-            unitRatePKR: 0, 
+            unitRatePKR: 0,
+            gstApplicable: false,
+            gstPercentage: 0,
+            gstAmount: 0,
             totalAmountPKR: 0 
           }
         ] 
@@ -338,10 +344,28 @@ export default function AddWorkOrderSalesPage() {
     }))
   }
 
-  const updatePOItem = (index: number, field: keyof POItem, value: string | number) => {
+  const updatePOItem = (index: number, field: keyof POItem, value: string | number | boolean) => {
     setFormData((prev) => {
       const poTable = [...prev.purchaseOrderSection.poTable]
-      poTable[index] = { ...poTable[index], [field]: value }
+      const updatedItem = { ...poTable[index], [field]: value }
+      
+      // Calculate GST and total amount if relevant fields change
+      if (field === 'unitRatePKR' || field === 'quantity' || field === 'gstApplicable' || field === 'gstPercentage') {
+        const unitRate = Number(updatedItem.unitRatePKR)
+        const quantity = Number(updatedItem.quantity)
+        const subtotal = unitRate * quantity
+        
+        if (updatedItem.gstApplicable) {
+          const gstPercentage = Number(updatedItem.gstPercentage)
+          updatedItem.gstAmount = subtotal * (gstPercentage / 100)
+          updatedItem.totalAmountPKR = subtotal + updatedItem.gstAmount
+        } else {
+          updatedItem.gstAmount = 0
+          updatedItem.totalAmountPKR = subtotal
+        }
+      }
+      
+      poTable[index] = updatedItem
       return {
         ...prev,
         purchaseOrderSection: { ...prev.purchaseOrderSection, poTable },
@@ -638,6 +662,87 @@ export default function AddWorkOrderSalesPage() {
             </div>
           </div>
 
+<div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+              Purchase Order - Items List
+            </h2>
+            {formData.purchaseOrderSection.poTable.map((item, index: number) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-7 gap-3 border p-3 rounded mb-3">
+                <TextareaField 
+                  label="Description" 
+                  value={item.description} 
+                  onChange={(v) => updatePOItem(index, "description", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Unit" 
+                  value={item.unit} 
+                  onChange={(v) => updatePOItem(index, "unit", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Qty" 
+                  type="number" 
+                  value={item.quantity} 
+                  onChange={(v) => updatePOItem(index, "quantity", Number(v))} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Unit Rate (PKR)" 
+                  type="number" 
+                  value={item.unitRatePKR} 
+                  onChange={(v) => updatePOItem(index, "unitRatePKR", Number(v))} 
+                  fontClass={dmSans.className}
+                />
+                <div className={`flex items-center gap-2 ${dmSans.className} tracking-wide`}>
+                  <input
+                    type="checkbox"
+                    checked={item.gstApplicable}
+                    onChange={(e) => updatePOItem(index, "gstApplicable", e.target.checked)}
+                  />
+                  <label>GST?</label>
+                </div>
+                {item.gstApplicable && (
+                  <InputField 
+                    label="GST %" 
+                    type="number" 
+                    value={item.gstPercentage} 
+                    onChange={(v) => updatePOItem(index, "gstPercentage", Number(v))} 
+                    fontClass={dmSans.className}
+                  />
+                )}
+                <InputField 
+                  label="GST Amount" 
+                  type="number" 
+                  value={item.gstAmount} 
+                  readOnly 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Total Amount (PKR)" 
+                  type="number" 
+                  value={item.totalAmountPKR} 
+                  readOnly 
+                  fontClass={dmSans.className}
+                />
+                <button 
+                  type="button" 
+                  className={`text-red-500 text-sm mt-2 ${dmSans.className} tracking-wide`} 
+                  onClick={() => removePOItem(index)}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button 
+              type="button" 
+              className={`mt-2 px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
+              onClick={addPOItem}
+            >
+              + Add PO Item
+            </button>
+          </div>
+          
           {/* Required Documents */}
           <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
             <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
@@ -672,62 +777,7 @@ export default function AddWorkOrderSalesPage() {
           </div>
 
           {/* Purchase Order Items */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Purchase Order - Items List
-            </h2>
-            {formData.purchaseOrderSection.poTable.map((item, index: number) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 border p-3 rounded mb-3">
-                <TextareaField 
-                  label="Description" 
-                  value={item.description} 
-                  onChange={(v) => updatePOItem(index, "description", v)} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Unit" 
-                  value={item.unit} 
-                  onChange={(v) => updatePOItem(index, "unit", v)} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Qty" 
-                  type="number" 
-                  value={item.quantity} 
-                  onChange={(v) => updatePOItem(index, "quantity", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Unit Rate (PKR)" 
-                  type="number" 
-                  value={item.unitRatePKR} 
-                  onChange={(v) => updatePOItem(index, "unitRatePKR", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Total Amount (PKR)" 
-                  type="number" 
-                  value={item.totalAmountPKR} 
-                  onChange={(v) => updatePOItem(index, "totalAmountPKR", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <button 
-                  type="button" 
-                  className={`text-red-500 text-sm mt-2 ${dmSans.className} tracking-wide`} 
-                  onClick={() => removePOItem(index)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button 
-              type="button" 
-              className={`mt-2 px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
-              onClick={addPOItem}
-            >
-              + Add PO Item
-            </button>
-          </div>
+          
 
           {/* Purchase Order Details */}
           <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
@@ -783,13 +833,15 @@ function InputField({
   value, 
   onChange, 
   required = false,
+  readOnly = false,
   fontClass = ""
 }: { 
   label: string; 
   type?: string; 
   value: string | number; 
-  onChange: (value: string) => void; 
+  onChange?: (value: string) => void; 
   required?: boolean;
+  readOnly?: boolean;
   fontClass?: string;
 }) {
   return (
@@ -802,8 +854,9 @@ function InputField({
         type={type}
         value={value}
         required={required}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full border border-gray-300 rounded-md p-2 ${fontClass} tracking-wide`}
+        readOnly={readOnly}
+        onChange={(e) => onChange?.(e.target.value)}
+        className={`w-full border border-gray-300 rounded-md p-2 ${fontClass} tracking-wide ${readOnly ? 'bg-gray-100' : ''}`}
       />
     </div>
   )

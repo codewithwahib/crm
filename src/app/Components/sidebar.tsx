@@ -8,6 +8,7 @@ import { FaBorderAll, FaUserClock } from "react-icons/fa";
 import { IoIosContacts } from "react-icons/io";
 import { RiStore2Line } from "react-icons/ri";
 import { MdAdminPanelSettings } from "react-icons/md";
+import { signOut } from "next-auth/react"
 import { GrDocumentStore } from "react-icons/gr";
 import { SiStatuspal } from "react-icons/si";
 import {
@@ -41,6 +42,10 @@ const Sidebar = () => {
       isActive(href) ? 'bg-[#8B5E3C] text-white' : 'hover:bg-gray-200 text-gray-700'
     }`
 
+    const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" })  // Redirect to login after logout
+  }
+  
   return (
     <>
       {/* Menu Button - Visible on all screens */}
@@ -157,6 +162,20 @@ const Sidebar = () => {
             <RiStore2Line className="h-5 w-5 mr-3" />
             <span>Inventory</span>
           </Link>
+
+
+          <div className="p-4 border-t border-gray-200 text-center text-xs text-gray-900 mt-auto space-y-3">
+          <button
+            onClick={handleLogout}
+            className="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+          >
+            Logout
+          </button>
+
+          <p className="text-gray-500 text-[11px]">
+            System and Software by <br /> Muhammad Hassan Jaffer
+          </p>
+        </div>
 
           {/* Admin-only links - only visible when isAdminMode is true */}
           {isAdminMode && (

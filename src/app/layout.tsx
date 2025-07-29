@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Toaster } from "react-hot-toast"; // ✅ Import Toaster
+import Providers from "./Providers"; // ✅ Import the client wrapper
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Customer Resource Managemnet",
+  title: "Customer Resource Management",
   description: "A to Zee Switchgear Engineering",
 };
 
@@ -28,10 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-
-        {/* ✅ Toast notification provider */}
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        {/* ✅ Now all client-only context providers are inside this wrapper */}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

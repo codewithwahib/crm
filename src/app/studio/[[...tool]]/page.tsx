@@ -1,12 +1,8 @@
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+'use client'
 
-export const metadata = {
-  title: "Sanity Studio",
-}
-
-import StudioClient from "@/app/studio/StudioClient"
+import { NextStudio } from 'next-sanity/studio'
+import config from '../../../../sanity.config'
 
 export default function StudioPage() {
-  return <StudioClient />
+  return <NextStudio config={config} />
 }
