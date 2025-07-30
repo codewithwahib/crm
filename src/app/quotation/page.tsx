@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Components/sidebar'
 import { HiSearch, HiX, HiChevronDown, HiChevronUp } from "react-icons/hi"
 import { client } from '@/sanity/lib/client'
@@ -88,7 +89,19 @@ export default function QuotationsListPage() {
     setExpandedQuotation(expandedQuotation === quotationId ? null : quotationId)
   }
 
+
+  if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser="director">
     <div className={`min-h-screen bg-white text-black ${dmSans.className} tracking-wide`}>
       <Sidebar />
 
@@ -287,5 +300,6 @@ export default function QuotationsListPage() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

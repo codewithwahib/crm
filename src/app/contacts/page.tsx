@@ -1,6 +1,7 @@
 'use client'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '../Components/ProtectedRoute'
 import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 import { useState, useEffect } from 'react'
 // import ProtectedPage from '../Components/ProtectedPage'
@@ -86,7 +87,19 @@ export default function ContactsPage() {
     );
   });
 
+     if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+
+  return (
+    <ProtectedRoute allowedUser='director'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="lg:ml-20 md:mr-10 pt-9 pl-2 pr-2 sm:px-4 py-4 md:py-6 space-y-4">
@@ -273,5 +286,6 @@ export default function ContactsPage() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

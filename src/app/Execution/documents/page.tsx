@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
 
@@ -116,6 +117,7 @@ export default function DocumentFilesPage() {
   }
 
   return (
+    <ProtectedRoute allowedUser='gm-sales'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl pt-16 pl-5 sm:pl-4 mx-auto px-4 py-10 space-y-6">
@@ -331,6 +333,7 @@ export default function DocumentFilesPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

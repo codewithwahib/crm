@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
 
 const dmSans = DM_Sans({
@@ -128,6 +129,7 @@ export default function AddQuotation() {
   ])
 
   const [quotationDocs, setQuotationDocs] = useState<File[]>([])
+  const [isLoading] = useState(true)
   const [technicalDrawings, setTechnicalDrawings] = useState<File[]>([])
   const [sldFile, setSldFile] = useState<File | null>(null)
 
@@ -225,7 +227,18 @@ export default function AddQuotation() {
     }
   }
 
+   if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser='director'>
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />
@@ -343,6 +356,7 @@ export default function AddQuotation() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 
@@ -413,6 +427,7 @@ function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, t
         <p className="mt-1 font-bold tracking-wide">Total: {total.toFixed(2)}</p>
       </div>
     </div>
+    
   )
 }
 

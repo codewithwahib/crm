@@ -3,6 +3,7 @@
 import { client } from '@/sanity/lib/client'
 import Link from 'next/link'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Execution/Components/sidebar'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
@@ -132,6 +133,7 @@ export default function WorkOrderDashboard() {
   }
 
   return (
+    <ProtectedRoute allowedUser='gm-sales'>
     <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -350,5 +352,6 @@ export default function WorkOrderDashboard() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

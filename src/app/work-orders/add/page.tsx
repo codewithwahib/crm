@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/app/Components/sidebar"
+import ProtectedRoute from "@/app/Components/ProtectedRoute"
 import { DM_Sans } from "next/font/google"
 import toast, { Toaster } from "react-hot-toast"
 
@@ -99,13 +100,14 @@ interface FormData {
 export default function AddWorkOrderSalesPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+const [isLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
     workOrderSection: {
       workOrderNumber: "",
       clientName: "",
-      jobReference: "",
+      jobReference: "", 
       clientPONumber: "",
       date: "",
       deliveryDate: "",
@@ -373,7 +375,18 @@ export default function AddWorkOrderSalesPage() {
     })
   }
 
+  if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser="director">
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />
@@ -742,7 +755,7 @@ export default function AddWorkOrderSalesPage() {
               + Add PO Item
             </button>
           </div>
-          
+
           {/* Required Documents */}
           <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
             <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
@@ -823,6 +836,7 @@ export default function AddWorkOrderSalesPage() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Execution/Components/sidebar'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import toast, { Toaster } from 'react-hot-toast'
 
 const dmSans = DM_Sans({
@@ -226,6 +227,7 @@ export default function AddQuotation() {
   }
 
   return (
+    < ProtectedRoute allowedUser='gm-sales'>
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />
@@ -343,6 +345,7 @@ export default function AddQuotation() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

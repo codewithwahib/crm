@@ -1096,7 +1096,9 @@
 
 
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useEffect } from 'react';
+import ProtectedRoute from '@/app/Components/ProtectedRoute';
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
@@ -1159,6 +1161,11 @@ interface WorkOrder {
   }
 }
 
+// interface ProtectedRouteProps {
+//   children: React.ReactNode;
+//   allowedPath: string;
+// }
+
 interface PreparedByStats {
   name: string
   today: number
@@ -1201,6 +1208,8 @@ const PERIOD_COLORS = {
   total: '#6366F1'
 };
 
+
+
 export default function CombinedDashboard() {
   const [activeTab, setActiveTab] = useState<'quotations' | 'workorders'>('quotations')
   const [quotations, setQuotations] = useState<Quotation[]>([])
@@ -1211,6 +1220,20 @@ export default function CombinedDashboard() {
   const [preparedByStats, setPreparedByStats] = useState<PreparedByStats[]>([])
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([])
   const [workOrderStats, setWorkOrderStats] = useState<WorkOrderStats[]>([])
+
+
+  // const router = useRouter();
+  // const [loading, setLoading] = useState(true); // Track auth status
+
+  // useEffect(() => {
+  //   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  //   if (!user.username || user.redirect !== '/dashboard') {
+  //     router.push('/login'); // Not authorized, redirect to login
+  //   } else {
+  //     setLoading(false); // Valid user, allow render
+  //   }
+  // }, [router]);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -1491,23 +1514,20 @@ export default function CombinedDashboard() {
     return acc
   }, {} as Record<string, number>)
 
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+if (isLoading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
       </div>
-    )
-  }
+    </div>
+  );
+}
+
 
   if (error) {
     return (
       <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
           <div className="bg-red-100 text-red-700 p-4 rounded-md">
             <p className="font-medium">{error}</p>
@@ -1517,7 +1537,19 @@ export default function CombinedDashboard() {
     )
   }
 
+// const router = useRouter();
+
+// // ✅ Always call hooks before any conditional return
+// useEffect(() => {
+//   const user = JSON.parse(localStorage.getItem('user') || '{}');
+//   if (!user.username || user.redirect !== '/dashboard') {
+//     router.push('/login');
+//   }
+// }, []);
+
+
   return (
+   <ProtectedRoute allowedUser="director">
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -2198,6 +2230,7 @@ export default function CombinedDashboard() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

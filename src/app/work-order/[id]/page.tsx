@@ -510,6 +510,7 @@
 
 import { client } from '@/sanity/lib/client'
 import { notFound } from 'next/navigation'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
 
@@ -649,6 +650,7 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
     }, 0) || 0
 
   return (
+    <ProtectedRoute allowedUser='director'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -1031,6 +1033,7 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
           )}
         </main>
       </div>
+      </ProtectedRoute>
     )
   }
 

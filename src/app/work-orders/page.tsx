@@ -6,6 +6,7 @@ import { DM_Sans } from 'next/font/google'
 // import ProtectedPage from '../Components/ProtectedPage'
 import Sidebar from '@/app/Components/sidebar'
 import Link from 'next/link'
+import ProtectedRoute from '../Components/ProtectedRoute'
 import { HiSearch, HiX } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 
@@ -126,23 +127,19 @@ export default function WorkOrderList() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 py-10">
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+   if (isLoading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   if (error) {
     return (
       <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
         <main className="max-w-6xl mx-auto px-4 py-10">
           <div className="bg-red-100 text-red-700 p-4 rounded-md">
             <p className="font-medium">{error}</p>
@@ -153,6 +150,7 @@ export default function WorkOrderList() {
   }
 
   return (
+    <ProtectedRoute allowedUser='director'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -351,6 +349,7 @@ export default function WorkOrderList() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

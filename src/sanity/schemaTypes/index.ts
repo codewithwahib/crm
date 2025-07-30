@@ -6,6 +6,7 @@ import documents from './documents'
 import paymentDetails from './payment-details'
 import workOrderStatus from './work-order-status'
 import inventory from './inventory'
+// import user from './user'
 
 
 
@@ -20,6 +21,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
   paymentDetails,
   workOrderStatus,
   inventory,
+  // user,
   
   ],
 }

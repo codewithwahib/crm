@@ -1,16 +1,162 @@
-import Sidebar from '@/app/Components/sidebar'
+'use client';
 
-export default function Home() {
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Image from 'next/image';
+import { DM_Sans } from 'next/font/google';
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+});
+
+const users = {
+  director: {
+    password: 'director123',
+    route: '/dashboard',
+  },
+  'gm-sales': {
+    password: 'gm123',
+    route: '/Anas-Nayyar/Dashboard',
+  },
+  'sales-manager': {
+    password: 'sales123',
+    route: '/Anas-Nayyar/Dashboard',
+  },
+  execution: {
+    password: 'exec123',
+    route: '/Execution/Dashboard',
+  },
+  mechanical: {
+    password: 'mech123',
+    route: '/Mechanical/Dashboard',
+  },
+  store: {
+    password: 'store123',
+    route: '/Store/Dashboard',
+  },
+};
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isAdminMode] = useState(false); // Optional flag
+  const [showPassword, setShowPassword] = useState(false);
+
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    setTimeout(() => {
+      const user = users[username as keyof typeof users];
+
+      if (user && user.password === password) {
+        localStorage.setItem('user', username);
+        router.push(user.route);
+      } else {
+        setError('Invalid username or password');
+        setLoading(false);
+      }
+    }, 700);
+  };
+
   return (
-    <div className="flex min-h-screen bg-white">
-      <Sidebar />
-      <div className="ml-10 p-6 w-full">
-        {/* <h1 className="text-2xl font-bold text-black">Welcome to Dashboard</h1> */}
-        {/* Main content area - will have white background by default */}
-        <div className="mt-4">
-          {/* Your dashboard content goes here */}
+    <div
+      className={`min-h-screen flex items-center bg-cover justify-center bg-center relative ${dmSans.className}`}
+      style={{ backgroundImage: "url('/loginn.jpg')" }} // ✅ Replace with your image
+    >
+      {/* ✅ Dark Overlay */}
+      <div className="absolute inset-0 bg-black opacity-50 z-0" />
+
+      {/* ✅ Login Form */}
+      <form
+        onSubmit={handleLogin}
+        className="bg-gray-50 p-8 rounded-lg  shadow-md w-80 space-y-4 relative z-10"
+      >
+        {/* ✅ Logo */}
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/logo.png"
+            alt="Company Logo"
+            width={180}
+            height={180}
+            className="rounded-md object-contain"
+          />
         </div>
-      </div>
+
+        {/* ✅ Title */}
+        <h1 className="text-2xl font-bold tracking-wide text-center text-gray-800">
+          Sign In
+        </h1>
+
+        {/* ✅ Error message */}
+        {error && (
+          <p className="text-red-500 text-sm tracking-wide text-center">{error}</p>
+        )}
+
+        {/* ✅ Username */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 tracking-wide">
+            Username
+          </label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black tracking-wide"
+            required
+          />
+        </div>
+
+        {/* ✅ Password */}
+        <div className="space-y-2 relative">
+  <label className="block text-sm font-medium text-gray-700 tracking-wide">
+    Password
+  </label>
+  <input
+    type={showPassword ? 'text' : 'password'}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black tracking-wide pr-10"
+    required
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2  pt-3 -translate-y-1/2 text-gray-600 hover:text-black focus:outline-none"
+    tabIndex={-1}
+  >
+    {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+  </button>
+</div>
+
+
+
+        {/* ✅ Login Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black tracking-wide ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+
+        {/* ✅ Footer */}
+        <div className="pt-2 border-t text-center text-xs text-gray-800">
+          <p>System and Software generated by Muhammad Hassan Jaffer</p>
+          {isAdminMode && (
+            <p className="mt-1 text-[#8B5E3C] font-medium">Admin Mode Active</p>
+          )}
+        </div>
+      </form>
     </div>
-  )
+  );
 }

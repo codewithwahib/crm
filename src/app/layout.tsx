@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import Providers from "./Providers"; // ✅ Import the client wrapper
+import { AuthProvider } from "@/app/Components/AuthProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,8 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* ✅ Now all client-only context providers are inside this wrapper */}
-        <Providers>{children}</Providers>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

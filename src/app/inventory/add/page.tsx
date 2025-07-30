@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -55,6 +56,8 @@ export default function AddInventoryItem() {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isLoading] = useState(true)
+
   const [error, setError] = useState('')
 
   const handleChange = (
@@ -138,7 +141,18 @@ export default function AddInventoryItem() {
     }
   }
 
+    if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser='director'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       {/* Toast Notifications Container */}
       <Toaster />
@@ -363,5 +377,6 @@ export default function AddInventoryItem() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

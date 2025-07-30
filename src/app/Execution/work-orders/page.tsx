@@ -7,6 +7,7 @@ import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Execution/Components/sidebar'
 import Link from 'next/link'
 import { HiSearch, HiX } from 'react-icons/hi'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import toast from 'react-hot-toast'
 
 const dmSans = DM_Sans({
@@ -153,6 +154,7 @@ export default function WorkOrderList() {
   }
 
   return (
+    < ProtectedRoute allowedUser='gm-sales'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -351,6 +353,7 @@ export default function WorkOrderList() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

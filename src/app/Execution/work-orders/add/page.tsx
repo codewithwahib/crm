@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import ProtectedRoute from "@/app/Components/ProtectedRoute"
 import Sidebar from '@/app/Execution/Components/sidebar'
 import { DM_Sans } from "next/font/google"
 import toast, { Toaster } from "react-hot-toast"
@@ -350,6 +351,7 @@ export default function AddWorkOrderSalesPage() {
   }
 
   return (
+    <ProtectedRoute allowedUser="gm-sales">
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />
@@ -773,6 +775,7 @@ export default function AddWorkOrderSalesPage() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

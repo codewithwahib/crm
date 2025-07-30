@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -71,6 +72,7 @@ export default function AddDocumentPage() {
   }
 
   return (
+    <ProtectedRoute allowedUser='gm-sales'>
     <div className={`min-h-screen bg-white ${dmSans.className} font-sans`}>
       <Sidebar />
       <Toaster position="top-right" />
@@ -220,5 +222,6 @@ export default function AddDocumentPage() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1099,6 +1099,7 @@
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Components/sidebar'
 import { 
   PieChart, 
@@ -1507,7 +1508,6 @@ export default function CombinedDashboard() {
   if (error) {
     return (
       <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
           <div className="bg-red-100 text-red-700 p-4 rounded-md">
             <p className="font-medium">{error}</p>
@@ -1518,6 +1518,7 @@ export default function CombinedDashboard() {
   }
 
   return (
+    <ProtectedRoute allowedUser='gm-sales'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -2198,6 +2199,7 @@ export default function CombinedDashboard() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

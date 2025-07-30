@@ -1,6 +1,7 @@
 'use client'
 
 import { client } from '@/sanity/lib/client'
+import ProtectedRoute from '../Components/ProtectedRoute'
 import Link from 'next/link'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
@@ -161,6 +162,7 @@ export default function WorkOrderDashboard() {
   }
 
   return (
+    <ProtectedRoute allowedUser='director'>
     <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
       <Toaster position="top-right" />
@@ -412,5 +414,6 @@ export default function WorkOrderDashboard() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

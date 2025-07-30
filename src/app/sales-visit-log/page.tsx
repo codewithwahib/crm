@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '../Components/ProtectedRoute'
 import Sidebar from '@/app/Components/sidebar'
 
 const dmSans = DM_Sans({
@@ -290,7 +291,19 @@ export default function AttendancePage() {
     )
   })
 
+
+       if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser='director'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -707,5 +720,6 @@ export default function AttendancePage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

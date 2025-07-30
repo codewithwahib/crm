@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Sidebar from "@/app/Components/sidebar"
 import { DM_Sans } from "next/font/google"
+import ProtectedRoute from "@/app/Components/ProtectedRoute"
 import toast, { Toaster } from "react-hot-toast"
 
 const dmSans = DM_Sans({
@@ -375,6 +376,7 @@ export default function EditWorkOrderSalesPage() {
   }
 
   return (
+    <ProtectedRoute allowedUser="director">
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />
@@ -798,6 +800,7 @@ export default function EditWorkOrderSalesPage() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 
