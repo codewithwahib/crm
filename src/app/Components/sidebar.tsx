@@ -42,7 +42,7 @@ const Sidebar = () => {
 
   const confirmLogout = () => {
     localStorage.removeItem('user');
-    router.push('/login');
+    router.push('/');
   };
 
   return (

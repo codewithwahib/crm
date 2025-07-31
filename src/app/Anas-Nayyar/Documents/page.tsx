@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
+import ProtectedRoute from '@/app/Components/ProtectedRoute' 
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 
@@ -89,18 +90,15 @@ export default function DocumentFilesPage() {
     })
   }
 
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 py-10">
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+if (isLoading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   if (error) {
     return (
@@ -116,6 +114,7 @@ export default function DocumentFilesPage() {
   }
 
   return (
+    <ProtectedRoute allowedUser='gm-sales'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl pt-16 pl-5 sm:pl-4 mx-auto px-4 py-10 space-y-6">
@@ -331,6 +330,7 @@ export default function DocumentFilesPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

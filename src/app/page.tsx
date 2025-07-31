@@ -22,19 +22,19 @@ const users = {
   },
   'sales-manager': {
     password: 'sales123',
-    route: '/Anas-Nayyar/Dashboard',
+    route: '/Aziz-Ahmed/Dashboard',
   },
   execution: {
-    password: 'exec123',
+    password: 'exe123',
     route: '/Execution/Dashboard',
   },
   mechanical: {
     password: 'mech123',
-    route: '/Mechanical/Dashboard',
+    route: '/Mechanical/drawings',
   },
   store: {
     password: 'store123',
-    route: '/Store/Dashboard',
+    route: '/Store/inventory',
   },
 };
 

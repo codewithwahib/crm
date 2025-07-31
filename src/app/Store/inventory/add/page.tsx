@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/app/Components/sidebar'
 import { DM_Sans } from 'next/font/google'
@@ -139,6 +140,7 @@ export default function AddInventoryItem() {
   }
 
   return (
+    <ProtectedRoute allowedUser='store'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       {/* Toast Notifications Container */}
       <Toaster />
@@ -363,5 +365,6 @@ export default function AddInventoryItem() {
         </form>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { HiSearch, HiX, HiChevronDown, HiChevronUp } from "react-icons/hi"
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
@@ -89,7 +90,8 @@ export default function QuotationsListPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-white text-black ${dmSans.className} tracking-wide`}>
+    <ProtectedRoute allowedUser='gm-sales'>
+          <div className={`min-h-screen bg-white text-black ${dmSans.className} tracking-wide`}>
       <Sidebar />
 
       <main className="max-w-6xl mx-auto px-4 py-6 lg:pl-8">
@@ -282,5 +284,6 @@ export default function QuotationsListPage() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

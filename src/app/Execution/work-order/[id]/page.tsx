@@ -650,7 +650,7 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
     }, 0) || 0
 
   return (
-    <ProtectedRoute allowedUser='gm-sales'>
+    <ProtectedRoute allowedUser='execution'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">

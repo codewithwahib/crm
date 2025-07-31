@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Aziz-Ahmed/Components/sidebar'
@@ -80,6 +81,7 @@ export default function AnasAttendanceForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+    const [isLoading] = useState(true)
   const [success, setSuccess] = useState<string | null>(null)
 
   const fetchAttendanceList = useCallback(async () => {
@@ -106,6 +108,7 @@ export default function AnasAttendanceForm() {
       const data: AttendanceRecord[] = await client.fetch(query)
       setAttendanceList(data)
       filterData(data, timeFilter)
+      
       
       const stats = {
         totalVisits: data.length,
@@ -293,7 +296,19 @@ export default function AnasAttendanceForm() {
     }
   }
 
+
+  if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser='sales-manager'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -630,5 +645,6 @@ export default function AnasAttendanceForm() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1,39 +1,34 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { DM_Sans } from 'next/font/google';
-import { useState } from 'react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { FaBorderAll } from "react-icons/fa";
-// import { IoIosContacts } from "react-icons/io";
-// import { RiStore2Line } from "react-icons/ri";
-import { MdAdminPanelSettings } from "react-icons/md";
-import { GrDocumentStore } from "react-icons/gr";
-import { SiStatuspal } from "react-icons/si";
+import { usePathname, useRouter } from 'next/navigation'
+import { DM_Sans } from 'next/font/google'
+import { useState } from 'react'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { FaBorderAll } from "react-icons/fa"
+import { MdAdminPanelSettings } from "react-icons/md"
+import { GrDocumentStore } from "react-icons/gr"
+import { SiStatuspal } from "react-icons/si"
+import { HiOutlineLogout } from "react-icons/hi"
 import {
   HomeIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline'
-import Image from 'next/image';
+import Image from 'next/image'
 
 const dmsans = DM_Sans({ 
   subsets: ['latin'],
   weight: ['400', '500', '700'],
-});
+})
 
 const Sidebar = () => {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isAdminMode, setIsAdminMode] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen)
-  }
-
-  const toggleAdminMode = () => {
-    setIsAdminMode(!isAdminMode)
-  }
-
+  const toggleSidebar = () => setIsOpen(!isOpen)
+  const toggleAdminMode = () => setIsAdminMode(!isAdminMode)
   const isActive = (href: string) => pathname === href
 
   const navItemClasses = (href: string) =>
@@ -41,20 +36,21 @@ const Sidebar = () => {
       isActive(href) ? 'bg-[#8B5E3C] text-white' : 'hover:bg-gray-200 text-gray-700'
     }`
 
+  const confirmLogout = () => {
+    localStorage.removeItem('user')
+    router.push('/')
+  }
+
   return (
     <>
-      {/* Menu Button - Visible on all screens */}
+      {/* Menu Button */}
       <button
         onClick={toggleSidebar}
         className={`fixed z-50 top-4 left-4 p-2 rounded-md text-[#8B5E3C] transition-all duration-300 ${
           isOpen ? 'left-[17rem]' : 'left-4'
         } ${dmsans.className}`}
       >
-        {isOpen ? (
-          <XMarkIcon className="h-10 w-10" />
-        ) : (
-          <Bars3Icon className="h-10 w-10"/>
-        )}
+        {isOpen ? <XMarkIcon className="h-10 w-10" /> : <Bars3Icon className="h-10 w-10"/>}
       </button>
 
       {/* Sidebar */}
@@ -63,18 +59,18 @@ const Sidebar = () => {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } ${dmsans.className} hide-scrollbar flex flex-col`}
       >
-        {/* Company Logo/Header */}
-<div className="p-4 border-b border-gray-200 flex items-center justify-center">
-  <Image
-    src="/logo.png"
-    alt="VoltEdge Logo"
-    width={64}        // From your original code
-    height={64}       // From your original code
-    priority          // Added for better loading
-    unoptimized       // Added to prevent blur
-    className="h-16 w-auto"  // From your original code
-  />
-</div>
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-200 flex items-center justify-center">
+          <Image
+            src="/logo.png"
+            alt="VoltEdge Logo"
+            width={64}
+            height={64}
+            priority
+            unoptimized
+            className="h-16 w-auto"
+          />
+        </div>
 
         {/* Admin Mode Toggle */}
         <div className="p-4 border-b border-gray-200">
@@ -124,11 +120,6 @@ const Sidebar = () => {
             <span>Quotations</span>
           </Link>
 
-          {/* <Link href="/contacts" className={`${navItemClasses('/contacts')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-            <IoIosContacts className="h-5 w-5 mr-3" />
-            <span>Contacts</span>
-          </Link> */}
-
           <Link href="/Execution/work-orders" className={`${navItemClasses('/Execution/work-orders')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <FaBorderAll className="h-5 w-5 mr-3" />
             <span>Work Orders</span>
@@ -143,43 +134,25 @@ const Sidebar = () => {
             <span>Work Order Status</span>
           </Link>
 
-          {/* <Link href="/sales-visit-log" className={`${navItemClasses('/sales-visit-log')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-            <FaUserClock className="h-5 w-5 mr-3" />
-            <span>Sales Visit Log</span>
-          </Link> */}
-
           <Link href="/Execution/documents" className={`${navItemClasses('/Execution/documents')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <GrDocumentStore className="h-5 w-5 mr-3" />
             <span>Documents</span>
           </Link>
 
-          {/* <Link href="/inventory" className={`${navItemClasses('/inventory')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-            <RiStore2Line className="h-5 w-5 mr-3" />
-            <span>Inventory</span>
-          </Link> */}
-
-          {/* Admin-only links - only visible when isAdminMode is true */}
+          {/* Admin-only links */}
           {isAdminMode && (
             <div className="pt-4 mt-4 border-t border-gray-200">
               <p className="px-3 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Admin Panel
               </p>
-              
               <Link href="/Execution/quotation/add" className={`${navItemClasses('/Execution/quotation/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <DocumentTextIcon className="h-5 w-5 mr-3" />
                 <span>Manage Quotations</span>
               </Link>
-
               <Link href="/Execution/work-orders/add" className={`${navItemClasses('/Execution/work-orders/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <FaBorderAll className="h-5 w-5 mr-3" />
                 <span>Manage Work Orders</span>
               </Link>
-
-              {/* <Link href="/inventory/add" className={`${navItemClasses('/inventory/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-                <RiStore2Line className="h-5 w-5 mr-3" />
-                <span>Manage Inventory</span>
-              </Link> */}
-
               <Link href="/Execution/documents/add" className={`${navItemClasses('/Execution/documents/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
                 <FaBorderAll className="h-5 w-5 mr-3" />
                 <span>Manage Documents</span>
@@ -188,8 +161,19 @@ const Sidebar = () => {
           )}
         </nav>
 
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200">
+          <button 
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-100 transition-colors"
+          >
+            <HiOutlineLogout className="h-5 w-5 mr-3" />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+
         {/* Footer Section */}
-        <div className="p-4 border-t border-gray-200 text-center text-xs text-gray-900 mt-auto">
+        <div className="p-4 border-t border-gray-200 text-center text-xs text-gray-900">
           <p>System and Software generated by Muhammad Hassan Jaffer</p>
           {isAdminMode && (
             <p className="mt-1 text-[#8B5E3C] font-medium">Admin Mode Active</p>
@@ -197,12 +181,40 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Overlay - Only shown when sidebar is open */}
+      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30"
           onClick={toggleSidebar}
         />
+      )}
+
+      {/* Logout Confirmation Dialog */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-xl space-y-4 text-center">
+            <h2 className={`text-lg font-semibold text-gray-800 ${dmsans.className}`}>
+              Confirm Logout
+            </h2>
+            <p className={`text-sm text-gray-600 ${dmsans.className}`}>
+              Are you sure you want to log out?
+            </p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={confirmLogout}
+                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition ${dmsans.className}`}
+              >
+                Logout
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition ${dmsans.className}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style jsx global>{`

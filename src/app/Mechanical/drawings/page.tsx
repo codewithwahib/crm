@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Mechanical/Components/sidebar'
 import { HiSearch, HiX, HiChevronDown, HiChevronUp } from "react-icons/hi"
 import { client } from '@/sanity/lib/client'
@@ -78,6 +79,7 @@ async function getWorkOrders(): Promise<WorkOrder[]> {
 export default function WorkOrdersListPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileView, setIsMobileView] = useState(false)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
@@ -119,7 +121,18 @@ export default function WorkOrdersListPage() {
     setExpandedOrder(expandedOrder === orderId ? null : orderId)
   }
 
+  if (isLoading) {
   return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <ProtectedRoute allowedUser='mechanical'>
     <div className={`min-h-screen bg-white text-black ${dmSans.className} tracking-wide`}>
       <Sidebar />
 
@@ -327,5 +340,6 @@ export default function WorkOrdersListPage() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

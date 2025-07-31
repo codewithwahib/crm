@@ -1,12 +1,13 @@
+
 'use client'
 
 import { client } from '@/sanity/lib/client'
 import Link from 'next/link'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
-import Sidebar from '@/app/Mechanical/Components/sidebar'
+import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -40,13 +41,14 @@ interface WorkOrder {
 
 export default function WorkOrderDashboard() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | 'All'>('All')
 
   useEffect(() => {
     const fetchWorkOrders = async () => {
       try {
+        setIsLoading(true)
         const query = `
           *[_type == "workOrderStatus"]{
             _id,
@@ -70,7 +72,7 @@ export default function WorkOrderDashboard() {
         setError('Failed to fetch work orders')
         console.error(err)
       } finally {
-        setLoading(false)
+        setIsLoading(false)
       }
     }
     fetchWorkOrders()
@@ -86,48 +88,16 @@ export default function WorkOrderDashboard() {
     Wiring: 'bg-teal-100 text-teal-700',
   }
 
-  const filteredWorkOrders =
-    statusFilter === 'All'
-      ? workOrders
-      : workOrders.filter((wo) => wo.status === statusFilter)
+  const filteredWorkOrders = statusFilter === 'All' 
+    ? workOrders 
+    : workOrders.filter(order => order.status === statusFilter)
 
-  const handleStatusChange = async (id: string, newStatus: WorkOrderStatus) => {
-    try {
-      toast.loading('Updating status...')
-      setWorkOrders((prev) =>
-        prev.map((wo) => (wo._id === id ? { ...wo, status: newStatus } : wo))
-      )
-
-      const res = await fetch('/api/work-order-status/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus }),
-      })
-
-      const data = await res.json()
-      toast.dismiss()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to update status')
-      }
-
-      toast.success('Status updated successfully!')
-    } catch (err) {
-      console.error(err)
-      toast.dismiss()
-      toast.error('Failed to update status. Please try again.')
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-white text-gray-800">
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 py-10">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+      <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+        </div>
       </div>
     )
   }
@@ -160,10 +130,9 @@ export default function WorkOrderDashboard() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-white text-gray-800">
+   return (
+    <ProtectedRoute allowedUser='mechanical'>   <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
-      <Toaster position="top-right" />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4">
@@ -254,7 +223,6 @@ export default function WorkOrderDashboard() {
                         'Delivery Date',
                         'Status',
                         'Items',
-                        'Actions',
                       ].map((heading) => (
                         <th
                           key={heading}
@@ -270,7 +238,7 @@ export default function WorkOrderDashboard() {
                       <tr key={workOrder._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Link
-                            href={`/work-orders/${workOrder._id}`}
+                            href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                             className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:underline font-medium`}
                           >
                             {workOrder.workOrderNumber}
@@ -302,30 +270,14 @@ export default function WorkOrderDashboard() {
                         <td className={`${dmSans.className} tracking-wide px-6 py-4 whitespace-nowrap`}>
                           {workOrder.items.length}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end">
+                        {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link
-                            href={`/work-orders/${workOrder._id}`}
+                            href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                             className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:text-[#6F4A2F]`}
                           >
                             View
                           </Link>
-                          <select
-                            value={workOrder.status}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                workOrder._id,
-                                e.target.value as WorkOrderStatus
-                              )
-                            }
-                            className={`${dmSans.className} tracking-wide ml-2 border border-gray-300 rounded-md text-sm px-2 py-1`}
-                          >
-                            {Object.keys(statusColors).map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
@@ -340,7 +292,7 @@ export default function WorkOrderDashboard() {
                   <div className="flex justify-between items-start">
                     <div>
                       <Link
-                        href={`/work-orders/${workOrder._id}`}
+                        href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                         className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:underline font-medium`}
                       >
                         {workOrder.workOrderNumber}
@@ -381,29 +333,13 @@ export default function WorkOrderDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex justify-between items-center">
+                  <div className="mt-3">
                     <Link
-                      href={`/work-orders/${workOrder._id}`}
+                      href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                       className={`${dmSans.className} tracking-wide text-sm text-[#8B5E3C] hover:text-[#6F4A2F]`}
                     >
                       View Details
                     </Link>
-                    <select
-                      value={workOrder.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          workOrder._id,
-                          e.target.value as WorkOrderStatus
-                        )
-                      }
-                      className={`${dmSans.className} tracking-wide border border-gray-300 rounded-md text-xs px-2 py-1`}
-                    >
-                      {Object.keys(statusColors).map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               ))}
@@ -412,5 +348,6 @@ export default function WorkOrderDashboard() {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }

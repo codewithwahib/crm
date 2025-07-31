@@ -69,7 +69,7 @@ export default function ProtectedRoute({ children, allowedUser }: ProtectedRoute
     const user = localStorage.getItem('user');
 
     if (!user || user !== allowedUser) {
-      router.replace('/login');
+      router.replace('/');
     } else {
       setIsAuthenticated(true);
     }

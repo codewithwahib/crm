@@ -225,9 +225,10 @@ export default function AddQuotation() {
       setIsSubmitting(false)
     }
   }
+  
 
   return (
-    < ProtectedRoute allowedUser='gm-sales'>
+    < ProtectedRoute allowedUser='execution'>
     <div className="min-h-screen bg-white text-gray-800">
       <Toaster />
       <Sidebar />

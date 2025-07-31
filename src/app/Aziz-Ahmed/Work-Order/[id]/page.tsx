@@ -509,6 +509,7 @@
 
 
 import { client } from '@/sanity/lib/client'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { notFound } from 'next/navigation'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Aziz-Ahmed/Components/sidebar'
@@ -653,7 +654,19 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
       return sum + (isNaN(val) ? 0 : val)
     }, 0) || 0
 
+
+//     if (isLoading) {
+//   return (
+//     <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+//       <div className="flex flex-col items-center space-y-4">
+//         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+//       </div>
+//     </div>
+//   );
+// }
+
   return (
+    <ProtectedRoute allowedUser='sales-manager'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -1036,5 +1049,6 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
           )}
         </main>
       </div>
+      </ProtectedRoute>
     )
   }

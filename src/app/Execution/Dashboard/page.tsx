@@ -1492,18 +1492,15 @@ export default function CombinedDashboard() {
     return acc
   }, {} as Record<string, number>)
 
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+if (isLoading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   if (error) {
     return (
@@ -1518,7 +1515,7 @@ export default function CombinedDashboard() {
   }
 
   return (
-    <ProtectedRoute allowedUser='gm-sales'>
+    <ProtectedRoute allowedUser='execution'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"; // ✅ Ensures fresh Sanity data every r
 
 import { client } from "@/sanity/lib/client";
 import { notFound } from "next/navigation";
+import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import { DM_Sans } from "next/font/google";
 import Sidebar from '@/app/Execution/Components/sidebar'
 
@@ -187,6 +188,7 @@ export default async function QuotationDetailPage({ params }: PageProps) {
       : "—";
 
   return (
+    <ProtectedRoute allowedUser="execution">
     <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
@@ -427,6 +429,7 @@ export default async function QuotationDetailPage({ params }: PageProps) {
             </table>
           </div>
         </div>
+        
 
         {/* ✅ Attachments */}
         {/* ✅ Safe Attachments Section */}
@@ -449,6 +452,7 @@ export default async function QuotationDetailPage({ params }: PageProps) {
 )}
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

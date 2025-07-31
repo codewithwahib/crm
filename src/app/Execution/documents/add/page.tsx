@@ -72,7 +72,7 @@ export default function AddDocumentPage() {
   }
 
   return (
-    <ProtectedRoute allowedUser='gm-sales'>
+    <ProtectedRoute allowedUser='execution'>
     <div className={`min-h-screen bg-white ${dmSans.className} font-sans`}>
       <Sidebar />
       <Toaster position="top-right" />

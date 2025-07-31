@@ -1,6 +1,7 @@
 // src/app/inventory/page.tsx
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Store/Components/sidebar'
 import { InventoryTable } from './InventoryTable'
 
@@ -37,7 +38,11 @@ export default async function InventoryPage() {
     image: item.image?.asset?.url ? { asset: { url: item.image.asset.url } } : undefined
   }))
 
+
+  
+
   return (
+    <ProtectedRoute allowedUser='store'>
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.className}`}>
       <Sidebar />
       
@@ -60,6 +65,7 @@ export default async function InventoryPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   )
 }
 

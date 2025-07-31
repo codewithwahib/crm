@@ -1,10 +1,11 @@
+
 'use client'
 
 import { client } from '@/sanity/lib/client'
 import Link from 'next/link'
-import { DM_Sans } from 'next/font/google'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
-import Sidebar from '@/app/Execution/Components/sidebar'
+import { DM_Sans } from 'next/font/google'
+import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 
@@ -40,13 +41,14 @@ interface WorkOrder {
 
 export default function WorkOrderDashboard() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | 'All'>('All')
 
   useEffect(() => {
     const fetchWorkOrders = async () => {
       try {
+        setIsLoading(true)
         const query = `
           *[_type == "workOrderStatus"]{
             _id,
@@ -70,7 +72,7 @@ export default function WorkOrderDashboard() {
         setError('Failed to fetch work orders')
         console.error(err)
       } finally {
-        setLoading(false)
+        setIsLoading(false)
       }
     }
     fetchWorkOrders()
@@ -86,20 +88,16 @@ export default function WorkOrderDashboard() {
     Wiring: 'bg-teal-100 text-teal-700',
   }
 
-  const filteredWorkOrders =
-    statusFilter === 'All'
-      ? workOrders
-      : workOrders.filter((wo) => wo.status === statusFilter)
+  const filteredWorkOrders = statusFilter === 'All' 
+    ? workOrders 
+    : workOrders.filter(order => order.status === statusFilter)
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-white text-gray-800">
-        <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 py-10">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8B5E3C]"></div>
-          </div>
-        </main>
+      <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+        </div>
       </div>
     )
   }
@@ -132,9 +130,8 @@ export default function WorkOrderDashboard() {
     )
   }
 
-  return (
-    <ProtectedRoute allowedUser='gm-sales'>
-    <div className="min-h-screen bg-white text-gray-800">
+   return (
+    <ProtectedRoute allowedUser='execution'>   <div className="min-h-screen bg-white text-gray-800">
       <Sidebar />
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
         {/* Header */}
@@ -226,7 +223,6 @@ export default function WorkOrderDashboard() {
                         'Delivery Date',
                         'Status',
                         'Items',
-                        'Actions',
                       ].map((heading) => (
                         <th
                           key={heading}
@@ -242,7 +238,7 @@ export default function WorkOrderDashboard() {
                       <tr key={workOrder._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Link
-                            href={`/Execution/Work-Order/${workOrder._id}`}
+                            href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                             className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:underline font-medium`}
                           >
                             {workOrder.workOrderNumber}
@@ -274,14 +270,14 @@ export default function WorkOrderDashboard() {
                         <td className={`${dmSans.className} tracking-wide px-6 py-4 whitespace-nowrap`}>
                           {workOrder.items.length}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link
-                            href={`/Execution/Work-Order/${workOrder._id}`}
+                            href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                             className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:text-[#6F4A2F]`}
                           >
                             View
                           </Link>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
@@ -296,7 +292,7 @@ export default function WorkOrderDashboard() {
                   <div className="flex justify-between items-start">
                     <div>
                       <Link
-                        href={`/Execution/Work-Order/${workOrder._id}`}
+                        href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                         className={`${dmSans.className} tracking-wide text-[#8B5E3C] hover:underline font-medium`}
                       >
                         {workOrder.workOrderNumber}
@@ -339,7 +335,7 @@ export default function WorkOrderDashboard() {
 
                   <div className="mt-3">
                     <Link
-                      href={`/Execution/Work-Order/${workOrder._id}`}
+                      href={`/Anas-Nayyar/Work-Order/${workOrder._id}`}
                       className={`${dmSans.className} tracking-wide text-sm text-[#8B5E3C] hover:text-[#6F4A2F]`}
                     >
                       View Details

@@ -6,6 +6,7 @@ export const revalidate = 0;                // ✅ no ISR
 import { client } from "@/sanity/lib/client";
 import { notFound } from "next/navigation";
 import { DM_Sans } from "next/font/google";
+import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import Sidebar from "@/app/Aziz-Ahmed/Components/sidebar";
 
 /* ✅ Google Font */
@@ -195,7 +196,11 @@ export default async function QuotationDetailPage({ params }: PageProps) {
         })
       : "—";
 
+
+      
+
   return (
+    < ProtectedRoute allowedUser="sales-manager">
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable}`}>
       <Sidebar />
       <main className={`max-w-6xl mx-auto px-4 py-10 space-y-8 ${dmSans.className}`}>
@@ -524,6 +529,7 @@ export default async function QuotationDetailPage({ params }: PageProps) {
         )}
       </main>
     </div>
+    </ProtectedRoute>
   );
 }
 
