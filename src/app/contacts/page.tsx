@@ -2,7 +2,7 @@
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import ProtectedRoute from '../Components/ProtectedRoute'
-import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
+import Sidebar from '@/app/Components/sidebar'
 import { useState, useEffect } from 'react'
 // import ProtectedPage from '../Components/ProtectedPage'
 

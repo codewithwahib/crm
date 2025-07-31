@@ -129,7 +129,7 @@ export default function AddQuotation() {
   ])
 
   const [quotationDocs, setQuotationDocs] = useState<File[]>([])
-  const [isLoading] = useState(true)
+  // const [isLoading] = useState(true)
   const [technicalDrawings, setTechnicalDrawings] = useState<File[]>([])
   const [sldFile, setSldFile] = useState<File | null>(null)
 
@@ -227,15 +227,15 @@ export default function AddQuotation() {
     }
   }
 
-   if (isLoading) {
-  return (
-    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
-      </div>
-    </div>
-  );
-}
+//    if (isLoading) {
+//   return (
+//     <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+//       <div className="flex flex-col items-center space-y-4">
+//         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+//       </div>
+//     </div>
+//   );
+// }
 
   return (
     <ProtectedRoute allowedUser='director'>

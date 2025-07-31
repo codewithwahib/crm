@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 export default function AddDocumentPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-    const [isLoading] = useState(true)
+    // const [isLoading] = useState(true)
   
   const [formData, setFormData] = useState({
     title: '',
@@ -73,15 +73,15 @@ export default function AddDocumentPage() {
     }
   }
 
- if (isLoading) {
-  return (
-    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
-      </div>
-    </div>
-  );
-}
+//  if (isLoading) {
+//   return (
+//     <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+//       <div className="flex flex-col items-center space-y-4">
+//         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+//       </div>
+//     </div>
+//   );
+// }
 
 
   return (

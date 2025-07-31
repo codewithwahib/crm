@@ -100,7 +100,7 @@ interface FormData {
 export default function AddWorkOrderSalesPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-const [isLoading] = useState(true)
+// const [isLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
@@ -375,15 +375,15 @@ const [isLoading] = useState(true)
     })
   }
 
-  if (isLoading) {
-  return (
-    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
-      </div>
-    </div>
-  );
-}
+//   if (isLoading) {
+//   return (
+//     <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+//       <div className="flex flex-col items-center space-y-4">
+//         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+//       </div>
+//     </div>
+//   );
+// }
 
   return (
     <ProtectedRoute allowedUser="director">
