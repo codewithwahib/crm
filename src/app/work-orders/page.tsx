@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
-import Sidebar from '@/app/Execution/Components/sidebar'
+import Sidebar from '@/app/Components/sidebar'
 import Link from 'next/link'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { HiSearch, HiX } from 'react-icons/hi'
@@ -186,7 +186,7 @@ export default function WorkOrderList() {
   }
 
   return (
-    <ProtectedRoute allowedUser='execution'>
+    <ProtectedRoute allowedUser='director'>
       <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
         <Toaster position="top-center" />
         <Sidebar />

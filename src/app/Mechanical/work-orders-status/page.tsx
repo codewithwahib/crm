@@ -4,7 +4,7 @@ import { client } from '@/sanity/lib/client'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Link from 'next/link'
 import { DM_Sans } from 'next/font/google'
-import Sidebar from '@/app/Components/sidebar'
+import Sidebar from '@/app/Mechanical/Components/sidebar'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -142,7 +142,7 @@ export default function WorkOrderDashboard() {
 
   if (loading) {
     return (
-      <ProtectedRoute allowedUser='director'>
+      <ProtectedRoute allowedUser='mechanical'>
         <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
@@ -154,7 +154,7 @@ export default function WorkOrderDashboard() {
 
   if (error) {
     return (
-      <ProtectedRoute allowedUser='director'>
+      <ProtectedRoute allowedUser='mechanical'>
         <div className="min-h-screen bg-white text-gray-800">
           <main className="max-w-6xl mx-auto px-4 py-10">
             <div className="bg-red-50 border-l-4 border-red-400 p-4">
@@ -182,7 +182,7 @@ export default function WorkOrderDashboard() {
   }
 
   return (
-    <ProtectedRoute allowedUser='director'>
+    <ProtectedRoute allowedUser='mechanical'>
       <div className="min-h-screen bg-white text-gray-800">
         <Sidebar />
         <Toaster position="top-right" />

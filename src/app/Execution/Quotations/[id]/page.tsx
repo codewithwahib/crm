@@ -189,292 +189,294 @@ export default async function QuotationDetailPage({ params }: PageProps) {
 
   return (
     <ProtectedRoute allowedUser="execution">
-    <div className="min-h-screen bg-white text-gray-800">
-      <Sidebar />
-      <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-        {/* ✅ HEADER */}
-        <div className="flex justify-between items-start border-b pb-6">
-          <div className="space-y-2">
-            <h1
-              className={`text-4xl font-bold pt-10 tracking-wide text-[#8B5E3C] ${dmSans.className}`}
-            >
-              {quotationId}
-            </h1>
-
-            {subject && (
-              <h2 className={`text-xl text-gray-600 ${dmSans.className}`}>
-                <span className="font-semibold text-[#8B5E3C]">
-                  Subject:
-                </span>{" "}
-                {subject}
-              </h2>
-            )}
-
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#8B5E3C]">Status:</span>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+      <div className="min-h-screen bg-white text-gray-800">
+        <Sidebar />
+        <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+          {/* ✅ HEADER */}
+          <div className="flex flex-col md:flex-row justify-between items-start border-b pb-6">
+            <div className="space-y-2 tracking-wide w-full md:w-auto">
+              <h1
+                className={`text-3xl md:text-4xl font-bold pt-10 tracking-wide text-[#8B5E3C] ${dmSans.className}`}
               >
-                {safeStatus}
-              </span>
-            </div>
-          </div>
-        </div>
+                {quotationId}
+              </h1>
 
-        {/* ✅ CLIENT + QUOTATION INFO */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Client Information */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-              Client Information
-            </h2>
-            <div className="space-y-3">
-              {clientName && (
-                <div>
-                  <p className="text-xl font-bold text-gray-600">Client Name:</p>
-                  <p className="text-lg">{clientName}</p>
-                </div>
-              )}
-              {company && (
-                <div>
-                  <p className="text-xl font-bold text-gray-600">Company:</p>
-                  <p className="text-lg">{company}</p>
-                </div>
+              {subject && (
+                <h2 className={`text-lg md:text-xl text-gray-600 tracking-wide ${dmSans.className}`}>
+                  <span className={`font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+                    Subject:
+                  </span>{" "}
+                  {subject}
+                </h2>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                {customerEmail && (
-                  <div>
-                    <p className="text-xl font-bold text-gray-600">Email:</p>
-                    <p className="text-lg">{customerEmail}</p>
-                  </div>
-                )}
-                {customerPhone && (
-                  <div>
-                    <p className="text-xl font-bold text-gray-600">Phone:</p>
-                    <p className="text-lg">{customerPhone}</p>
-                  </div>
-                )}
-              </div>
-
-              {address && (
-                <div>
-                  <p className="text-xl font-bold text-gray-600">Address:</p>
-                  <p className="text-lg">{address}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Quotation Details */}
-          <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-            <h2 className="text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2">Quotation Details</h2>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xl font-bold text-gray-600">Reference No:</p>
-                  <p className="text-lg">{referenceNo}</p>
-                </div>
-                {ferencNumber && (
-                  <div>
-                    <p className="text-xl font-bold text-gray-600">FERENC No:</p>
-                    <p className="text-lg">{ferencNumber}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xl font-bold text-gray-600">Date:</p>
-                  <p className="text-lg">{formatDate(date)}</p>
-                </div>
-                {sentDate && (
-                  <div>
-                    <p className="text-xl font-bold text-gray-600">Sent Date:</p>
-                    <p className="text-lg">{formatDate(sentDate)}</p>
-                  </div>
-                )}
-              </div>
-
-              {receivingDate && (
-                <div>
-                  <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Received Date:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{formatDate(receivingDate)}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {preparedBy && (
-                  <div>
-                    <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Prepared By:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{preparedBy}</p>
-                  </div>
-                )}
-                {salesPerson && (
-                  <div>
-                    <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Sales Person:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{salesPerson}</p>
-                  </div>
-                )}
+              <div className={`flex items-center gap-2 tracking-wide ${dmSans.className}`}>
+                <span className={`font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>Status:</span>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium tracking-wide ${statusColor} ${dmSans.className}`}
+                >
+                  {safeStatus}
+                </span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ✅ Project & Revision */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {projectName && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-                Project Information
-              </h2>
-              <p className={`text-lg tracking-wider ${dmSans.className}`}>{projectName}</p>
-            </div>
-          )}
-
-          {revision && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-                Revision Details
+          {/* ✅ CLIENT + QUOTATION INFO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+            {/* Client Information */}
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 tracking-wide ${dmSans.className}`}>
+                Client Information
               </h2>
               <div className="space-y-3">
-                <div>
-                  <p className={`text-xl font-bold tracking-wide text-gray-600 ${dmSans.className}`}>Revision:</p>
-                  <p className={`text-lg tracking-wide ${dmSans.className}`}>{revision}</p>
-                </div>
-                {revisionDate && (
+                {clientName && (
                   <div>
-                    <p className={`text-xl tracking-wide font-bold text-gray-600 ${dmSans.className}`}>Revision Date:</p>
-                    <p className={`text-lg tracking-wide ${dmSans.className}`}>{formatDate(revisionDate)}</p>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Client Name:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{clientName}</p>
+                  </div>
+                )}
+                {company && (
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Company:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{company}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {customerEmail && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Email:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{customerEmail}</p>
+                    </div>
+                  )}
+                  {customerPhone && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Phone:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{customerPhone}</p>
+                    </div>
+                  )}
+                </div>
+
+                {address && (
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Address:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{address}</p>
                   </div>
                 )}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* ✅ Products Table */}
-        <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-          <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>Quoted Items</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className={`px-6 py-3 tracking-wide text-left text-sm font-medium text-gray-700 uppercase ${dmSans.className}`}>S No.</th>
-                  <th className={`px-6 py-3 tracking-wide text-left text-sm font-medium text-gray-700 uppercase ${dmSans.className}`}>Description</th>
-                  <th className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-700 uppercase ${dmSans.className}`}>Qty</th>
-                  <th className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-700 uppercase ${dmSans.className}`}>Unit Price</th>
-                  <th className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-700 uppercase ${dmSans.className}`}>Total</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-  {Array.isArray(products) && products.length > 0 ? (
-    products.map((item, i) => {
-      const quantity = Number(item.quantity ?? 0);
-      const unitPrice = Number(item.unitPrice ?? 0);
-      const totalPrice = item.totalPrice ?? unitPrice * quantity;
+            {/* Quotation Details */}
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 tracking-wide ${dmSans.className}`}>
+                Quotation Details
+              </h2>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Reference No:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{referenceNo}</p>
+                  </div>
+                  {ferencNumber && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>FERENC No:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{ferencNumber}</p>
+                    </div>
+                  )}
+                </div>
 
-      return (
-        <tr key={i} className="hover:bg-gray-50">
-          <td className={`px-6 py-4 ${dmSans.className}`}>{i + 1}.</td>
-          <td className={`px-6 py-4 text-gray-500 ${dmSans.className}`}>
-            {item.description || item.itemName || "N/A"}
-          </td>
-          <td className={`px-6 py-4 text-right ${dmSans.className}`}>{quantity}</td>
-          <td className={`px-6 py-4 text-right ${dmSans.className}`}>{unitPrice.toFixed(2)}</td>
-          <td className={`px-6 py-4 text-right font-medium ${dmSans.className}`}>
-            {totalPrice.toFixed(2)}
-          </td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td
-        colSpan={5}
-        className="px-6 py-4 text-center text-gray-400 italic"
-      >
-        No products available
-      </td>
-    </tr>
-  )}
-</tbody>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Date:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{formatDate(date)}</p>
+                  </div>
+                  {sentDate && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Sent Date:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{formatDate(sentDate)}</p>
+                    </div>
+                  )}
+                </div>
 
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan={4} className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-500 ${dmSans.className}`}>
-                    Subtotal:
-                  </td>
-                  <td className={`px-6 py-3 text-right tracking-wide text-sm font-medium ${dmSans.className}`}>
-                    Rs. {subtotal.toFixed(2)}
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className={`px-6 py-3 tracking-wide text-right text-sm font-medium text-gray-500 ${dmSans.className}`}>
-                    GST (18%):
-                  </td>
-                  <td className={`px-6 py-3 text-right tracking-wide text-sm font-medium ${dmSans.className}`}>
-                    Rs. {gst.toFixed(2)}
-                  </td>
-                </tr>
-                <tr className="border-t border-gray-200">
-                  <td colSpan={4} className={`px-6 py-3 tracking-wide text-right text-sm font-bold text-gray-900 ${dmSans.className}`}>
-                    Total Amount:
-                  </td>
-                  <td className={`px-6 py-3 text-right tracking-wide text-sm font-bold text-[#8B5E3C] ${dmSans.className}`}>
-                    Rs. {totalPrice.toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                {receivingDate && (
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Received Date:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{formatDate(receivingDate)}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {preparedBy && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Prepared By:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{preparedBy}</p>
+                    </div>
+                  )}
+                  {salesPerson && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Sales Person:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{salesPerson}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        
 
-        {/* ✅ Attachments */}
-        {/* ✅ Safe Attachments Section */}
-{(quotationAttachments?.length > 0 || drawingAttachments?.length > 0 || sldDocument) && (
-  <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-    <h2 className={`text-2xl font-semibold tracking-wide text-[#8B5E3C] mb-4 border-b pb-2 ${dmSans.className}`}>
-      Attachments
-    </h2>
+          {/* ✅ Project & Revision */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+            {projectName && (
+              <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+                <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 tracking-wide ${dmSans.className}`}>
+                  Project Information
+                </h2>
+                <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{projectName}</p>
+              </div>
+            )}
 
-    <div className="grid tracking-wide grid-cols-1 md:grid-cols-2 gap-6">
-      {quotationAttachments?.length > 0 && (
-        <AttachmentList title="Quotation Documents" files={quotationAttachments} />
-      )}
-      {drawingAttachments?.length > 0 && (
-        <AttachmentList title="Technical Drawings" files={drawingAttachments} />
-      )}
-      {sldDocument && <AttachmentList title="Single Line Diagram (SLD)" files={[sldDocument]} />}
-    </div>
-  </div>
-)}
-      </main>
-    </div>
+            {revision && (
+              <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+                <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 tracking-wide ${dmSans.className}`}>
+                  Revision Details
+                </h2>
+                <div className="space-y-3">
+                  <div>
+                    <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Revision:</p>
+                    <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{revision}</p>
+                  </div>
+                  {revisionDate && (
+                    <div>
+                      <p className={`text-base md:text-xl font-bold text-gray-600 tracking-wide ${dmSans.className}`}>Revision Date:</p>
+                      <p className={`text-sm md:text-lg tracking-wide ${dmSans.className}`}>{formatDate(revisionDate)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ✅ Products Table */}
+          <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] p-4 md:p-6 pb-4 tracking-wide ${dmSans.className}`}>
+              Quoted Items
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className={`px-4 md:px-6 py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase tracking-wide ${dmSans.className}`}>S No.</th>
+                    <th className={`px-4 md:px-6 py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase tracking-wide ${dmSans.className}`}>Description</th>
+                    <th className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase tracking-wide ${dmSans.className}`}>Qty</th>
+                    <th className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase tracking-wide ${dmSans.className}`}>Unit Price</th>
+                    <th className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase tracking-wide ${dmSans.className}`}>Total</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Array.isArray(products) && products.length > 0 ? (
+                    products.map((item, i) => {
+                      const quantity = Number(item.quantity ?? 0);
+                      const unitPrice = Number(item.unitPrice ?? 0);
+                      const totalPrice = item.totalPrice ?? unitPrice * quantity;
+
+                      return (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className={`px-4 md:px-6 py-4 text-xs md:text-sm tracking-wide ${dmSans.className}`}>{i + 1}.</td>
+                          <td className={`px-4 md:px-6 py-4 text-gray-500 text-xs md:text-sm tracking-wide ${dmSans.className}`}>
+                            {item.description || item.itemName || "N/A"}
+                          </td>
+                          <td className={`px-4 md:px-6 py-4 text-right text-xs md:text-sm tracking-wide ${dmSans.className}`}>{quantity}</td>
+                          <td className={`px-4 md:px-6 py-4 text-right text-xs md:text-sm tracking-wide ${dmSans.className}`}>{unitPrice.toFixed(2)}</td>
+                          <td className={`px-4 md:px-6 py-4 text-right font-medium text-xs md:text-sm tracking-wide ${dmSans.className}`}>
+                            {totalPrice.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className={`px-6 py-4 text-center text-gray-400 italic text-sm tracking-wide ${dmSans.className}`}
+                      >
+                        No products available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan={4} className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-500 tracking-wide ${dmSans.className}`}>
+                      Subtotal:
+                    </td>
+                    <td className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium tracking-wide ${dmSans.className}`}>
+                      Rs. {subtotal.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={4} className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium text-gray-500 tracking-wide ${dmSans.className}`}>
+                      GST (18%):
+                    </td>
+                    <td className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-medium tracking-wide ${dmSans.className}`}>
+                      Rs. {gst.toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={4} className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-bold text-gray-900 tracking-wide ${dmSans.className}`}>
+                      Total Amount:
+                    </td>
+                    <td className={`px-4 md:px-6 py-3 text-right text-xs md:text-sm font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+                      Rs. {totalPrice.toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* ✅ Attachments */}
+          {(quotationAttachments?.length > 0 || drawingAttachments?.length > 0 || sldDocument) && (
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-4 border-b pb-2 tracking-wide ${dmSans.className}`}>
+                Attachments
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {quotationAttachments?.length > 0 && (
+                  <AttachmentList title="Quotation Documents" files={quotationAttachments} />
+                )}
+                {drawingAttachments?.length > 0 && (
+                  <AttachmentList title="Technical Drawings" files={drawingAttachments} />
+                )}
+                {sldDocument && <AttachmentList title="Single Line Diagram (SLD)" files={[sldDocument]} />}
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </ProtectedRoute>
-  )
+  );
 }
 
 // ✅ Attachments list with font applied
 function AttachmentList({ title, files }: { title: string; files: FileAttachment[] }) {
   return (
     <div>
-      <h3 className={`text-lg font-medium text-[#8B5E3C] mb-3 ${dmSans.className}`}>{title}</h3>
+      <h3 className={`text-base md:text-lg font-medium text-[#8B5E3C] mb-3 tracking-wide ${dmSans.className}`}>{title}</h3>
       <ul className="space-y-2">
         {files.map((file, i) => (
-          <li key={i} className={`flex items-center ${dmSans.className}`}>
+          <li key={i} className={`flex items-center text-sm md:text-base tracking-wide ${dmSans.className}`}>
             📄{' '}
             <a
               href={file.asset?.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`text-blue-600 hover:underline flex-1 ${dmSans.className}`}
+              className={`text-blue-600 hover:underline flex-1 ml-2 tracking-wide ${dmSans.className}`}
             >
               {file.asset?.originalFilename || 'Document'}
             </a>
             {file.asset?.size && (
-              <span className={`text-xs text-gray-500 ml-2 ${dmSans.className}`}>
+              <span className={`text-xs text-gray-500 ml-2 tracking-wide ${dmSans.className}`}>
                 {(file.asset.size / 1024).toFixed(1)} KB
               </span>
             )}
@@ -482,5 +484,5 @@ function AttachmentList({ title, files }: { title: string; files: FileAttachment
         ))}
       </ul>
     </div>
-  )
+  );
 }

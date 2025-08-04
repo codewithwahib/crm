@@ -61,7 +61,7 @@ type TimeFilter = 'today' | 'week' | 'month' | 'year' | 'all'
 
 export default function AnasAttendanceForm() {
   const [attendanceList, setAttendanceList] = useState<AttendanceRecord[]>([])
- const [isLoading] = useState(true)
+  const [isLoading] = useState(true)
   const [filteredList, setFilteredList] = useState<AttendanceRecord[]>([])
   const [loadingAttendance, setLoadingAttendance] = useState(true)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('today')
@@ -295,354 +295,344 @@ export default function AnasAttendanceForm() {
     }
   }
 
-  if (isLoading) {
-  return (
-    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
-      </div>
-    </div>
-  );
-}
-
   return (
     <ProtectedRoute allowedUser='gm-sales'>
-    <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-      <Sidebar />
-      <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-        {/* Header Section */}
-        <div className="flex justify-between items-start border-b pb-6">
-          <div className="space-y-2">
-            <h1 className={`text-3xl font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
-              Anas Nayyar - Sales Visit Log
-            </h1>
-            <p className={`text-gray-600 tracking-wide ${dmSans.className}`}>Daily sales visit log form</p>
-          </div>
-          <button
-            onClick={updateCurrentTime}
-            className={`bg-[#8B5E3C] text-white px-4 py-2 rounded tracking-wide ${dmSans.className}`}
-          >
-            Refresh Time
-          </button>
-        </div>
-
-        {/* Summary Statistics Section */}
-        <div className="bg-[#F5F5F5] p-6 rounded-lg shadow-sm">
-          <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 tracking-wide ${dmSans.className}`}>
-            Summary Statistics
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className={`text-gray-500 tracking-wide ${dmSans.className}`}>Total Logs</h3>
-              <p className={`text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.totalVisits}</p>
+      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+        <Sidebar />
+        <main className="px-4 py-4 md:py-10 md:px-6 max-w-6xl mx-auto space-y-6 md:space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row pt-14 justify-between items-start border-b pb-4 md:pb-6 gap-4">
+            <div className="space-y-1 md:space-y-2">
+              <h1 className={`text-2xl md:text-3xl font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+                Anas Nayyar - Sales Visit Log
+              </h1>
+              <p className={`text-sm md:text-base text-gray-600 tracking-wide ${dmSans.className}`}>Daily sales visit log form</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className={`text-gray-500 tracking-wide ${dmSans.className}`}>Client Visits</h3>
-              <p className={`text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.clientVisits}</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className={`text-gray-500 tracking-wide ${dmSans.className}`}>Office Days</h3>
-              <p className={`text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.officeDays}</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className={`text-gray-500 tracking-wide ${dmSans.className}`}>Last Visit</h3>
-              <p className={`text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.lastVisitDate}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Sales Visit Form */}
-        <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
-          <h2 className={`text-2xl font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
-            Today&apos;s Sales Visit Log
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
-                Employee Name
-              </label>
-              <input
-                className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide ${dmSans.className}`}
-                value={newRecord.employee.name}
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
-                Date
-              </label>
-              <input
-                type="date"
-                className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide ${dmSans.className}`}
-                value={newRecord.date}
-                readOnly
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
-                Work Location Type *
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleWorkLocationChange('office')}
-                  className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                    newRecord.workLocationType === 'office'
-                      ? 'bg-[#8B5E3C] text-white'
-                      : 'bg-gray-200'
-                  }`}
-                >
-                  Office
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleWorkLocationChange('remote')}
-                  className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                    newRecord.workLocationType === 'remote'
-                      ? 'bg-[#8B5E3C] text-white'
-                      : 'bg-gray-200'
-                  }`}
-                >
-                  Remote
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleWorkLocationChange('client_visit')}
-                  className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                    newRecord.workLocationType === 'client_visit'
-                      ? 'bg-[#8B5E3C] text-white'
-                      : 'bg-gray-200'
-                  }`}
-                >
-                  Client Visit
-                </button>
-              </div>
-            </div>
-
-            {newRecord.workLocationType === 'client_visit' && (
-              <>
-                <div>
-                  <label
-                    className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}
-                  >
-                    Client Name *
-                  </label>
-                  <input
-                    className={`border w-full px-3 py-2 rounded tracking-wide ${dmSans.className}`}
-                    value={newRecord.clientName || ''}
-                    onChange={(e) =>
-                      setNewRecord((prev) => ({ ...prev, clientName: e.target.value }))
-                    }
-                    required
-                    placeholder="Enter client name"
-                  />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}
-                  >
-                    Client Location *
-                  </label>
-                  <input
-                    className={`border w-full px-3 py-2 rounded tracking-wide ${dmSans.className}`}
-                    value={newRecord.clientLocation || ''}
-                    onChange={(e) =>
-                      setNewRecord((prev) => ({ ...prev, clientLocation: e.target.value }))
-                    }
-                    required
-                    placeholder="Enter client location"
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
-                Check In Time
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="time"
-                  className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide ${dmSans.className}`}
-                  value={newRecord.checkIn || ''}
-                  readOnly
-                />
-                <button
-                  type="button"
-                  onClick={updateCurrentTime}
-                  className={`bg-gray-200 hover:bg-gray-300 px-3 rounded tracking-wide ${dmSans.className}`}
-                >
-                  Now
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Enhanced Summary of Work Section */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className={`block text-sm font-medium text-gray-700 tracking-wide ${dmSans.className}`}>
-                Summary of Work Done / Visits *
-              </label>
-              <div className="flex items-center">
-                <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
-                  {newRecord.summaryOfWork?.length || 0}/500
-                </span>
-              </div>
-            </div>
-            
-            <textarea
-              className={`border w-full rounded p-2 tracking-wide ${dmSans.className}`}
-              value={newRecord.summaryOfWork || ''}
-              onChange={(e) =>
-                setNewRecord((prev) => ({ ...prev, summaryOfWork: e.target.value }))
-              }
-              rows={5}
-              required
-              minLength={50}
-            />
-          </div>
-
-          {/* Enhanced Follow-ups Section */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className={`block text-sm font-medium text-gray-700 tracking-wide ${dmSans.className}`}>
-                Follow-ups Planned for Next Day *
-              </label>
-              <div className="flex items-center">
-                <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
-                  {newRecord.followUps?.length || 0}/300
-                </span>
-              </div>
-            </div>
-            
-            <textarea
-              className={`border w-full rounded p-2 tracking-wide ${dmSans.className}`}
-              value={newRecord.followUps || ''}
-              onChange={(e) => setNewRecord((prev) => ({ ...prev, followUps: e.target.value }))}
-              rows={4}
-              required
-              minLength={30}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`bg-[#8B5E3C] text-white px-6 py-3 rounded-lg tracking-wide ${dmSans.className} disabled:opacity-50`}
+              onClick={updateCurrentTime}
+              className={`bg-[#8B5E3C] text-white px-4 py-2 rounded tracking-wide text-sm md:text-base ${dmSans.className}`}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Sales Log'}
+              Refresh Time
             </button>
           </div>
-        </form>
 
-        {/* Recent Attendance Records */}
-        <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className={`text-2xl font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
-              Attendance Logs
+          {/* Summary Statistics Section */}
+          <div className="bg-[#F5F5F5] p-4 md:p-6 rounded-lg shadow-sm">
+            <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 tracking-wide ${dmSans.className}`}>
+              Summary Statistics
             </h2>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleTimeFilterChange('today')}
-                className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                  timeFilter === 'today' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
-                }`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => handleTimeFilterChange('week')}
-                className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                  timeFilter === 'week' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
-                }`}
-              >
-                This Week
-              </button>
-              <button
-                onClick={() => handleTimeFilterChange('month')}
-                className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                  timeFilter === 'month' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
-                }`}
-              >
-                This Month
-              </button>
-              <button
-                onClick={() => handleTimeFilterChange('year')}
-                className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                  timeFilter === 'year' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
-                }`}
-              >
-                This Year
-              </button>
-              <button
-                onClick={() => handleTimeFilterChange('all')}
-                className={`px-3 py-1 rounded tracking-wide ${dmSans.className} ${
-                  timeFilter === 'all' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
-                }`}
-              >
-                All Time
-              </button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+              <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+                <h3 className={`text-xs md:text-sm text-gray-500 tracking-wide ${dmSans.className}`}>Total Logs</h3>
+                <p className={`text-lg md:text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.totalVisits}</p>
+              </div>
+              <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+                <h3 className={`text-xs md:text-sm text-gray-500 tracking-wide ${dmSans.className}`}>Client Visits</h3>
+                <p className={`text-lg md:text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.clientVisits}</p>
+              </div>
+              <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+                <h3 className={`text-xs md:text-sm text-gray-500 tracking-wide ${dmSans.className}`}>Office Days</h3>
+                <p className={`text-lg md:text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.officeDays}</p>
+              </div>
+              <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+                <h3 className={`text-xs md:text-sm text-gray-500 tracking-wide ${dmSans.className}`}>Last Visit</h3>
+                <p className={`text-lg md:text-2xl font-bold tracking-wide ${dmSans.className}`}>{summaryStats.lastVisitDate}</p>
+              </div>
             </div>
           </div>
 
-          {loadingAttendance ? (
-            <p className={`text-gray-500 tracking-wide ${dmSans.className}`}>Loading records...</p>
-          ) : filteredList.length === 0 ? (
-            <p className={`text-gray-500 tracking-wide ${dmSans.className}`}>No records found for selected period.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border border-gray-200 text-sm">
-                <thead className="bg-[#8B5E3C] text-white">
-                  <tr>
-                    <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Date</th>
-                    <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Location Type</th>
-                    <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Client</th>
-                    <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Check-in</th>
-                    <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Summary</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredList.slice(0, 5).map((record) => (
-                    <tr key={record._id} className="border-b hover:bg-gray-100">
-                      <td className={`p-2 tracking-wide ${dmSans.className}`}>{record.date}</td>
-                      <td className={`p-2 capitalize tracking-wider ${dmSans.className}`}>{record.workLocationType || '-'}</td>
-                      <td className={`p-2 tracking-wider ${dmSans.className}`}>{record.clientName || '-'}</td>
-                      <td className={`p-2 tracking-wider ${dmSans.className}`}>
-                        {record.checkIn
-                          ? new Date(record.checkIn).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '-'}
-                      </td>
-                      <td className={`p-2 max-w-xs truncate tracking-wide ${dmSans.className}`}>
-                        {record.summaryOfWork || '-'}
-                      </td>
+          {/* Sales Visit Form */}
+          <form onSubmit={handleSubmit} className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm space-y-3 md:space-y-4">
+            <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+              Today&apos;s Sales Visit Log
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
+                  Employee Name
+                </label>
+                <input
+                  className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide text-sm md:text-base ${dmSans.className}`}
+                  value={newRecord.employee.name}
+                  readOnly
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
+                  Date
+                </label>
+                <input
+                  type="date"
+                  className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide text-sm md:text-base ${dmSans.className}`}
+                  value={newRecord.date}
+                  readOnly
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
+                  Work Location Type *
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleWorkLocationChange('office')}
+                    className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                      newRecord.workLocationType === 'office'
+                        ? 'bg-[#8B5E3C] text-white'
+                        : 'bg-gray-200'
+                    }`}
+                  >
+                    Office
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWorkLocationChange('remote')}
+                    className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                      newRecord.workLocationType === 'remote'
+                        ? 'bg-[#8B5E3C] text-white'
+                        : 'bg-gray-200'
+                    }`}
+                  >
+                    Remote
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWorkLocationChange('client_visit')}
+                    className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                      newRecord.workLocationType === 'client_visit'
+                        ? 'bg-[#8B5E3C] text-white'
+                        : 'bg-gray-200'
+                    }`}
+                  >
+                    Client Visit
+                  </button>
+                </div>
+              </div>
+
+              {newRecord.workLocationType === 'client_visit' && (
+                <>
+                  <div>
+                    <label
+                      className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}
+                    >
+                      Client Name *
+                    </label>
+                    <input
+                      className={`border w-full px-3 py-2 rounded tracking-wide text-sm md:text-base ${dmSans.className}`}
+                      value={newRecord.clientName || ''}
+                      onChange={(e) =>
+                        setNewRecord((prev) => ({ ...prev, clientName: e.target.value }))
+                      }
+                      required
+                      placeholder="Enter client name"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}
+                    >
+                      Client Location *
+                    </label>
+                    <input
+                      className={`border w-full px-3 py-2 rounded tracking-wide text-sm md:text-base ${dmSans.className}`}
+                      value={newRecord.clientLocation || ''}
+                      onChange={(e) =>
+                        setNewRecord((prev) => ({ ...prev, clientLocation: e.target.value }))
+                      }
+                      required
+                      placeholder="Enter client location"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 mb-1 tracking-wide ${dmSans.className}`}>
+                  Check In Time
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    className={`border w-full px-3 py-2 rounded bg-gray-100 tracking-wide text-sm md:text-base ${dmSans.className}`}
+                    value={newRecord.checkIn || ''}
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    onClick={updateCurrentTime}
+                    className={`bg-gray-200 hover:bg-gray-300 px-2 md:px-3 rounded tracking-wide text-xs md:text-sm ${dmSans.className}`}
+                  >
+                    Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced Summary of Work Section */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 tracking-wide ${dmSans.className}`}>
+                  Summary of Work Done / Visits *
+                </label>
+                <div className="flex items-center">
+                  <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
+                    {newRecord.summaryOfWork?.length || 0}/500
+                  </span>
+                </div>
+              </div>
+              
+              <textarea
+                className={`border w-full rounded p-2 tracking-wide text-sm md:text-base ${dmSans.className}`}
+                value={newRecord.summaryOfWork || ''}
+                onChange={(e) =>
+                  setNewRecord((prev) => ({ ...prev, summaryOfWork: e.target.value }))
+                }
+                rows={5}
+                required
+                minLength={50}
+              />
+            </div>
+
+            {/* Enhanced Follow-ups Section */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className={`block text-xs md:text-sm font-medium text-gray-700 tracking-wide ${dmSans.className}`}>
+                  Follow-ups Planned for Next Day *
+                </label>
+                <div className="flex items-center">
+                  <span className={`text-xs text-gray-500 mr-2 tracking-wide ${dmSans.className}`}>
+                    {newRecord.followUps?.length || 0}/300
+                  </span>
+                </div>
+              </div>
+              
+              <textarea
+                className={`border w-full rounded p-2 tracking-wide text-sm md:text-base ${dmSans.className}`}
+                value={newRecord.followUps || ''}
+                onChange={(e) => setNewRecord((prev) => ({ ...prev, followUps: e.target.value }))}
+                rows={4}
+                required
+                minLength={30}
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`bg-[#8B5E3C] text-white px-4 py-2 md:px-6 md:py-3 rounded-lg tracking-wide text-sm md:text-base ${dmSans.className} disabled:opacity-50`}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </form>
+
+          {/* Recent Attendance Records */}
+          <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-3">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+                Attendance Logs
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleTimeFilterChange('today')}
+                  className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                    timeFilter === 'today' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => handleTimeFilterChange('week')}
+                  className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                    timeFilter === 'week' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  This Week
+                </button>
+                <button
+                  onClick={() => handleTimeFilterChange('month')}
+                  className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                    timeFilter === 'month' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  This Month
+                </button>
+                <button
+                  onClick={() => handleTimeFilterChange('year')}
+                  className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                    timeFilter === 'year' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  This Year
+                </button>
+                <button
+                  onClick={() => handleTimeFilterChange('all')}
+                  className={`px-2 py-1 md:px-3 md:py-1 rounded tracking-wide text-xs md:text-sm ${dmSans.className} ${
+                    timeFilter === 'all' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  All Time
+                </button>
+              </div>
+            </div>
+
+            {loadingAttendance ? (
+              <p className={`text-gray-500 tracking-wide ${dmSans.className}`}>Loading records...</p>
+            ) : filteredList.length === 0 ? (
+              <p className={`text-gray-500 tracking-wide ${dmSans.className}`}>No records found for selected period.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-200 text-xs md:text-sm">
+                  <thead className="bg-[#8B5E3C] text-white">
+                    <tr>
+                      <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Date</th>
+                      <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Location Type</th>
+                      <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Client</th>
+                      <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Check-in</th>
+                      <th className={`p-2 text-left tracking-wider ${dmSans.className}`}>Summary</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredList.slice(0, 5).map((record) => (
+                      <tr key={record._id} className="border-b hover:bg-gray-100">
+                        <td className={`p-2 tracking-wide ${dmSans.className}`}>{record.date}</td>
+                        <td className={`p-2 capitalize tracking-wider ${dmSans.className}`}>{record.workLocationType || '-'}</td>
+                        <td className={`p-2 tracking-wider ${dmSans.className}`}>{record.clientName || '-'}</td>
+                        <td className={`p-2 tracking-wider ${dmSans.className}`}>
+                          {record.checkIn
+                            ? new Date(record.checkIn).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                        </td>
+                        <td className={`p-2 max-w-xs truncate tracking-wide ${dmSans.className}`}>
+                          {record.summaryOfWork || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Error / Success Messages */}
+          {error && (
+            <div className={`bg-red-100 text-red-700 p-3 rounded tracking-wide text-sm md:text-base ${dmSans.className}`}>{error}</div>
+          )}
+          {success && (
+            <div className={`bg-green-100 text-green-700 p-3 rounded tracking-wide text-sm md:text-base ${dmSans.className}`}>
+              {success}
             </div>
           )}
-        </div>
-
-        {/* Error / Success Messages */}
-        {error && (
-          <div className={`bg-red-100 text-red-700 p-3 rounded tracking-wide ${dmSans.className}`}>{error}</div>
-        )}
-        {success && (
-          <div className={`bg-green-100 text-green-700 p-3 rounded tracking-wide ${dmSans.className}`}>
-            {success}
-          </div>
-        )}
-      </main>
-    </div>
+        </main>
+      </div>
     </ProtectedRoute>
   )
 }

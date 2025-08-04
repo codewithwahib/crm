@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
-import Sidebar from '@/app/Components/sidebar'
+import Sidebar from '@/app/Execution/Components/sidebar'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],

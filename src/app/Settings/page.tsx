@@ -140,10 +140,10 @@ export default function UpdatePasswordPage() {
           <div className="flex justify-between items-start pb-4">
             <div className="space-y-1">
               <h1 className={`text-2xl font-bold pt-12 pl-4 text-[#8B5E3C] ${dmSans.className}`}>
-                Update Role Password
+                {/* Update Role Password */}
               </h1>
               <p className="text-sm text-gray-500 pl-4">
-                Update authentication credentials for system roles
+                {/* Update authentication credentials for system roles */}
               </p>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function UpdatePasswordPage() {
           <form onSubmit={handleUpdate} className="mt-6 space-y-6">
             <div className="bg-gray-50 p-6 rounded-lg shadow-sm border">
               <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
-                Password Configuration
+             Change Password 
               </h2>
               
               <div className="space-y-4">

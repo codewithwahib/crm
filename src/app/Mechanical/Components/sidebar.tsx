@@ -71,14 +71,6 @@ const Sidebar = () => {
 
         {/* Navigation Links */}
         <nav className="p-4 space-y-1 flex-grow">
-          <Link
-            href="/Mechanical/work-orders-status"
-            className={`${navItemClasses('/Mechanical/work-orders-status')} ${dmsans.className}`}
-            onClick={() => setIsOpen(false)}
-          >
-            <SiStatuspal className="h-5 w-5 mr-3" />
-            <span>Work Order Status</span>
-          </Link>
 
           <Link 
             href="/Mechanical/drawings" 
@@ -88,6 +80,24 @@ const Sidebar = () => {
             <IoSettings className="h-7 w-7 mr-3" />
             <span className='text-md tracking-wider'>Drawing/Components</span>
           </Link>
+          
+          <Link
+            href="/Mechanical/work-orders-status"
+            className={`${navItemClasses('/Mechanical/work-orders-status')} ${dmsans.className}`}
+            onClick={() => setIsOpen(false)}
+          >
+            <SiStatuspal className="h-5 w-5 mr-3" />
+            <span>Work Order Status</span>
+          </Link>
+
+          {/* <Link 
+            href="/Mechanical/drawings" 
+            className={`${navItemClasses('/Mechanical/drawings')} ${dmsans.className}`} 
+            onClick={() => setIsOpen(false)}
+          >
+            <IoSettings className="h-7 w-7 mr-3" />
+            <span className='text-md tracking-wider'>Drawing/Components</span>
+          </Link> */}
         </nav>
 
         {/* Logout Button & Footer */}

@@ -1,9 +1,8 @@
-// src/app/work-order/edit/[id]/page.tsx
-"use client"
+'use client'
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import Sidebar from "@/app/Components/sidebar"
+import Sidebar from "@/app/Execution/Components/sidebar"
 import { DM_Sans } from "next/font/google"
 import ProtectedRoute from "@/app/Components/ProtectedRoute"
 import toast, { Toaster } from "react-hot-toast"
@@ -171,7 +170,6 @@ export default function EditWorkOrderSalesPage() {
     if (workOrderId) fetchWorkOrder()
   }, [workOrderId])
 
-  // Generic handler for top-level fields
   const handleChange = <
     T extends keyof WorkOrderFormData,
     K extends keyof WorkOrderFormData[T]
@@ -189,7 +187,6 @@ export default function EditWorkOrderSalesPage() {
     }))
   }
 
-  // Specialized handlers for nested objects
   const handleCustomerInfoChange = (field: keyof CustomerInfo, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -364,441 +361,443 @@ export default function EditWorkOrderSalesPage() {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-white text-gray-800">
-        <main className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex justify-center items-center h-64">
-            <p className={`text-lg ${dmSans.className} tracking-wide`}>Loading work order data...</p>
-          </div>
-        </main>
+      <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
     <ProtectedRoute allowedUser="execution">
-    <div className="min-h-screen bg-white text-gray-800">
-      <Toaster />
-      <Sidebar />
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        <h1 className={`text-2xl font-bold text-[#8B5E3C] ${dmSans.className} tracking-wide`}>
-          Edit Work Order / Sales Order / PO
-        </h1>
+      <div className="min-h-screen bg-white text-gray-800">
+        <Toaster />
+        <Sidebar />
+        <main className="max-w-5xl mx-auto px-4 py-6">
+          <h1 className={`text-xl sm:text-2xl pt-20 font-bold text-[#8B5E3C] ${dmSans.className} tracking-wide`}>
+            Edit Work Order / Sales Order / PO
+          </h1>
 
-        {error && (
-          <div className={`mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md text-sm ${dmSans.className} tracking-wide`}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* Work Order Section */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Work Order Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField 
-                label="Work Order Number *" 
-                value={formData.workOrderSection.workOrderNumber} 
-                onChange={(v) => handleChange("workOrderSection", "workOrderNumber", v)} 
-                required 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Client Name *" 
-                value={formData.workOrderSection.clientName} 
-                onChange={(v) => handleChange("workOrderSection", "clientName", v)} 
-                required 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Job Reference" 
-                value={formData.workOrderSection.jobReference || ""} 
-                onChange={(v) => handleChange("workOrderSection", "jobReference", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Client PO Number" 
-                value={formData.workOrderSection.clientPONumber || ""} 
-                onChange={(v) => handleChange("workOrderSection", "clientPONumber", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Date *" 
-                type="date" 
-                value={formData.workOrderSection.date || ""} 
-                onChange={(v) => handleChange("workOrderSection", "date", v)} 
-                required 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Delivery Date" 
-                type="date" 
-                value={formData.workOrderSection.deliveryDate || ""} 
-                onChange={(v) => handleChange("workOrderSection", "deliveryDate", v)} 
-                fontClass={dmSans.className}
-              />
+          {error && (
+            <div className={`mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md text-sm ${dmSans.className} tracking-wide`}>
+              {error}
             </div>
-          </div>
+          )}
 
-          {/* Work Order Products */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Work Order - Products List
-            </h2>
-            {formData.workOrderSection.products.map((prod, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-3 border p-3 rounded mb-3">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+            {/* Work Order Section */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Work Order Details
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <InputField 
-                  label="Serial No" 
-                  value={prod.serialNumber || ""} 
-                  onChange={(v) => updateProduct(index, "serialNumber", v)} 
-                  fontClass={dmSans.className}
-                />
-                <TextareaField 
-                  label="Item Description" 
-                  value={prod.itemDescription || ""} 
-                  onChange={(v) => updateProduct(index, "itemDescription", v)} 
+                  label="Work Order Number *" 
+                  value={formData.workOrderSection.workOrderNumber} 
+                  onChange={(v) => handleChange("workOrderSection", "workOrderNumber", v)} 
+                  required 
                   fontClass={dmSans.className}
                 />
                 <InputField 
-                  label="Quantity" 
-                  type="number" 
-                  value={prod.quantity || ""} 
-                  onChange={(v) => updateProduct(index, "quantity", Number(v))} 
+                  label="Client Name *" 
+                  value={formData.workOrderSection.clientName} 
+                  onChange={(v) => handleChange("workOrderSection", "clientName", v)} 
+                  required 
                   fontClass={dmSans.className}
                 />
                 <InputField 
-                  label="Remarks" 
-                  value={prod.remarks || ""} 
-                  onChange={(v) => updateProduct(index, "remarks", v)} 
+                  label="Job Reference" 
+                  value={formData.workOrderSection.jobReference || ""} 
+                  onChange={(v) => handleChange("workOrderSection", "jobReference", v)} 
                   fontClass={dmSans.className}
                 />
-                <button 
-                  type="button" 
-                  className={`text-red-500 text-sm mt-2 ${dmSans.className} tracking-wide`} 
-                  onClick={() => removeProduct(index)}
-                >
-                  Remove
-                </button>
+                <InputField 
+                  label="Client PO Number" 
+                  value={formData.workOrderSection.clientPONumber || ""} 
+                  onChange={(v) => handleChange("workOrderSection", "clientPONumber", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Date *" 
+                  type="date" 
+                  value={formData.workOrderSection.date || ""} 
+                  onChange={(v) => handleChange("workOrderSection", "date", v)} 
+                  required 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Delivery Date" 
+                  type="date" 
+                  value={formData.workOrderSection.deliveryDate || ""} 
+                  onChange={(v) => handleChange("workOrderSection", "deliveryDate", v)} 
+                  fontClass={dmSans.className}
+                />
               </div>
-            ))}
-            <button 
-              type="button" 
-              className={`mt-2 px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
-              onClick={addProduct}
-            >
-              + Add Product
-            </button>
-          </div>
-
-          {/* Sales Order - Customer Info */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Sales Order - Customer Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField 
-                label="Customer Name" 
-                value={formData.salesOrderSection.customerInfo.customerName} 
-                onChange={(v) => handleCustomerInfoChange("customerName", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Sales Person" 
-                value={formData.salesOrderSection.customerInfo.salesPerson || ""} 
-                onChange={(v) => handleCustomerInfoChange("salesPerson", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Contact Person" 
-                value={formData.salesOrderSection.customerInfo.contactPerson || ""} 
-                onChange={(v) => handleCustomerInfoChange("contactPerson", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Email" 
-                type="email" 
-                value={formData.salesOrderSection.customerInfo.email || ""} 
-                onChange={(v) => handleCustomerInfoChange("email", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Mobile No" 
-                value={formData.salesOrderSection.customerInfo.mobileNo || ""} 
-                onChange={(v) => handleCustomerInfoChange("mobileNo", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Phone No" 
-                value={formData.salesOrderSection.customerInfo.phoneNo || ""} 
-                onChange={(v) => handleCustomerInfoChange("phoneNo", v)} 
-                fontClass={dmSans.className}
-              />
             </div>
-          </div>
 
-          {/* Sales Order - Order Details */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Sales Order - Order Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField 
-                label="Product Type" 
-                value={formData.salesOrderSection.orderDetails.productType || ""} 
-                onChange={(v) => handleOrderDetailsChange("productType", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="PO Number" 
-                value={formData.salesOrderSection.orderDetails.poNumber || ""} 
-                onChange={(v) => handleOrderDetailsChange("poNumber", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="PO Date" 
-                type="date" 
-                value={formData.salesOrderSection.orderDetails.poDate || ""} 
-                onChange={(v) => handleOrderDetailsChange("poDate", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="PO Value" 
-                type="number" 
-                value={formData.salesOrderSection.orderDetails.poValue || ""} 
-                onChange={(v) => handleOrderDetailsChange("poValue", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Delivery Date" 
-                type="date" 
-                value={formData.salesOrderSection.orderDetails.deliveryDate || ""} 
-                onChange={(v) => handleOrderDetailsChange("deliveryDate", v)} 
-                fontClass={dmSans.className}
-              />
-              <InputField 
-                label="Expected Completion Date" 
-                type="date" 
-                value={formData.salesOrderSection.orderDetails.expectedCompletionDate || ""} 
-                onChange={(v) => handleOrderDetailsChange("expectedCompletionDate", v)} 
+            {/* Work Order Products */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Work Order - Products List
+              </h2>
+              {formData.workOrderSection.products.map((prod, index) => (
+                <div key={index} className="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-3 border p-2 sm:p-3 rounded mb-2 sm:mb-3">
+                  <InputField 
+                    label="Serial No" 
+                    value={prod.serialNumber || ""} 
+                    onChange={(v) => updateProduct(index, "serialNumber", v)} 
+                    fontClass={dmSans.className}
+                  />
+                  <TextareaField 
+                    label="Item Description" 
+                    value={prod.itemDescription || ""} 
+                    onChange={(v) => updateProduct(index, "itemDescription", v)} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Quantity" 
+                    type="number" 
+                    value={prod.quantity || ""} 
+                    onChange={(v) => updateProduct(index, "quantity", Number(v))} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Remarks" 
+                    value={prod.remarks || ""} 
+                    onChange={(v) => updateProduct(index, "remarks", v)} 
+                    fontClass={dmSans.className}
+                  />
+                  <button 
+                    type="button" 
+                    className={`text-red-500 text-xs sm:text-sm mt-1 sm:mt-2 ${dmSans.className} tracking-wide`} 
+                    onClick={() => removeProduct(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button 
+                type="button" 
+                className={`mt-2 px-2 sm:px-3 py-1 text-xs sm:text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
+                onClick={addProduct}
+              >
+                + Add Product
+              </button>
+            </div>
+
+            {/* Sales Order - Customer Info */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Sales Order - Customer Information
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <InputField 
+                  label="Customer Name" 
+                  value={formData.salesOrderSection.customerInfo.customerName} 
+                  onChange={(v) => handleCustomerInfoChange("customerName", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Sales Person" 
+                  value={formData.salesOrderSection.customerInfo.salesPerson || ""} 
+                  onChange={(v) => handleCustomerInfoChange("salesPerson", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Contact Person" 
+                  value={formData.salesOrderSection.customerInfo.contactPerson || ""} 
+                  onChange={(v) => handleCustomerInfoChange("contactPerson", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Email" 
+                  type="email" 
+                  value={formData.salesOrderSection.customerInfo.email || ""} 
+                  onChange={(v) => handleCustomerInfoChange("email", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Mobile No" 
+                  value={formData.salesOrderSection.customerInfo.mobileNo || ""} 
+                  onChange={(v) => handleCustomerInfoChange("mobileNo", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Phone No" 
+                  value={formData.salesOrderSection.customerInfo.phoneNo || ""} 
+                  onChange={(v) => handleCustomerInfoChange("phoneNo", v)} 
+                  fontClass={dmSans.className}
+                />
+              </div>
+            </div>
+
+            {/* Sales Order - Order Details */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Sales Order - Order Details
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <InputField 
+                  label="Product Type" 
+                  value={formData.salesOrderSection.orderDetails.productType || ""} 
+                  onChange={(v) => handleOrderDetailsChange("productType", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="PO Number" 
+                  value={formData.salesOrderSection.orderDetails.poNumber || ""} 
+                  onChange={(v) => handleOrderDetailsChange("poNumber", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="PO Date" 
+                  type="date" 
+                  value={formData.salesOrderSection.orderDetails.poDate || ""} 
+                  onChange={(v) => handleOrderDetailsChange("poDate", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="PO Value" 
+                  type="number" 
+                  value={formData.salesOrderSection.orderDetails.poValue || ""} 
+                  onChange={(v) => handleOrderDetailsChange("poValue", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Delivery Date" 
+                  type="date" 
+                  value={formData.salesOrderSection.orderDetails.deliveryDate || ""} 
+                  onChange={(v) => handleOrderDetailsChange("deliveryDate", v)} 
+                  fontClass={dmSans.className}
+                />
+                <InputField 
+                  label="Expected Completion Date" 
+                  type="date" 
+                  value={formData.salesOrderSection.orderDetails.expectedCompletionDate || ""} 
+                  onChange={(v) => handleOrderDetailsChange("expectedCompletionDate", v)} 
+                  fontClass={dmSans.className}
+                />
+                <div className="sm:col-span-2">
+                  <TextareaField 
+                    label="Special Instructions" 
+                    value={formData.salesOrderSection.orderDetails.specialInstructions || ""} 
+                    onChange={(v) => handleOrderDetailsChange("specialInstructions", v)} 
+                    fontClass={dmSans.className}
+                  />
+                </div>
+                <div className={`flex items-center gap-2 sm:col-span-2 ${dmSans.className} tracking-wide`}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.salesOrderSection.orderDetails.shopDrawingApproval} 
+                    onChange={(e) => handleOrderDetailsChange("shopDrawingApproval", e.target.checked)} 
+                  />
+                  <label className="text-sm sm:text-base">Shop Drawing Approved?</label>
+                </div>
+                <InputField  
+                  label="Approval Date" 
+                  type="date" 
+                  value={formData.salesOrderSection.orderDetails.shopDrawingApprovalDate || ""} 
+                  onChange={(v) => handleOrderDetailsChange("shopDrawingApprovalDate", v)} 
+                  fontClass={dmSans.className}
+                />
+              </div>
+            </div>
+
+            {/* Sales Order - Terms & Conditions */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Sales Order - Terms & Authorization
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <SelectField
+                  label="Payment Type"
+                  value={formData.salesOrderSection.termsAndConditions.paymentType || ""}
+                  onChange={(v) => handleTermsChange("paymentType", v)}
+                  options={[
+                    { label: "Before Delivery", value: "beforeDelivery" },
+                    { label: "After Delivery", value: "afterDelivery" },
+                    { label: "Partial Payment", value: "partialPayment" },
+                  ]}
+                  fontClass={dmSans.className}
+                />
+                <SelectField
+                  label="Delivery Method"
+                  value={formData.salesOrderSection.termsAndConditions.deliveryMethod || ""}
+                  onChange={(v) => handleTermsChange("deliveryMethod", v)}
+                  options={[
+                    { label: "By Company", value: "company" },
+                    { label: "By Customer", value: "customer" },
+                    { label: "Third Party", value: "thirdParty" },
+                  ]}
+                  fontClass={dmSans.className}
+                />
+                <SelectField
+                  label="Warranty Period"
+                  value={formData.salesOrderSection.termsAndConditions.warrantyPeriod || ""}
+                  onChange={(v) => handleTermsChange("warrantyPeriod", v)}
+                  options={[
+                    { label: "1 Year", value: "1year" },
+                    { label: "2 Years", value: "2years" },
+                    { label: "5 Years", value: "5years" },
+                    { label: "10 Years", value: "10years" },
+                  ]}
+                  fontClass={dmSans.className}
+                />
+                <div className={`flex items-center gap-2 ${dmSans.className} tracking-wide`}>
+                  <input
+                    type="checkbox"
+                    checked={formData.salesOrderSection.termsAndConditions.pricesIncludeGST}
+                    onChange={(e) => handleTermsChange("pricesIncludeGST", e.target.checked)}
+                  />
+                  <label className="text-sm sm:text-base">Prices Include GST?</label>
+                </div>
+                <InputField 
+                  label="Authorized By" 
+                  value={formData.salesOrderSection.authorizedBy || ""} 
+                  onChange={(v) => handleChange("salesOrderSection", "authorizedBy", v)} 
+                  fontClass={dmSans.className}
+                />
+              </div>
+            </div>
+
+            {/* Required Documents */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Required Documents
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <FileField 
+                  label="Quotation with Final Price" 
+                  onChange={(e) => handleFileChange("quotationWithFinalPrice", e)} 
+                  fontClass={dmSans.className}
+                />
+                <FileField 
+                  label="Approved Shop Drawing" 
+                  onChange={(e) => handleFileChange("approvedShopDrawing", e)} 
+                  fontClass={dmSans.className}
+                />
+                <FileField 
+                  label="Component List" 
+                  onChange={(e) => handleFileChange("componentList", e)} 
+                  fontClass={dmSans.className}
+                />
+                <FileField 
+                  label="Customer PO Copy *" 
+                  required 
+                  onChange={(e) => handleFileChange("customerPOCopy", e)} 
+                  fontClass={dmSans.className}
+                />
+                <FileField 
+                  label="Technical Specifications" 
+                  onChange={(e) => handleFileChange("technicalSpecifications", e)} 
+                  fontClass={dmSans.className}
+                />
+              </div>
+            </div>
+
+            {/* Purchase Order Items */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Purchase Order - Items List
+              </h2>
+              {formData.purchaseOrderSection.poTable.map((item, index) => (
+                <div key={index} className="grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-3 border p-2 sm:p-3 rounded mb-2 sm:mb-3">
+                  <TextareaField 
+                    label="Description" 
+                    value={item.description || ""} 
+                    onChange={(v) => updatePOItem(index, "description", v)} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Unit" 
+                    value={item.unit || ""} 
+                    onChange={(v) => updatePOItem(index, "unit", v)} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Qty" 
+                    type="number" 
+                    value={item.quantity || ""} 
+                    onChange={(v) => updatePOItem(index, "quantity", Number(v))} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Unit Rate (PKR)" 
+                    type="number" 
+                    value={item.unitRatePKR || ""} 
+                    onChange={(v) => updatePOItem(index, "unitRatePKR", Number(v))} 
+                    fontClass={dmSans.className}
+                  />
+                  <InputField 
+                    label="Total Amount (PKR)" 
+                    type="number" 
+                    value={item.totalAmountPKR || ""} 
+                    onChange={(v) => updatePOItem(index, "totalAmountPKR", Number(v))} 
+                    fontClass={dmSans.className}
+                  />
+                  <button 
+                    type="button" 
+                    className={`text-red-500 text-xs sm:text-sm mt-1 sm:mt-2 ${dmSans.className} tracking-wide`} 
+                    onClick={() => removePOItem(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button 
+                type="button" 
+                className={`mt-2 px-2 sm:px-3 py-1 text-xs sm:text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
+                onClick={addPOItem}
+              >
+                + Add PO Item
+              </button>
+            </div>
+
+            {/* Purchase Order Details */}
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm">
+              <h2 className={`text-base sm:text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Purchase Order Details
+              </h2>
+              <TextareaField 
+                label="Ship To" 
+                value={formData.purchaseOrderSection.shipTo || ""} 
+                onChange={(v) => handleChange("purchaseOrderSection", "shipTo", v)} 
                 fontClass={dmSans.className}
               />
               <TextareaField 
-                label="Special Instructions" 
-                value={formData.salesOrderSection.orderDetails.specialInstructions || ""} 
-                onChange={(v) => handleOrderDetailsChange("specialInstructions", v)} 
+                label="Payment Terms" 
+                value={formData.purchaseOrderSection.paymentTerms || ""} 
+                onChange={(v) => handleChange("purchaseOrderSection", "paymentTerms", v)} 
                 fontClass={dmSans.className}
               />
-              <div className={`flex items-center gap-2 col-span-2 ${dmSans.className} tracking-wide`}>
-                <input 
-                  type="checkbox" 
-                  checked={formData.salesOrderSection.orderDetails.shopDrawingApproval} 
-                  onChange={(e) => handleOrderDetailsChange("shopDrawingApproval", e.target.checked)} 
-                />
-                <label>Shop Drawing Approved?</label>
-              </div>
-              <InputField  
-                label="Approval Date" 
-                type="date" 
-                value={formData.salesOrderSection.orderDetails.shopDrawingApprovalDate || ""} 
-                onChange={(v) => handleOrderDetailsChange("shopDrawingApprovalDate", v)} 
+              <TextareaField 
+                label="Delivery Terms" 
+                value={formData.purchaseOrderSection.deliveryTerms || ""} 
+                onChange={(v) => handleChange("purchaseOrderSection", "deliveryTerms", v)} 
                 fontClass={dmSans.className}
               />
             </div>
-          </div>
 
-          {/* Sales Order - Terms & Conditions */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Sales Order - Terms & Authorization
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SelectField
-                label="Payment Type"
-                value={formData.salesOrderSection.termsAndConditions.paymentType || ""}
-                onChange={(v) => handleTermsChange("paymentType", v)}
-                options={[
-                  { label: "Before Delivery", value: "beforeDelivery" },
-                  { label: "After Delivery", value: "afterDelivery" },
-                  { label: "Partial Payment", value: "partialPayment" },
-                ]}
-                fontClass={dmSans.className}
-              />
-              <SelectField
-                label="Delivery Method"
-                value={formData.salesOrderSection.termsAndConditions.deliveryMethod || ""}
-                onChange={(v) => handleTermsChange("deliveryMethod", v)}
-                options={[
-                  { label: "By Company", value: "company" },
-                  { label: "By Customer", value: "customer" },
-                  { label: "Third Party", value: "thirdParty" },
-                ]}
-                fontClass={dmSans.className}
-              />
-              <SelectField
-                label="Warranty Period"
-                value={formData.salesOrderSection.termsAndConditions.warrantyPeriod || ""}
-                onChange={(v) => handleTermsChange("warrantyPeriod", v)}
-                options={[
-                  { label: "1 Year", value: "1year" },
-                  { label: "2 Years", value: "2years" },
-                  { label: "5 Years", value: "5years" },
-                  { label: "10 Years", value: "10years" },
-                ]}
-                fontClass={dmSans.className}
-              />
-              <div className={`flex items-center gap-2 ${dmSans.className} tracking-wide`}>
-                <input
-                  type="checkbox"
-                  checked={formData.salesOrderSection.termsAndConditions.pricesIncludeGST}
-                  onChange={(e) => handleTermsChange("pricesIncludeGST", e.target.checked)}
-                />
-                <label>Prices Include GST?</label>
-              </div>
-              <InputField 
-                label="Authorized By" 
-                value={formData.salesOrderSection.authorizedBy || ""} 
-                onChange={(v) => handleChange("salesOrderSection", "authorizedBy", v)} 
-                fontClass={dmSans.className}
-              />
+            <div className={`flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t ${dmSans.className} tracking-wide`}>
+              <button
+                type="button"
+                onClick={() => router.push('/work-orders')}
+                className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border rounded hover:bg-gray-50 tracking-wide"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] disabled:opacity-50 tracking-wide"
+              >
+                {loading ? 'Updating...' : 'Update Work Order'}
+              </button>
             </div>
-          </div>
-
-          {/* Required Documents */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Required Documents
-            </h2>
-            <FileField 
-              label="Quotation with Final Price" 
-              onChange={(e) => handleFileChange("quotationWithFinalPrice", e)} 
-              fontClass={dmSans.className}
-            />
-            <FileField 
-              label="Approved Shop Drawing" 
-              onChange={(e) => handleFileChange("approvedShopDrawing", e)} 
-              fontClass={dmSans.className}
-            />
-            <FileField 
-              label="Component List" 
-              onChange={(e) => handleFileChange("componentList", e)} 
-              fontClass={dmSans.className}
-            />
-            <FileField 
-              label="Customer PO Copy *" 
-              required 
-              onChange={(e) => handleFileChange("customerPOCopy", e)} 
-              fontClass={dmSans.className}
-            />
-            <FileField 
-              label="Technical Specifications" 
-              onChange={(e) => handleFileChange("technicalSpecifications", e)} 
-              fontClass={dmSans.className}
-            />
-          </div>
-
-          {/* Purchase Order Items */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Purchase Order - Items List
-            </h2>
-            {formData.purchaseOrderSection.poTable.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 border p-3 rounded mb-3">
-                <TextareaField 
-                  label="Description" 
-                  value={item.description || ""} 
-                  onChange={(v) => updatePOItem(index, "description", v)} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Unit" 
-                  value={item.unit || ""} 
-                  onChange={(v) => updatePOItem(index, "unit", v)} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Qty" 
-                  type="number" 
-                  value={item.quantity || ""} 
-                  onChange={(v) => updatePOItem(index, "quantity", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Unit Rate (PKR)" 
-                  type="number" 
-                  value={item.unitRatePKR || ""} 
-                  onChange={(v) => updatePOItem(index, "unitRatePKR", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <InputField 
-                  label="Total Amount (PKR)" 
-                  type="number" 
-                  value={item.totalAmountPKR || ""} 
-                  onChange={(v) => updatePOItem(index, "totalAmountPKR", Number(v))} 
-                  fontClass={dmSans.className}
-                />
-                <button 
-                  type="button" 
-                  className={`text-red-500 text-sm mt-2 ${dmSans.className} tracking-wide`} 
-                  onClick={() => removePOItem(index)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button 
-              type="button" 
-              className={`mt-2 px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 ${dmSans.className} tracking-wide`} 
-              onClick={addPOItem}
-            >
-              + Add PO Item
-            </button>
-          </div>
-
-          {/* Purchase Order Details */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Purchase Order Details
-            </h2>
-            <TextareaField 
-              label="Ship To" 
-              value={formData.purchaseOrderSection.shipTo || ""} 
-              onChange={(v) => handleChange("purchaseOrderSection", "shipTo", v)} 
-              fontClass={dmSans.className}
-            />
-            <TextareaField 
-              label="Payment Terms" 
-              value={formData.purchaseOrderSection.paymentTerms || ""} 
-              onChange={(v) => handleChange("purchaseOrderSection", "paymentTerms", v)} 
-              fontClass={dmSans.className}
-            />
-            <TextareaField 
-              label="Delivery Terms" 
-              value={formData.purchaseOrderSection.deliveryTerms || ""} 
-              onChange={(v) => handleChange("purchaseOrderSection", "deliveryTerms", v)} 
-              fontClass={dmSans.className}
-            />
-          </div>
-
-          <div className={`flex justify-end gap-3 pt-4 border-t ${dmSans.className} tracking-wide`}>
-            <button
-              type="button"
-              onClick={() => router.push('/work-orders')}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 tracking-wide"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] disabled:opacity-50 tracking-wide"
-            >
-              {loading ? 'Updating...' : 'Update Work Order'}
-            </button>
-          </div>
-        </form>
-      </main>
-    </div>
+          </form>
+        </main>
+      </div>
     </ProtectedRoute>
   )
 }
@@ -823,7 +822,7 @@ function InputField({
 }: InputFieldProps) {
   return (
     <div className={`${fontClass} tracking-wide`}>
-      <label className="block text-sm font-medium mb-1 tracking-wide">
+      <label className="block text-xs sm:text-sm font-medium mb-1 tracking-wide">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
@@ -832,7 +831,7 @@ function InputField({
         value={value}
         required={required}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full border border-gray-300 rounded-md p-2 ${fontClass} tracking-wide`}
+        className={`w-full text-xs sm:text-sm border border-gray-300 rounded-md p-1 sm:p-2 ${fontClass} tracking-wide`}
       />
     </div>
   )
@@ -855,12 +854,12 @@ function TextareaField({
 }: TextareaFieldProps) {
   return (
     <div className={`${fontClass} tracking-wide`}>
-      <label className="block text-sm font-medium mb-1 tracking-wide">{label}</label>
+      <label className="block text-xs sm:text-sm font-medium mb-1 tracking-wide">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className={`w-full border border-gray-300 rounded-md p-2 ${fontClass} tracking-wide`}
+        className={`w-full text-xs sm:text-sm border border-gray-300 rounded-md p-1 sm:p-2 ${fontClass} tracking-wide`}
       />
     </div>
   )
@@ -883,11 +882,11 @@ function SelectField({
 }: SelectFieldProps) {
   return (
     <div className={`${fontClass} tracking-wide`}>
-      <label className="block text-sm font-medium mb-1 tracking-wide">{label}</label>
+      <label className="block text-xs sm:text-sm font-medium mb-1 tracking-wide">{label}</label>
       <select 
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
-        className={`w-full border border-gray-300 rounded-md p-2 ${fontClass} tracking-wide`}
+        className={`w-full text-xs sm:text-sm border border-gray-300 rounded-md p-1 sm:p-2 ${fontClass} tracking-wide`}
       >
         <option value="">Select...</option>
         {options.map((opt, idx) => (
@@ -912,8 +911,8 @@ function FileField({
   fontClass = ""
 }: FileFieldProps) {
   return (
-    <div className={`mb-4 ${fontClass} tracking-wide`}>
-      <label className="block font-medium text-sm mb-1 tracking-wide">
+    <div className={`mb-2 sm:mb-4 ${fontClass} tracking-wide`}>
+      <label className="block font-medium text-xs sm:text-sm mb-1 tracking-wide">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
@@ -921,7 +920,7 @@ function FileField({
         type="file" 
         required={required} 
         onChange={onChange} 
-        className={`block w-full text-sm border rounded p-2 ${fontClass} tracking-wide`} 
+        className={`block w-full text-xs sm:text-sm border rounded p-1 sm:p-2 ${fontClass} tracking-wide`} 
       />
     </div>
   )

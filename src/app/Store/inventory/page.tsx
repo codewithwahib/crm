@@ -46,7 +46,7 @@ export default async function InventoryPage() {
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.className}`}>
       <Sidebar />
       
-      <main className="ml-1 mr-2 pt-20 sm:mr-5 md:mr-6  lg:mr-8 lg:pl-8">
+      <main className="ml-1 mr-2 pt-14 sm:mr-5 md:mr-6  lg:mr-8 lg:pl-8">
         <div className="max-w-7xl mx-auto px-2 py-6 sm:px-3 md:px-4">
           <div className="flex justify-between items-center mb-6">
             <div>

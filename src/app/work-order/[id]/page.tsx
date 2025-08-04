@@ -1038,7 +1038,7 @@
 //   }
 
 
-  import { client } from '@/sanity/lib/client'
+import { client } from '@/sanity/lib/client'
 import { notFound } from 'next/navigation'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
@@ -1068,12 +1068,6 @@ interface POItem {
   gstAmount?: number
   totalAmountPKR: number
 }
-
-// interface GSTSummary {
-//   subtotal?: number
-//   totalGST?: number
-//   grandTotal?: number
-// }
 
 // Helper: Safe number formatter
 const formatCurrency = (value?: number | string | null): string => {
@@ -1189,26 +1183,19 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
     _createdAt
   } = data
 
-  // Calculate totals
-  // const poTotal =
-  //   purchaseOrderSection?.poTable?.reduce((sum: number, item: POItem) => {
-  //     const val = Number(item.totalAmountPKR || 0)
-  //     return sum + (isNaN(val) ? 0 : val)
-  //   }, 0) || 0
-
   return (
     <ProtectedRoute allowedUser='director'>
       <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
         <Sidebar />
-        <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+        <main className="max-w-6xl mt-10 mx-auto px-4 py-6 md:py-10 space-y-6 md:space-y-8">
 
           {/* HEADER */}
-          <div className="flex justify-between items-start border-b pb-6">
-            <div className="space-y-2">
-              <h1 className={`text-3xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
+          <div className="flex flex-col md:flex-row justify-between items-start border-b pb-4 md:pb-6 gap-4">
+            <div className="space-y-1 md:space-y-2">
+              <h1 className={`text-2xl md:text-3xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
                 Work Order: {workOrderSection?.workOrderNumber || 'N/A'}
               </h1>
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 md:gap-4 text-sm md:text-base">
                 <div>
                   <span className="font-semibold text-[#8B5E3C]">Created:</span>{' '}
                   {formatDate(_createdAt)}
@@ -1230,46 +1217,46 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
           </div>
 
           {/* CLIENT & ORDER INFO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             {/* CLIENT INFO */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 pb-2 border-b ${dmSans.className}`}>
                 Client Information
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 <div>
-                  <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Client Name:</p>
-                  <p className={`text-lg ${dmSans.className}`}>
+                  <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Client Name:</p>
+                  <p className={`text-base md:text-lg ${dmSans.className}`}>
                     {workOrderSection?.clientName || salesOrderSection?.customerInfo?.customerName || 'N/A'}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   {salesOrderSection?.customerInfo?.contactPerson && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Contact Person:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.contactPerson}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Contact Person:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.contactPerson}</p>
                     </div>
                   )}
                   {salesOrderSection?.customerInfo?.salesPerson && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Sales Person:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.salesPerson}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Sales Person:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.salesPerson}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   {salesOrderSection?.customerInfo?.email && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Email:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.email}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Email:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.email}</p>
                     </div>
                   )}
                   {salesOrderSection?.customerInfo?.mobileNo && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Mobile:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.mobileNo}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Mobile:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.customerInfo.mobileNo}</p>
                     </div>
                   )}
                 </div>
@@ -1277,67 +1264,67 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
             </div>
 
             {/* ORDER DETAILS */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 pb-2 border-b ${dmSans.className}`}>
                 Order Details
               </h2>
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div>
-                    <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Job Reference:</p>
-                    <p className={`text-lg ${dmSans.className}`}>{workOrderSection?.jobReference || 'N/A'}</p>
+                    <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Job Reference:</p>
+                    <p className={`text-base md:text-lg ${dmSans.className}`}>{workOrderSection?.jobReference || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Client PO Number:</p>
-                    <p className={`text-lg ${dmSans.className}`}>{workOrderSection?.clientPONumber || 'N/A'}</p>
+                    <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Client PO Number:</p>
+                    <p className={`text-base md:text-lg ${dmSans.className}`}>{workOrderSection?.clientPONumber || 'N/A'}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   {salesOrderSection?.orderDetails?.productType && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Product Type:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.orderDetails.productType}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Product Type:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.orderDetails.productType}</p>
                     </div>
                   )}
                   {salesOrderSection?.orderDetails?.poValue && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>PO Value:</p>
-                      <p className={`text-lg ${dmSans.className}`}>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>PO Value:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>
                         Rs. {formatCurrency(salesOrderSection.orderDetails.poValue)}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   {workOrderSection?.deliveryDate && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Delivery Date:</p>
-                      <p className={`text-lg ${dmSans.className}`}>{formatDate(workOrderSection.deliveryDate)}</p>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Delivery Date:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>{formatDate(workOrderSection.deliveryDate)}</p>
                     </div>
                   )}
                   {salesOrderSection?.orderDetails?.expectedCompletionDate && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Expected Completion:</p>
-                      <p className={`text-lg ${dmSans.className}`}>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Expected Completion:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>
                         {formatDate(salesOrderSection.orderDetails.expectedCompletionDate)}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div>
-                    <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Drawing Approved:</p>
-                    <p className={`text-lg ${dmSans.className}`}>
+                    <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Drawing Approved:</p>
+                    <p className={`text-base md:text-lg ${dmSans.className}`}>
                       {salesOrderSection?.orderDetails?.shopDrawingApproval ? 'Yes' : 'No'}
                     </p>
                   </div>
                   {salesOrderSection?.orderDetails?.shopDrawingApprovalDate && (
                     <div>
-                      <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Approval Date:</p>
-                      <p className={`text-lg ${dmSans.className}`}>
+                      <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Approval Date:</p>
+                      <p className={`text-base md:text-lg ${dmSans.className}`}>
                         {formatDate(salesOrderSection.orderDetails.shopDrawingApprovalDate)}
                       </p>
                     </div>
@@ -1346,8 +1333,8 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
 
                 {salesOrderSection?.orderDetails?.specialInstructions && (
                   <div>
-                    <p className={`text-lg font-semibold text-gray-600 ${dmSans.className}`}>Special Instructions:</p>
-                    <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.orderDetails.specialInstructions}</p>
+                    <p className={`text-base md:text-lg font-semibold text-gray-600 ${dmSans.className}`}>Special Instructions:</p>
+                    <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.orderDetails.specialInstructions}</p>
                   </div>
                 )}
               </div>
@@ -1357,26 +1344,26 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
           {/* WORK ORDER PRODUCTS */}
           {workOrderSection?.products?.length > 0 && (
             <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>Work Order</h2>
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] p-4 md:p-6 pb-3 md:pb-4 ${dmSans.className}`}>Work Order</h2>
               <div className="overflow-x-auto">
                 <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">S No.</th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Serial Number</th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Description</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">Qty</th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Remarks</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">S No.</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">Serial No.</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">Description</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">Qty</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">Remarks</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {workOrderSection.products.map((product: Product, i: number) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">{i + 1}.</td>
-                        <td className="px-6 py-4 font-medium">{product.serialNumber || '-'}</td>
-                        <td className="px-6 py-4">{product.itemDescription}</td>
-                        <td className="px-6 py-4 text-right">{product.quantity}</td>
-                        <td className="px-6 py-4 text-gray-500">{product.remarks || '-'}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 whitespace-nowrap">{i + 1}.</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 font-medium whitespace-nowrap">{product.serialNumber || '-'}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4">{product.itemDescription}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right whitespace-nowrap">{product.quantity}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-gray-500">{product.remarks || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1388,26 +1375,26 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
           {/* PURCHASE ORDER SECTION */}
           {purchaseOrderSection?.poTable?.length > 0 && (
             <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] p-6 pb-4 ${dmSans.className}`}>Purchase Order</h2>
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] p-4 md:p-6 pb-3 md:pb-4 ${dmSans.className}`}>Purchase Order</h2>
 
               {/* Purchase Order Meta */}
-              <div className="px-6 pb-4 space-y-4">
+              <div className="px-4 md:px-6 pb-3 md:pb-4 space-y-3 md:space-y-4">
                 {purchaseOrderSection.shipTo && (
                   <div>
-                    <p className={`text-lg font-semibold ${dmSans.className}`}>Ship To:</p>
-                    <p className={`${dmSans.className}`}>{purchaseOrderSection.shipTo}</p>
+                    <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Ship To:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>{purchaseOrderSection.shipTo}</p>
                   </div>
                 )}
                 {purchaseOrderSection.paymentTerms && (
                   <div>
-                    <p className={`text-lg font-semibold ${dmSans.className}`}>Payment Terms:</p>
-                    <p className={`${dmSans.className}`}>{purchaseOrderSection.paymentTerms}</p>
+                    <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Payment Terms:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>{purchaseOrderSection.paymentTerms}</p>
                   </div>
                 )}
                 {purchaseOrderSection.deliveryTerms && (
                   <div>
-                    <p className={`text-lg font-semibold ${dmSans.className}`}>Delivery Terms:</p>
-                    <p className={`${dmSans.className}`}>{purchaseOrderSection.deliveryTerms}</p>
+                    <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Delivery Terms:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>{purchaseOrderSection.deliveryTerms}</p>
                   </div>
                 )}
               </div>
@@ -1417,55 +1404,55 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
                 <table className={`min-w-full divide-y divide-gray-200 ${dmSans.className}`}>
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Description</th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase">Unit</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">Qty</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">Unit Rate (PKR)</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">GST</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">GST Amount</th>
-                      <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 uppercase">Total (PKR)</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">Description</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 uppercase">Unit</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">Qty</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">Unit Rate</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">GST</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">GST Amt</th>
+                      <th className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-700 uppercase">Total</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {purchaseOrderSection.poTable.map((item: POItem, i: number) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">{item.description}</td>
-                        <td className="px-6 py-4">{item.unit}</td>
-                        <td className="px-6 py-4 text-right">{item.quantity}</td>
-                        <td className="px-6 py-4 text-right">{formatCurrency(item.unitRatePKR)}</td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-4 py-2 md:px-6 md:py-4">{item.description}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 whitespace-nowrap">{item.unit}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right whitespace-nowrap">{item.quantity}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right whitespace-nowrap">{formatCurrency(item.unitRatePKR)}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right whitespace-nowrap">
                           {item.gstApplicable ? `${item.gstPercentage || 0}%` : 'N/A'}
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right whitespace-nowrap">
                           {item.gstApplicable ? formatCurrency(item.gstAmount) : 'N/A'}
                         </td>
-                        <td className="px-6 py-4 text-right font-medium">{formatCurrency(item.totalAmountPKR)}</td>
+                        <td className="px-4 py-2 md:px-6 md:py-4 text-right font-medium whitespace-nowrap">{formatCurrency(item.totalAmountPKR)}</td>
                       </tr>
                     ))}
                   </tbody>
                   {purchaseOrderSection.gstSummary && (
                     <tfoot className="bg-gray-50">
                       <tr>
-                        <td colSpan={5} className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                        <td colSpan={5} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-900">
                           Subtotal:
                         </td>
-                        <td colSpan={2} className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                        <td colSpan={2} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-900">
                           Rs. {formatCurrency(purchaseOrderSection.gstSummary.subtotal)}
                         </td>
                       </tr>
                       <tr>
-                        <td colSpan={5} className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                        <td colSpan={5} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-900">
                           Total GST:
                         </td>
-                        <td colSpan={2} className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                        <td colSpan={2} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-medium text-gray-900">
                           Rs. {formatCurrency(purchaseOrderSection.gstSummary.totalGST)}
                         </td>
                       </tr>
                       <tr className="border-t border-gray-200">
-                        <td colSpan={5} className="px-6 py-3 text-right text-sm font-bold text-gray-900">
+                        <td colSpan={5} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-bold text-gray-900">
                           Grand Total:
                         </td>
-                        <td colSpan={2} className="px-6 py-3 text-right text-sm font-bold text-[#8B5E3C]">
+                        <td colSpan={2} className="px-4 py-2 md:px-6 md:py-3 text-right text-xs md:text-sm font-bold text-[#8B5E3C]">
                           Rs. {formatCurrency(purchaseOrderSection.gstSummary.grandTotal)}
                         </td>
                       </tr>
@@ -1478,41 +1465,41 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
 
           {/* Terms & Conditions */}
           {salesOrderSection?.termsAndConditions && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 pb-2 border-b ${dmSans.className}`}>
                 Terms & Conditions
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 <div>
-                  <p className={`text-lg font-semibold ${dmSans.className}`}>Payment Type:</p>
-                  <p className={`${dmSans.className}`}>
+                  <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Payment Type:</p>
+                  <p className={`text-sm md:text-base ${dmSans.className}`}>
                     {salesOrderSection.termsAndConditions.paymentType || 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className={`text-lg font-semibold ${dmSans.className}`}>Prices Include GST:</p>
-                  <p className={`${dmSans.className}`}>
+                  <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Prices Include GST:</p>
+                  <p className={`text-sm md:text-base ${dmSans.className}`}>
                     {salesOrderSection.termsAndConditions.pricesIncludeGST ? 'Yes' : 'No'}
                   </p>
                 </div>
                 {salesOrderSection.termsAndConditions.gstPercentage && (
                   <div>
-                    <p className={`text-lg font-semibold ${dmSans.className}`}>GST Percentage:</p>
-                    <p className={`${dmSans.className}`}>
+                    <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>GST Percentage:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>
                       {salesOrderSection.termsAndConditions.gstPercentage}%
                     </p>
                   </div>
                 )}
                 <div>
-                  <p className={`text-lg font-semibold ${dmSans.className}`}>Delivery Method:</p>
-                  <p className={`${dmSans.className}`}>
-                    {salesOrderSection.termsAndConditions.deliveryMethod || 'N/A'}
-                  </p>
+                  <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Delivery Method:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>
+                      {salesOrderSection.termsAndConditions.deliveryMethod || 'N/A'}
+                    </p>
                 </div>
                 {salesOrderSection.termsAndConditions.warrantyPeriod && (
                   <div>
-                    <p className={`text-lg font-semibold ${dmSans.className}`}>Warranty Period:</p>
-                    <p className={`${dmSans.className}`}>
+                    <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Warranty Period:</p>
+                    <p className={`text-sm md:text-base ${dmSans.className}`}>
                       {salesOrderSection.termsAndConditions.warrantyPeriod}
                     </p>
                   </div>
@@ -1523,19 +1510,19 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
 
           {/* Required Documents */}
           {salesOrderSection?.requiredDocuments && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 pb-2 border-b ${dmSans.className}`}>
                 Required Documents
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {salesOrderSection.requiredDocuments.quotationWithFinalPriceUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-[#8B5E3C] mb-3">Quotation with Final Price</h3>
+                    <h3 className="text-base md:text-lg font-medium text-[#8B5E3C] mb-2 md:mb-3">Quotation with Final Price</h3>
                     <a
                       href={salesOrderSection.requiredDocuments.quotationWithFinalPriceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-blue-600 hover:underline flex items-center gap-2 text-sm md:text-base"
                     >
                       📄 {salesOrderSection.requiredDocuments.quotationWithFinalPriceName || 'Document'}
                     </a>
@@ -1543,12 +1530,12 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
                 )}
                 {salesOrderSection.requiredDocuments.approvedShopDrawingUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-[#8B5E3C] mb-3">Approved Shop Drawing</h3>
+                    <h3 className="text-base md:text-lg font-medium text-[#8B5E3C] mb-2 md:mb-3">Approved Shop Drawing</h3>
                     <a
                       href={salesOrderSection.requiredDocuments.approvedShopDrawingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-blue-600 hover:underline flex items-center gap-2 text-sm md:text-base"
                     >
                       📄 {salesOrderSection.requiredDocuments.approvedShopDrawingName || 'Document'}
                     </a>
@@ -1556,12 +1543,12 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
                 )}
                 {salesOrderSection.requiredDocuments.componentListUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-[#8B5E3C] mb-3">Component List</h3>
+                    <h3 className="text-base md:text-lg font-medium text-[#8B5E3C] mb-2 md:mb-3">Component List</h3>
                     <a
                       href={salesOrderSection.requiredDocuments.componentListUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-blue-600 hover:underline flex items-center gap-2 text-sm md:text-base"
                     >
                       📄 {salesOrderSection.requiredDocuments.componentListName || 'Document'}
                     </a>
@@ -1569,12 +1556,12 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
                 )}
                 {salesOrderSection.requiredDocuments.customerPOCopyUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-[#8B5E3C] mb-3">Customer PO Copy</h3>
+                    <h3 className="text-base md:text-lg font-medium text-[#8B5E3C] mb-2 md:mb-3">Customer PO Copy</h3>
                     <a
                       href={salesOrderSection.requiredDocuments.customerPOCopyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-blue-600 hover:underline flex items-center gap-2 text-sm md:text-base"
                     >
                       📄 {salesOrderSection.requiredDocuments.customerPOCopyName || 'Document'}
                     </a>
@@ -1582,12 +1569,12 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
                 )}
                 {salesOrderSection.requiredDocuments.technicalSpecificationsUrl && (
                   <div>
-                    <h3 className="text-lg font-medium text-[#8B5E3C] mb-3">Technical Specifications</h3>
+                    <h3 className="text-base md:text-lg font-medium text-[#8B5E3C] mb-2 md:mb-3">Technical Specifications</h3>
                     <a
                       href={salesOrderSection.requiredDocuments.technicalSpecificationsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-2"
+                      className="text-blue-600 hover:underline flex items-center gap-2 text-sm md:text-base"
                     >
                       📄 {salesOrderSection.requiredDocuments.technicalSpecificationsName || 'Document'}
                     </a>
@@ -1599,20 +1586,20 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
 
           {/* Authorized By */}
           {salesOrderSection?.authorizedBy && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h2 className={`text-2xl font-semibold text-[#8B5E3C] mb-4 pb-2 border-b ${dmSans.className}`}>
+            <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+              <h2 className={`text-xl md:text-2xl font-semibold text-[#8B5E3C] mb-3 md:mb-4 pb-2 border-b ${dmSans.className}`}>
                 Authorization
               </h2>
               <div className="flex justify-end">
                 <div className="text-center">
-                  <p className={`text-lg font-semibold ${dmSans.className}`}>Authorized By:</p>
-                  <p className={`text-lg ${dmSans.className}`}>{salesOrderSection.authorizedBy}</p>
+                  <p className={`text-base md:text-lg font-semibold ${dmSans.className}`}>Authorized By:</p>
+                  <p className={`text-base md:text-lg ${dmSans.className}`}>{salesOrderSection.authorizedBy}</p>
                 </div>
               </div>
             </div>
           )}
         </main>
       </div>
-    </ProtectedRoute>
+     </ProtectedRoute>
   )
 }
