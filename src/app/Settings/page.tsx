@@ -112,8 +112,9 @@ export default function UpdatePasswordPage() {
       setNewPassword('')
       setConfirmPassword('')
       setRole('')
-    } catch (err: any) {
-      toast.error(err.message, {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update password'
+      toast.error(errorMessage, {
         duration: 4000,
         position: 'top-center',
         icon: '❌',
@@ -139,13 +140,10 @@ export default function UpdatePasswordPage() {
           <div className="flex justify-between items-start pb-4">
             <div className="space-y-1">
               <h1 className={`text-2xl font-bold pt-12 pl-4 text-[#8B5E3C] ${dmSans.className}`}>
-                {/* Update Role Password */}
+                Update Role Password
               </h1>
               <p className="text-sm text-gray-500 pl-4">
-                {/* Update authentication credentials for system roles */}
-              </p>
-              <p className="text-sm text-gray-500 pl-4">
-                {/* Update authentication credentials for system roles */}
+                Update authentication credentials for system roles
               </p>
             </div>
           </div>

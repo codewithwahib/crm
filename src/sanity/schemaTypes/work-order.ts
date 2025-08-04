@@ -569,6 +569,6 @@ export default defineType({
 });
 
 // Type guard for WorkOrderStatus
-function isWorkOrderStatus(status: any): status is WorkOrderStatus {
+function isWorkOrderStatus(status: string): status is WorkOrderStatus {
   return status in statusMap;
 }

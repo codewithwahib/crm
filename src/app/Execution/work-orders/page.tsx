@@ -100,68 +100,68 @@ export default function WorkOrderList() {
   })
 
   const handleDelete = async (id: string) => {
-    const workOrder = workOrders.find(order => order._id === id)
-    const orderNumber = workOrder?.workOrderSection?.workOrderNumber || 'this work order'
-    
-    // Custom toast confirmation
-    const toastId = toast.custom((t) => (
-      <div className={`bg-white p-6 rounded-lg shadow-xl border border-gray-200 max-w-md ${dmSans.className}`}>
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Confirm Deletion</h3>
-        <p className="text-gray-600 mb-6">
-          Are you sure you want to delete work order <span className="font-semibold">#{orderNumber}</span>? 
-          This action cannot be undone.
-        </p>
-        <div className="flex justify-end space-x-3">
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-            }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t.id)
-              try {
-                setDeletingId(id)
+  const workOrder = workOrders.find(order => order._id === id)
+  const orderNumber = workOrder?.workOrderSection?.workOrderNumber || 'this work order'
+  
+  // Custom toast confirmation - directly using toast.custom without assigning to variable
+  toast.custom((t) => (
+    <div className={`bg-white p-6 rounded-lg shadow-xl border border-gray-200 max-w-md ${dmSans.className}`}>
+      <h3 className="text-lg font-bold text-gray-800 mb-4">Confirm Deletion</h3>
+      <p className="text-gray-600 mb-6">
+        Are you sure you want to delete work order <span className="font-semibold">#{orderNumber}</span>? 
+        This action cannot be undone.
+      </p>
+      <div className="flex justify-end space-x-3">
+        <button
+          onClick={() => {
+            toast.dismiss(t.id)
+          }}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id)
+            try {
+              setDeletingId(id)
 
-                const res = await fetch('/api/work-orders/delete', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    id,
-                    workOrderNumber: orderNumber
-                  }),
-                })
+              const res = await fetch('/api/work-orders/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  id,
+                  workOrderNumber: orderNumber
+                }),
+              })
 
-                const data = await res.json()
+              const data = await res.json()
 
-                if (!res.ok) throw new Error(data.error || 'Failed to delete')
+              if (!res.ok) throw new Error(data.error || 'Failed to delete')
 
-                setWorkOrders(prev => prev.filter(order => order._id !== id))
-                toast.success(`Work order #${orderNumber} deleted successfully!`, {
-                  duration: 4000,
-                })
-              } catch (err) {
-                console.error(err)
-                toast.error(`Failed to delete work order #${orderNumber}`, {
-                  duration: 4000,
-                })
-              } finally {
-                setDeletingId(null)
-              }
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition"
-          >
-            Delete
-          </button>
-        </div>
+              setWorkOrders(prev => prev.filter(order => order._id !== id))
+              toast.success(`Work order #${orderNumber} deleted successfully!`, {
+                duration: 4000,
+              })
+            } catch (err) {
+              console.error(err)
+              toast.error(`Failed to delete work order #${orderNumber}`, {
+                duration: 4000,
+              })
+            } finally {
+              setDeletingId(null)
+            }
+          }}
+          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition"
+        >
+          Delete
+        </button>
       </div>
-    ), {
-      duration: Infinity
-    })
-  }
+    </div>
+  ), {
+    duration: Infinity
+  })
+}
 
   if (isLoading) {
     return (

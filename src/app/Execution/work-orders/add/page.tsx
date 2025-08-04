@@ -98,16 +98,16 @@ interface WorkOrderSection {
   products: Product[]
 }
 
-interface InputFieldProps {
-  label: string;
-  type?: string;
-  value: string | number;
-  onChange?: (value: string) => void;
-  required?: boolean;
-  readOnly?: boolean;
-  fontClass?: string;
-  error?: boolean; // Only allow boolean, not string
-}
+// interface InputFieldProps {
+//   label: string;
+//   type?: string;
+//   value: string | number;
+//   onChange?: (value: string) => void;
+//   required?: boolean;
+//   readOnly?: boolean;
+//   fontClass?: string;
+//   error?: boolean; // Only allow boolean, not string
+// }
 
 interface FormData {
   workOrderSection: WorkOrderSection

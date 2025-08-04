@@ -1069,11 +1069,11 @@ interface POItem {
   totalAmountPKR: number
 }
 
-interface GSTSummary {
-  subtotal?: number
-  totalGST?: number
-  grandTotal?: number
-}
+// interface GSTSummary {
+//   subtotal?: number
+//   totalGST?: number
+//   grandTotal?: number
+// }
 
 // Helper: Safe number formatter
 const formatCurrency = (value?: number | string | null): string => {
@@ -1190,11 +1190,11 @@ export default async function WorkOrderDetailPage({ params }: { params: { id: st
   } = data
 
   // Calculate totals
-  const poTotal =
-    purchaseOrderSection?.poTable?.reduce((sum: number, item: POItem) => {
-      const val = Number(item.totalAmountPKR || 0)
-      return sum + (isNaN(val) ? 0 : val)
-    }, 0) || 0
+  // const poTotal =
+  //   purchaseOrderSection?.poTable?.reduce((sum: number, item: POItem) => {
+  //     const val = Number(item.totalAmountPKR || 0)
+  //     return sum + (isNaN(val) ? 0 : val)
+  //   }, 0) || 0
 
   return (
     <ProtectedRoute allowedUser='director'>

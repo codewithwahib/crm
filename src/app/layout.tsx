@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Customer Resource Management",
+  title: "A to Zee Switchgear Engineering",
   description: "A to Zee Switchgear Engineering",
 };
 

@@ -7,7 +7,7 @@ import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Components/sidebar'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import  { Toaster } from 'react-hot-toast'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],

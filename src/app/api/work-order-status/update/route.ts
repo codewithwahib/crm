@@ -11,7 +11,7 @@ interface UpdateWorkOrderStatusRequest {
 // Define types for the response
 interface SuccessResponse {
   success: true;
-  data: any; // You can replace 'any' with a more specific type from Sanity if available
+  data: unknown; // You can replace 'any' with a more specific type from Sanity if available
 }
 
 interface ErrorResponse {
