@@ -1,26 +1,58 @@
-import { NextResponse } from 'next/server'
-import { writeClient } from '@/sanity/lib/client' // Make sure this has token for write access
+import { writeClient } from "@/sanity/lib/client"
+import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+// Define types for the request body
+interface UpdateWorkOrderStatusRequest {
+  id: string;
+  status: 'Mechanical' | 'Powder Paint' | 'Assembling' | 'Delivered' | 'Bill' | 'Paint' | 'Wiring';
+  updatedAt: string;
+}
+
+// Define types for the response
+interface SuccessResponse {
+  success: true;
+  data: any; // You can replace 'any' with a more specific type from Sanity if available
+}
+
+interface ErrorResponse {
+  error: string;
+}
+
+export async function POST(request: Request): Promise<NextResponse<SuccessResponse | ErrorResponse>> {
   try {
-    const { id, status } = await req.json()
+    const { id, status, updatedAt } = await request.json() as UpdateWorkOrderStatusRequest;
 
     if (!id || !status) {
       return NextResponse.json(
-        { error: 'Missing id or status' },
+        { error: "Missing required fields" },
         { status: 400 }
-      )
+      );
     }
 
-    // ✅ Update status in Sanity
-    const updatedDoc = await writeClient.patch(id).set({ status }).commit()
+    // Validate the status value
+    const validStatuses = ['Mechanical', 'Powder Paint', 'Assembling', 'Delivered', 'Bill', 'Paint', 'Wiring'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status value" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ success: true, updatedDoc })
+    // Update the work order status in Sanity
+    const result = await writeClient
+      .patch(id)
+      .set({
+        "workOrderSection.status.currentStatus": status,
+        "workOrderSection.status.updatedAt": updatedAt,
+      })
+      .commit();
+
+    return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error('Failed to update status:', error)
+    console.error("Error updating work order status:", error);
     return NextResponse.json(
-      { error: 'Failed to update status' },
+      { error: "Failed to update work order status" },
       { status: 500 }
-    )
+    );
   }
 }

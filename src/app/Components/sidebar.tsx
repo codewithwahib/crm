@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { DM_Sans } from 'next/font/google';
 import { useState } from 'react';
+import { IoSettingsOutline } from "react-icons/io5"
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { FaBorderAll, FaUserClock } from "react-icons/fa";
 import { IoIosContacts } from "react-icons/io";
@@ -121,6 +122,12 @@ const Sidebar = () => {
             <span>Inventory</span>
           </Link>
 
+
+          <Link href="/Settings" className={`${navItemClasses('/Settings')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
+            <IoSettingsOutline  className="h-5 w-5 mr-3" />
+            <span>Settings</span>
+          </Link>
+
           {isAdminMode && (
             <div className="pt-4 mt-4 border-t border-gray-200">
               <p className="px-3 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin Panel</p>
@@ -137,7 +144,7 @@ const Sidebar = () => {
                 <span>Manage Inventory</span>
               </Link>
               <Link href="/documents/add" className={`${navItemClasses('/documents/add')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
-                <FaBorderAll className="h-5 w-5 mr-3" />
+                <GrDocumentStore className="h-5 w-5 mr-3" />
                 <span>Manage Documents</span>
               </Link>
             </div>

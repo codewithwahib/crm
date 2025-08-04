@@ -146,31 +146,35 @@ export default function AnasNayyarDashboard() {
           setQuotations(result)
           calculateMonthlyRevenue(result)
         } else {
-          const query = `*[_type == "workOrderSalesOrder" && references(*[_type == "quotation" && salesPerson == "Anas Nayyar"]._id)]{
-            _id,
-            _createdAt,
-            salesOrderSection{
-              orderDetails{
-                poValue,
-                includesGST
-              },
-              termsAndConditions{
-                pricesIncludeGST
-              }
-            },
-            purchaseOrderSection{
-              poTable[]{
-                description,
-                unit,
-                quantity,
-                unitRatePKR,
-                gstApplicable,
-                gstPercentage,
-                gstAmount,
-                totalAmountPKR
-              }
-            }
-          }`
+          const query = `*[
+  _type == "workOrderSalesOrder" &&
+  salesOrderSection.customerInfo.salesPerson == "Anas Nayyar"
+] | order(_createdAt desc) {
+  _id,
+  _createdAt,
+  salesOrderSection {
+    orderDetails {
+      poValue,
+      includesGST
+    },
+    termsAndConditions {
+      pricesIncludeGST
+    }
+  },
+  purchaseOrderSection {
+    poTable[] {
+      description,
+      unit,
+      quantity,
+      unitRatePKR,
+      gstApplicable,
+      gstPercentage,
+      gstAmount,
+      totalAmountPKR
+    }
+  }
+}
+`
           
           const result = await client.fetch<WorkOrder[]>(query)
           setWorkOrders(result)

@@ -1100,7 +1100,7 @@ import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
-import Sidebar from '@/app/Components/sidebar'
+import Sidebar from '@/app/Execution/Components/sidebar'
 import { 
   PieChart, 
   Pie, 

@@ -1,8 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
-import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Sidebar from '@/app/Aziz-Ahmed/Components/sidebar'
 import { 
   PieChart, 
@@ -146,31 +146,35 @@ export default function AnasNayyarDashboard() {
           setQuotations(result)
           calculateMonthlyRevenue(result)
         } else {
-          const query = `*[_type == "workOrderSalesOrder" && references(*[_type == "quotation" && salesPerson == "Aziz Ahmed"]._id)]{
-            _id,
-            _createdAt,
-            salesOrderSection{
-              orderDetails{
-                poValue,
-                includesGST
-              },
-              termsAndConditions{
-                pricesIncludeGST
-              }
-            },
-            purchaseOrderSection{
-              poTable[]{
-                description,
-                unit,
-                quantity,
-                unitRatePKR,
-                gstApplicable,
-                gstPercentage,
-                gstAmount,
-                totalAmountPKR
-              }
-            }
-          }`
+          const query = `*[
+  _type == "workOrderSalesOrder" &&
+  salesOrderSection.customerInfo.salesPerson == "Aziz Ahmed"
+] | order(_createdAt desc) {
+  _id,
+  _createdAt,
+  salesOrderSection {
+    orderDetails {
+      poValue,
+      includesGST
+    },
+    termsAndConditions {
+      pricesIncludeGST
+    }
+  },
+  purchaseOrderSection {
+    poTable[] {
+      description,
+      unit,
+      quantity,
+      unitRatePKR,
+      gstApplicable,
+      gstPercentage,
+      gstAmount,
+      totalAmountPKR
+    }
+  }
+}
+`
           
           const result = await client.fetch<WorkOrder[]>(query)
           setWorkOrders(result)
@@ -376,7 +380,7 @@ if (isLoading) {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 gap-4">
           <div className="space-y-2 pt-10 pl-5 w-full md:w-auto">
             <h1 className={`text-2xl sm:text-3xl pr-3 font-bold text-[#8B5E3C] ${dmSans.className}`}>
-      Aziz Ahmed&apos;s Dashboard ({activeTab === 'quotations' ? 'Quotations' : 'Work Orders'})
+              Anas Nayyar&apos;s Dashboard ({activeTab === 'quotations' ? 'Quotations' : 'Work Orders'})
             </h1>
           </div>
           <div className={`flex space-x-2 w-full md:w-auto pb-4 md:pb-0 pl-5 md:pl-0 ${dmSans.variable} font-sans`}>

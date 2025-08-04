@@ -129,16 +129,26 @@ export default function AddQuotation() {
   ])
 
   const [quotationDocs, setQuotationDocs] = useState<File[]>([])
-  // const [isLoading] = useState(true)
   const [technicalDrawings, setTechnicalDrawings] = useState<File[]>([])
   const [sldFile, setSldFile] = useState<File | null>(null)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  const capitalizeWords = (str: string) => {
+    return str.replace(/\b\w/g, char => char.toUpperCase())
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    let processedValue = value
+    
+    // Capitalize each word for salesPerson and preparedBy fields
+    if (name === 'salesPerson' || name === 'preparedBy') {
+      processedValue = capitalizeWords(value)
+    }
+    
+    setFormData((prev) => ({ ...prev, [name]: processedValue }))
   }
 
   const handleProductChange = (index: number, field: string, value: string | number) => {
@@ -227,135 +237,125 @@ export default function AddQuotation() {
     }
   }
 
-//    if (isLoading) {
-//   return (
-//     <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
-//       <div className="flex flex-col items-center space-y-4">
-//         <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
-//       </div>
-//     </div>
-//   );
-// }
-
   return (
     <ProtectedRoute allowedUser='director'>
-    <div className="min-h-screen bg-white text-gray-800">
-      <Toaster />
-      <Sidebar />
-      <main className="max-w-5xl pt-16 mx-auto px-4 py-6">
-        <h1 className={`text-2xl font-bold text-[#8B5E3C] ${dmSans.className} tracking-wide`}>
-          Add New Quotation
-        </h1>
+      <div className="min-h-screen bg-white text-gray-800">
+        <Toaster />
+        <Sidebar />
+        <main className="max-w-5xl pt-16 mx-auto px-4 py-6">
+          <h1 className={`text-2xl font-bold text-[#8B5E3C] ${dmSans.className} tracking-wide`}>
+            Add New Quotation
+          </h1>
 
-        {error && (
-          <div className={`mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md text-sm ${dmSans.className} tracking-wide`}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* Basic Info */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Basic Information
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField label="Quotation ID *" name="quotationId" value={formData.quotationId} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Reference No *" name="referenceNo" value={formData.referenceNo} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="FERENC Number" name="ferencNumber" value={formData.ferencNumber} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Date *" type="date" name="date" value={formData.date} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
-              <SelectField
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                options={['Draft', 'Sent', 'Accepted', 'Rejected', 'Expired']}
-                fontClass={`${dmSans.className} tracking-wide`}
-              />
-              <InputField label="Project Name" name="projectName" value={formData.projectName} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+          {error && (
+            <div className={`mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-md text-sm ${dmSans.className} tracking-wide`}>
+              {error}
             </div>
-          </div>
+          )}
 
-          {/* Customer Info */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Customer Information
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField label="Client *" name="client" value={formData.client} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Company" name="company" value={formData.company} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Customer Email" type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Customer Phone" name="customerPhone" value={formData.customerPhone} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <TextareaField label="Address" name="address" value={formData.address} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+            {/* Basic Info */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Basic Information
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField label="Quotation ID *" name="quotationId" value={formData.quotationId} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Reference No *" name="referenceNo" value={formData.referenceNo} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="FERENC Number" name="ferencNumber" value={formData.ferencNumber} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Date *" type="date" name="date" value={formData.date} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
+                <SelectField
+                  label="Status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  options={['Draft', 'Sent', 'Accepted', 'Rejected', 'Expired']}
+                  fontClass={`${dmSans.className} tracking-wide`}
+                />
+                <InputField label="Project Name" name="projectName" value={formData.projectName} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+              </div>
             </div>
-          </div>
 
-          {/* Quotation Meta */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
-              Quotation Details
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField label="Subject" name="subject" value={formData.subject} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Sent Date" type="date" name="sentDate" value={formData.sentDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Receiving Date" type="date" name="receivingDate" value={formData.receivingDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Revision No." name="revision" value={formData.revision} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Revision Date" type="date" name="revisionDate" value={formData.revisionDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Sales Person" name="salesPerson" value={formData.salesPerson} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
-              <InputField label="Prepared By" name="preparedBy" value={formData.preparedBy} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+            {/* Customer Info */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Customer Information
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField label="Client *" name="client" value={formData.client} onChange={handleChange} required fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Company" name="company" value={formData.company} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Customer Email" type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Customer Phone" name="customerPhone" value={formData.customerPhone} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <TextareaField label="Address" name="address" value={formData.address} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+              </div>
             </div>
-          </div>
 
-          {/* Products */}
-          <ProductsSection
-            products={products}
-            onChange={handleProductChange}
-            onAdd={addProductRow}
-            onRemove={removeProductRow}
-            subtotal={formData.subtotal}
-            gst={formData.gst}
-            total={formData.totalPrice}
-            onGSTChange={handleGSTChange}
-            fontClass={`${dmSans.className} tracking-wide`}
-          />
+            {/* Quotation Meta */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${dmSans.className} tracking-wide`}>
+                Quotation Details
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField label="Subject" name="subject" value={formData.subject} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Sent Date" type="date" name="sentDate" value={formData.sentDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Receiving Date" type="date" name="receivingDate" value={formData.receivingDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Revision No." name="revision" value={formData.revision} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Revision Date" type="date" name="revisionDate" value={formData.revisionDate} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Sales Person" name="salesPerson" value={formData.salesPerson} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+                <InputField label="Prepared By" name="preparedBy" value={formData.preparedBy} onChange={handleChange} fontClass={`${dmSans.className} tracking-wide`} />
+              </div>
+            </div>
 
-          {/* Terms & Notes */}
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <TextareaField label="Terms & Conditions" name="termsAndConditions" value={formData.termsAndConditions} onChange={handleChange} rows={4} fontClass={`${dmSans.className} tracking-wide`} />
-            <TextareaField label="Internal Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} fontClass={`${dmSans.className} tracking-wide`} />
-          </div>
+            {/* Products */}
+            <ProductsSection
+              products={products}
+              onChange={handleProductChange}
+              onAdd={addProductRow}
+              onRemove={removeProductRow}
+              subtotal={formData.subtotal}
+              gst={formData.gst}
+              total={formData.totalPrice}
+              onGSTChange={handleGSTChange}
+              fontClass={`${dmSans.className} tracking-wide`}
+            />
 
-          {/* Attachments */}
-          <AttachmentsSection
-            quotationDocs={quotationDocs}
-            technicalDrawings={technicalDrawings}
-            sldFile={sldFile}
-            onQuotationUpload={(f: FileList | null) => handleFileUpload(setQuotationDocs, f)}
-            onDrawingUpload={(f: FileList | null) => handleFileUpload(setTechnicalDrawings, f)}
-            onSldUpload={(f: File | null) => handleSldUpload(f)}
-            fontClass={`${dmSans.className} tracking-wide`}
-          />
+            {/* Terms & Notes */}
+            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <TextareaField label="Terms & Conditions" name="termsAndConditions" value={formData.termsAndConditions} onChange={handleChange} rows={4} fontClass={`${dmSans.className} tracking-wide`} />
+              <TextareaField label="Internal Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} fontClass={`${dmSans.className} tracking-wide`} />
+            </div>
 
-          {/* Submit */}
-          <div className={`flex justify-end gap-3 pt-4 border-t ${dmSans.className} tracking-wide`}>
-            <button
-              type="button"
-              onClick={() => router.push('/quotation')}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 tracking-wide"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] disabled:opacity-50 tracking-wide"
-            >
-              {isSubmitting ? 'Saving...' : 'Save Quotation'}
-            </button>
-          </div>
-        </form>
-      </main>
-    </div>
+            {/* Attachments */}
+            <AttachmentsSection
+              quotationDocs={quotationDocs}
+              technicalDrawings={technicalDrawings}
+              sldFile={sldFile}
+              onQuotationUpload={(f: FileList | null) => handleFileUpload(setQuotationDocs, f)}
+              onDrawingUpload={(f: FileList | null) => handleFileUpload(setTechnicalDrawings, f)}
+              onSldUpload={(f: File | null) => handleSldUpload(f)}
+              fontClass={`${dmSans.className} tracking-wide`}
+            />
+
+            {/* Submit */}
+            <div className={`flex justify-end gap-3 pt-4 border-t ${dmSans.className} tracking-wide`}>
+              <button
+                type="button"
+                onClick={() => router.push('/quotation')}
+                className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 tracking-wide"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] disabled:opacity-50 tracking-wide"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Quotation'}
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
     </ProtectedRoute>
   )
 }
@@ -427,7 +427,6 @@ function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, t
         <p className="mt-1 font-bold tracking-wide">Total: {total.toFixed(2)}</p>
       </div>
     </div>
-    
   )
 }
 

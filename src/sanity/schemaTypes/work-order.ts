@@ -1,5 +1,26 @@
 import { defineType, defineField } from 'sanity'
 
+// Define the type for work order status
+type WorkOrderStatus = 
+  | 'mechanical' 
+  | 'powder_paint' 
+  | 'assembling' 
+  | 'delivered' 
+  | 'bill' 
+  | 'paint' 
+  | 'wiring';
+
+// Create the status map with proper typing
+const statusMap: Record<WorkOrderStatus, string> = {
+  mechanical: '🔧 Mechanical',
+  powder_paint: '🎨 Powder Paint',
+  assembling: '🛠️ Assembling',
+  delivered: '🚚 Delivered',
+  bill: '💰 Bill',
+  paint: '🎨 Paint',
+  wiring: '🔌 Wiring'
+};
+
 export default defineType({
   name: 'workOrderSalesOrder',
   title: 'Work Order, Sales Order & PO',
@@ -64,6 +85,80 @@ export default defineType({
                 defineField({ name: 'itemDescription', title: 'Item Description', type: 'text', rows: 2 }),
                 defineField({ name: 'quantity', title: 'Quantity', type: 'number', validation: (Rule) => Rule.min(1).error('Quantity must be at least 1') }),
                 defineField({ name: 'remarks', title: 'Remarks', type: 'string' }),
+              ],
+            }),
+          ],
+        }),
+
+        /* ===========================
+           WORK ORDER STATUS SECTION
+        ============================ */
+        defineField({
+          name: 'status',
+          title: 'Work Order Status',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'currentStatus',
+              title: 'Current Status',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Mechanical', value: 'mechanical' },
+                  { title: 'Powder Paint', value: 'powder_paint' },
+                  { title: 'Assembling', value: 'assembling' },
+                  { title: 'Delivered', value: 'delivered' },
+                  { title: 'Bill', value: 'bill' },
+                  { title: 'Paint', value: 'paint' },
+                  { title: 'Wiring', value: 'wiring' },
+                ],
+                layout: 'dropdown',
+              },
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'statusHistory',
+              title: 'Status History',
+              type: 'array',
+              of: [
+                defineField({
+                  name: 'statusUpdate',
+                  title: 'Status Update',
+                  type: 'object',
+                  fields: [
+                    defineField({
+                      name: 'status',
+                      title: 'Status',
+                      type: 'string',
+                      options: {
+                        list: [
+                          { title: 'Mechanical', value: 'mechanical' },
+                          { title: 'Powder Paint', value: 'powder_paint' },
+                          { title: 'Assembling', value: 'assembling' },
+                          { title: 'Delivered', value: 'delivered' },
+                          { title: 'Bill', value: 'bill' },
+                          { title: 'Paint', value: 'paint' },
+                          { title: 'Wiring', value: 'wiring' },
+                        ],
+                      },
+                    }),
+                    defineField({
+                      name: 'date',
+                      title: 'Date',
+                      type: 'datetime',
+                      options: {
+                        dateFormat: 'DD-MM-YYYY',
+                        timeFormat: 'HH:mm',
+                      },
+                    }),
+                    defineField({
+                      name: 'notes',
+                      title: 'Notes',
+                      type: 'text',
+                      rows: 2,
+                    }),
+                  ],
+                }),
               ],
             }),
           ],
@@ -431,17 +526,33 @@ export default defineType({
       poDate: 'salesOrderSection.orderDetails.poDate',
       poValue: 'salesOrderSection.orderDetails.poValue',
       includesGST: 'salesOrderSection.termsAndConditions.pricesIncludeGST',
+      status: 'workOrderSection.status.currentStatus',
     },
-    prepare({ title, subtitle, poNumber, poDate, poValue, includesGST }) {
-      const formattedPoDate = poDate ? new Date(poDate).toLocaleDateString() : 'No PO date'
+    prepare(selection) {
+      const {
+        title,
+        subtitle,
+        poNumber,
+        poDate,
+        poValue,
+        includesGST,
+        status
+      } = selection;
+
+      const formattedPoDate = poDate ? new Date(poDate).toLocaleDateString() : 'No PO date';
       const formattedValue = poValue ? 
         new Intl.NumberFormat('en-PK', { 
           style: 'currency', 
           currency: 'PKR',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
-        }).format(poValue).replace('PKR', 'Rs ') : 'No value'
+        }).format(poValue).replace('PKR', 'Rs ') : 'No value';
       
+      // Type-safe status display
+      const statusDisplay = status && isWorkOrderStatus(status) 
+        ? statusMap[status] 
+        : 'No status';
+
       return {
         title: title || 'Work/Sales/PO',
         subtitle: [
@@ -449,9 +560,15 @@ export default defineType({
           poNumber ? `PO: ${poNumber}` : 'No PO number',
           `PO Date: ${formattedPoDate}`,
           `Value: ${formattedValue}`,
-          includesGST ? '(incl. GST)' : '(excl. GST)'
+          includesGST ? '(incl. GST)' : '(excl. GST)',
+          `Status: ${statusDisplay}`
         ].join(' | ')
-      }
+      };
     },
   },
-})
+});
+
+// Type guard for WorkOrderStatus
+function isWorkOrderStatus(status: any): status is WorkOrderStatus {
+  return status in statusMap;
+}
