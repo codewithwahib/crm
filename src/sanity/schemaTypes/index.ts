@@ -12,6 +12,8 @@ import salesManagerPassword from './sales-manager-password'
 import executionPassword from './execution-password'
 import mechanicalPassword from './mechanical-password'
 import storePassword from './store-password'
+import jobApplication from './jobsapplication'
+
 
 
 
@@ -34,6 +36,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     executionPassword,
     mechanicalPassword,
     storePassword,
+    jobApplication,
 
 
   ],

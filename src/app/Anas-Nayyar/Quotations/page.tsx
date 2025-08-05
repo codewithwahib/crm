@@ -187,7 +187,7 @@ export default function QuotationsListPage() {
                           <span>{q.salesPerson || '-'}</span>
                         </div>
                         <Link
-                          href={`/Quotations/${q.quotationId?.toUpperCase()}`}
+                          href={`Anas-Nayyar/Quotations/${q.quotationId?.toUpperCase()}`}
                           className="block mt-3 text-center text-blue-600 hover:underline font-medium"
                         >
                           View Full Details
