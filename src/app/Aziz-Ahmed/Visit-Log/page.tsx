@@ -1375,7 +1375,7 @@ export default function AnasAttendanceForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading] = useState(true)
+  // const [isLoading] = useState(true)
   const [success, setSuccess] = useState<string | null>(null)
 
   const fetchAttendanceList = useCallback(async () => {

@@ -7,7 +7,6 @@ import Sidebar from '@/app/Anas-Nayyar/Components/sidebar'
 import ProtectedRoute from '@/app/Components/ProtectedRoute'
 import Link from 'next/link'
 import { HiSearch, HiX } from 'react-icons/hi'
-import toast from 'react-hot-toast'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],

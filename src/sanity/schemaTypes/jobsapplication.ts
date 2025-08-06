@@ -1,6 +1,4 @@
-// schemas/jobApplication.ts
-
-export default {
+const jobApplicationSchema = {
   name: 'jobApplication',
   type: 'document',
   title: 'Job Applications',
@@ -18,4 +16,6 @@ export default {
       title: 'Resume',
     },
   ],
-}
+};
+
+export default jobApplicationSchema;

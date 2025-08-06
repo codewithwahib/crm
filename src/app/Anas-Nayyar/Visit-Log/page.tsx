@@ -61,7 +61,7 @@ type TimeFilter = 'today' | 'week' | 'month' | 'year' | 'all'
 
 export default function AnasAttendanceForm() {
   const [attendanceList, setAttendanceList] = useState<AttendanceRecord[]>([])
-  const [isLoading] = useState(true)
+  // const [isLoading] = useState(true)
   const [filteredList, setFilteredList] = useState<AttendanceRecord[]>([])
   const [loadingAttendance, setLoadingAttendance] = useState(true)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('today')

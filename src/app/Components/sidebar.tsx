@@ -9,7 +9,7 @@ import { IoSettingsOutline } from "react-icons/io5"
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { FaBorderAll, FaUserClock } from "react-icons/fa";
 import { IoIosContacts } from "react-icons/io";
-import { BsBagFill } from "react-icons/bs";
+// import { BsBagFill } from "react-icons/bs";
 import { RiStore2Line } from "react-icons/ri";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { HiOutlineLogout } from "react-icons/hi";
@@ -124,10 +124,10 @@ const Sidebar = () => {
           </Link>
 
 
-          <Link href="/jobs-application" className={`${navItemClasses('/jobs-application')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
+          {/* <Link href="/jobs-application" className={`${navItemClasses('/jobs-application')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <BsBagFill className="h-5 w-5 mr-3" />
             <span>Jobs Application</span>
-          </Link>
+          </Link> */}
 
 
           <Link href="/Settings" className={`${navItemClasses('/Settings')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
