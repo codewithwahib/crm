@@ -123,6 +123,8 @@ const Sidebar = () => {
             <span>Inventory</span>
           </Link>
 
+          
+
 
           {/* <Link href="/jobs-application" className={`${navItemClasses('/jobs-application')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
             <BsBagFill className="h-5 w-5 mr-3" />

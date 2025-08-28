@@ -181,7 +181,14 @@ export default defineType({
       name: 'subtotal',
       title: 'Subtotal',
       type: 'number',
-      description: 'Sum of all items before taxes'
+      description: 'Sum of all items before taxes and discounts'
+    }),
+    defineField({
+      name: 'discount',
+      title: 'Discount Amount',
+      type: 'number',
+      description: 'Discount amount to be subtracted from subtotal',
+      initialValue: 0
     }),
     defineField({
       name: 'gst',
@@ -193,7 +200,7 @@ export default defineType({
       name: 'totalPrice',
       title: 'Total Amount',
       type: 'number',
-      description: 'Subtotal + Taxes'
+      description: 'Subtotal - Discount + Taxes'
     }),
 
     defineField({
@@ -230,6 +237,15 @@ export default defineType({
       options: {
         accept: '.pdf,.dwg,.dxf,.png,.jpg,.jpeg'
       }
+    }),
+
+    // ✅ Other Documents section
+    defineField({
+      name: 'otherDocuments',
+      title: 'Other Documents',
+      type: 'array',
+      of: [{ type: 'file' }],
+      description: 'Any other relevant documents related to this quotation'
     }),
 
     defineField({

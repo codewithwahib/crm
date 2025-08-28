@@ -13,8 +13,7 @@ import executionPassword from './execution-password'
 import mechanicalPassword from './mechanical-password'
 import storePassword from './store-password'
 import jobApplication from './jobsapplication'
-
-
+import button from './button'
 
 
 
@@ -37,6 +36,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     mechanicalPassword,
     storePassword,
     jobApplication,
+    button,
 
 
   ],

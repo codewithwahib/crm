@@ -32,6 +32,7 @@ interface FormData {
   salesPerson: string
   preparedBy: string
   subtotal: number
+  discount: number
   gst: number
   totalPrice: number
   termsAndConditions: string
@@ -71,9 +72,13 @@ interface ProductsSectionProps {
   onAdd: () => void
   onRemove: (index: number) => void
   subtotal: number
+  discount: number
   gst: number
   total: number
+  onDiscountChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onGSTChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onSubtotalChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onTotalChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   fontClass: string
 }
 
@@ -81,9 +86,15 @@ interface AttachmentsSectionProps {
   quotationDocs: File[]
   technicalDrawings: File[]
   sldFile: File | null
+  otherDocuments: File[]
   onQuotationUpload: (files: FileList | null) => void
   onDrawingUpload: (files: FileList | null) => void
   onSldUpload: (file: File | null) => void
+  onOtherDocumentsUpload: (files: FileList | null) => void
+  onRemoveQuotationDoc: (index: number) => void
+  onRemoveDrawing: (index: number) => void
+  onRemoveSld: () => void
+  onRemoveOtherDocument: (index: number) => void
   fontClass: string
 }
 
@@ -92,6 +103,15 @@ interface FileUploadProps {
   multiple?: boolean
   files: File[]
   onUpload: (files: FileList | null) => void
+  onRemove: (index: number) => void
+  fontClass: string
+}
+
+interface SingleFileUploadProps {
+  label: string
+  file: File | null
+  onUpload: (file: File | null) => void
+  onRemove: () => void
   fontClass: string
 }
 
@@ -118,6 +138,7 @@ export default function AddQuotation() {
     salesPerson: '',
     preparedBy: '',
     subtotal: 0,
+    discount: 0,
     gst: 0,
     totalPrice: 0,
     termsAndConditions: '',
@@ -131,6 +152,7 @@ export default function AddQuotation() {
   const [quotationDocs, setQuotationDocs] = useState<File[]>([])
   const [technicalDrawings, setTechnicalDrawings] = useState<File[]>([])
   const [sldFile, setSldFile] = useState<File | null>(null)
+  const [otherDocuments, setOtherDocuments] = useState<File[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -155,11 +177,9 @@ export default function AddQuotation() {
     const updated = [...products]
     updated[index] = {
       ...updated[index],
-      [field]: field === 'quantity' || field === 'unitPrice' ? Number(value) : value
+      [field]: field === 'quantity' || field === 'unitPrice' || field === 'totalPrice' ? Number(value) : value
     }
-    updated[index].totalPrice = updated[index].quantity * updated[index].unitPrice
     setProducts(updated)
-    recalcTotals(updated, formData.gst)
   }
 
   const addProductRow = () => {
@@ -169,19 +189,26 @@ export default function AddQuotation() {
   const removeProductRow = (index: number) => {
     const updated = products.filter((_, i) => i !== index)
     setProducts(updated)
-    recalcTotals(updated, formData.gst)
   }
 
-  const recalcTotals = (prodList = products, gstValue = formData.gst) => {
-    const subtotal = prodList.reduce((sum, p) => sum + (p.totalPrice || 0), 0)
-    const total = subtotal + Number(gstValue || 0)
-    setFormData((prev) => ({ ...prev, subtotal, totalPrice: total }))
+  const handleSubtotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const subtotalValue = Number(e.target.value)
+    setFormData((prev) => ({ ...prev, subtotal: subtotalValue }))
+  }
+
+  const handleTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const totalValue = Number(e.target.value)
+    setFormData((prev) => ({ ...prev, totalPrice: totalValue }))
+  }
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const discountValue = Number(e.target.value)
+    setFormData((prev) => ({ ...prev, discount: discountValue }))
   }
 
   const handleGSTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const gstValue = Number(e.target.value)
     setFormData((prev) => ({ ...prev, gst: gstValue }))
-    recalcTotals(products, gstValue)
   }
 
   const handleFileUpload = (setter: React.Dispatch<React.SetStateAction<File[]>>, files: FileList | null) => {
@@ -192,6 +219,14 @@ export default function AddQuotation() {
   const handleSldUpload = (file: File | null) => {
     if (!file) return
     setSldFile(file)
+  }
+
+  const handleRemoveFile = (setter: React.Dispatch<React.SetStateAction<File[]>>, index: number) => {
+    setter((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleRemoveSld = () => {
+    setSldFile(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,6 +253,7 @@ export default function AddQuotation() {
       quotationDocs.forEach(file => fd.append('quotationDocs', file))
       technicalDrawings.forEach(file => fd.append('technicalDrawings', file))
       if (sldFile) fd.append('sldFile', sldFile)
+      otherDocuments.forEach(file => fd.append('otherDocuments', file))
 
       const res = await fetch('/api/quotation', { method: 'POST', body: fd })
       if (!res.ok) {
@@ -313,9 +349,13 @@ export default function AddQuotation() {
               onAdd={addProductRow}
               onRemove={removeProductRow}
               subtotal={formData.subtotal}
+              discount={formData.discount}
               gst={formData.gst}
               total={formData.totalPrice}
+              onDiscountChange={handleDiscountChange}
               onGSTChange={handleGSTChange}
+              onSubtotalChange={handleSubtotalChange}
+              onTotalChange={handleTotalChange}
               fontClass={`${dmSans.className} tracking-wide`}
             />
 
@@ -330,9 +370,15 @@ export default function AddQuotation() {
               quotationDocs={quotationDocs}
               technicalDrawings={technicalDrawings}
               sldFile={sldFile}
+              otherDocuments={otherDocuments}
               onQuotationUpload={(f: FileList | null) => handleFileUpload(setQuotationDocs, f)}
               onDrawingUpload={(f: FileList | null) => handleFileUpload(setTechnicalDrawings, f)}
               onSldUpload={(f: File | null) => handleSldUpload(f)}
+              onOtherDocumentsUpload={(f: FileList | null) => handleFileUpload(setOtherDocuments, f)}
+              onRemoveQuotationDoc={(index: number) => handleRemoveFile(setQuotationDocs, index)}
+              onRemoveDrawing={(index: number) => handleRemoveFile(setTechnicalDrawings, index)}
+              onRemoveSld={handleRemoveSld}
+              onRemoveOtherDocument={(index: number) => handleRemoveFile(setOtherDocuments, index)}
               fontClass={`${dmSans.className} tracking-wide`}
             />
 
@@ -391,26 +437,80 @@ function SelectField({ label, name, value, onChange, options, fontClass }: Selec
   )
 }
 
-function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, total, onGSTChange, fontClass }: ProductsSectionProps) {
+function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, discount, gst, total, onDiscountChange, onGSTChange, onSubtotalChange, onTotalChange, fontClass }: ProductsSectionProps) {
   return (
     <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
       <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${fontClass} tracking-wide`}>Quoted Products</h2>
+      
+      {/* Column Headers */}
+      <div className={`grid grid-cols-1 sm:grid-cols-5 gap-2 mb-2 ${fontClass} tracking-wide`}>
+        <div className="text-sm font-medium text-gray-700">Item Name *</div>
+        <div className="text-sm font-medium text-gray-700">Description</div>
+        <div className="text-sm font-medium text-gray-700">Quantity</div>
+        <div className="text-sm font-medium text-gray-700">Unit Price</div>
+        <div className="text-sm font-medium text-gray-700">Total Price</div>
+      </div>
+      
+      {/* Product Rows */}
       {products.map((p, idx) => (
         <div key={idx} className={`grid grid-cols-1 sm:grid-cols-5 gap-2 mb-2 ${fontClass} tracking-wide`}>
-          <input placeholder="Item Name" value={p.itemName} onChange={(e) => onChange(idx, 'itemName', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} required />
-          <input placeholder="Description" value={p.description} onChange={(e) => onChange(idx, 'description', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} />
-          <input type="number" placeholder="Qty" value={p.quantity} min={1} onChange={(e) => onChange(idx, 'quantity', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} />
-          <input type="number" placeholder="Unit Price" value={p.unitPrice} onChange={(e) => onChange(idx, 'unitPrice', e.target.value)} className={`border p-2 rounded ${fontClass} tracking-wide`} />
-          <div className={`flex justify-between items-center ${fontClass} tracking-wide`}>
-            <span className="text-sm font-semibold tracking-wide">{p.totalPrice.toFixed(2)}</span>
+          <div>
+            <input 
+              placeholder="Item Name" 
+              value={p.itemName} 
+              onChange={(e) => onChange(idx, 'itemName', e.target.value)} 
+              className={`w-full border p-2 rounded ${fontClass} tracking-wide`} 
+              required 
+            />
+          </div>
+          <div>
+            <input 
+              placeholder="Description" 
+              value={p.description} 
+              onChange={(e) => onChange(idx, 'description', e.target.value)} 
+              className={`w-full border p-2 rounded ${fontClass} tracking-wide`} 
+            />
+          </div>
+          <div>
+            <input 
+              type="number" 
+              placeholder="Qty" 
+              value={p.quantity} 
+              min={1} 
+              onChange={(e) => onChange(idx, 'quantity', e.target.value)} 
+              className={`w-full border p-2 rounded ${fontClass} tracking-wide`} 
+            />
+          </div>
+          <div>
+            <input 
+              type="number" 
+              placeholder="Unit Price" 
+              value={p.unitPrice} 
+              onChange={(e) => onChange(idx, 'unitPrice', e.target.value)} 
+              className={`w-full border p-2 rounded ${fontClass} tracking-wide`} 
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input 
+              type="number" 
+              placeholder="Total Price" 
+              value={p.totalPrice} 
+              onChange={(e) => onChange(idx, 'totalPrice', e.target.value)} 
+              className={`w-full border p-2 rounded ${fontClass} tracking-wide`} 
+            />
             {products.length > 1 && (
-              <button type="button" onClick={() => onRemove(idx)} className="text-red-500 text-xs hover:underline tracking-wide">
+              <button 
+                type="button" 
+                onClick={() => onRemove(idx)} 
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+              >
                 Remove
               </button>
             )}
           </div>
         </div>
       ))}
+      
       <button
         type="button"
         onClick={onAdd}
@@ -418,30 +518,108 @@ function ProductsSection({ products, onChange, onAdd, onRemove, subtotal, gst, t
       >
         + Add Product
       </button>
-      <div className={`mt-4 text-right ${fontClass} tracking-wide`}>
-        <p>Subtotal: <strong>{subtotal.toFixed(2)}</strong></p>
-        <div className="flex justify-end gap-2 items-center">
-          <label className="text-sm tracking-wide">GST:</label>
-          <input type="number" value={gst} onChange={onGSTChange} className={`border p-1 w-20 rounded text-right ${fontClass} tracking-wide`} />
+      
+      {/* Totals Section */}
+      <div className={`mt-6 pt-4 border-t ${fontClass} tracking-wide`}>
+        <div className="flex justify-end">
+          <div className="w-64 space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium tracking-wide">Subtotal:</label>
+              <input 
+                type="number" 
+                value={subtotal} 
+                onChange={onSubtotalChange} 
+                className={`border p-1 w-32 rounded text-right ${fontClass} tracking-wide`} 
+              />
+            </div>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium tracking-wide">Discount:</label>
+              <input 
+                type="number" 
+                value={discount} 
+                onChange={onDiscountChange} 
+                className={`border p-1 w-32 rounded text-right ${fontClass} tracking-wide`} 
+              />
+            </div>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium tracking-wide">GST:</label>
+              <input 
+                type="number" 
+                value={gst} 
+                onChange={onGSTChange} 
+                className={`border p-1 w-32 rounded text-right ${fontClass} tracking-wide`} 
+              />
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t">
+              <label className="text-sm font-bold tracking-wide">Total:</label>
+              <input 
+                type="number" 
+                value={total} 
+                onChange={onTotalChange} 
+                className={`border p-1 w-32 rounded text-right font-bold ${fontClass} tracking-wide`} 
+              />
+            </div>
+          </div>
         </div>
-        <p className="mt-1 font-bold tracking-wide">Total: {total.toFixed(2)}</p>
       </div>
     </div>
   )
 }
 
-function AttachmentsSection({ quotationDocs, technicalDrawings, sldFile, onQuotationUpload, onDrawingUpload, onSldUpload, fontClass }: AttachmentsSectionProps) {
+function AttachmentsSection({ 
+  quotationDocs, 
+  technicalDrawings, 
+  sldFile, 
+  otherDocuments,
+  onQuotationUpload, 
+  onDrawingUpload, 
+  onSldUpload, 
+  onOtherDocumentsUpload,
+  onRemoveQuotationDoc, 
+  onRemoveDrawing, 
+  onRemoveSld, 
+  onRemoveOtherDocument,
+  fontClass 
+}: AttachmentsSectionProps) {
   return (
     <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
       <h2 className={`text-lg font-semibold text-[#8B5E3C] mb-3 border-b pb-2 ${fontClass} tracking-wide`}>Attachments</h2>
-      <FileUpload label="Quotation Documents" multiple files={quotationDocs} onUpload={onQuotationUpload} fontClass={fontClass} />
-      <FileUpload label="Technical Drawings" multiple files={technicalDrawings} onUpload={onDrawingUpload} fontClass={fontClass} />
-      <FileUpload label="Single Line Diagram (SLD)" files={sldFile ? [sldFile] : []} onUpload={(files) => onSldUpload(files?.[0] || null)} fontClass={fontClass} />
+      <FileUpload 
+        label="Quotation Documents" 
+        multiple 
+        files={quotationDocs} 
+        onUpload={onQuotationUpload} 
+        onRemove={onRemoveQuotationDoc} 
+        fontClass={fontClass} 
+      />
+      <FileUpload 
+        label="Technical Drawings" 
+        multiple 
+        files={technicalDrawings} 
+        onUpload={onDrawingUpload} 
+        onRemove={onRemoveDrawing} 
+        fontClass={fontClass} 
+      />
+      <SingleFileUpload 
+        label="Single Line Diagram (SLD)" 
+        file={sldFile} 
+        onUpload={onSldUpload} 
+        onRemove={onRemoveSld} 
+        fontClass={fontClass} 
+      />
+      <FileUpload 
+        label="Other Documents" 
+        multiple 
+        files={otherDocuments} 
+        onUpload={onOtherDocumentsUpload} 
+        onRemove={onRemoveOtherDocument} 
+        fontClass={fontClass} 
+      />
     </div>
   )
 }
 
-function FileUpload({ label, multiple, files, onUpload, fontClass }: FileUploadProps) {
+function FileUpload({ label, multiple, files, onUpload, onRemove, fontClass }: FileUploadProps) {
   return (
     <div className={`mb-4 ${fontClass} tracking-wide`}>
       <label className={`block font-medium text-sm mb-1 tracking-wide`}>{label}</label>
@@ -451,12 +629,52 @@ function FileUpload({ label, multiple, files, onUpload, fontClass }: FileUploadP
         onChange={(e) => onUpload(e.target.files)} 
         className={`block w-full text-sm border rounded p-2 ${fontClass} tracking-wide`} 
       />
-      {files?.length > 0 && (
+      {files.length > 0 && (
         <ul className={`mt-2 text-sm text-gray-600 ${fontClass} tracking-wide`}>
           {files.map((f, i) => (
-            <li key={i} className="tracking-wide">📄 {f.name}</li>
+            <li key={i} className="flex items-center justify-between py-1 border-b">
+              <span className="tracking-wide">📄 {f.name}</span>
+              <button 
+                type="button" 
+                onClick={() => onRemove(i)}
+                className="text-red-500 hover:text-red-700 ml-2"
+                title="Remove file"
+              >
+                ✕
+              </button>
+            </li>
           ))}
         </ul>
+      )}
+    </div>
+  )
+}
+
+function SingleFileUpload({ label, file, onUpload, onRemove, fontClass }: SingleFileUploadProps) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpload(e.target.files?.[0] || null)
+  }
+
+  return (
+    <div className={`mb-4 ${fontClass} tracking-wide`}>
+      <label className={`block font-medium text-sm mb-1 tracking-wide`}>{label}</label>
+      <input 
+        type="file" 
+        onChange={handleFileChange} 
+        className={`block w-full text-sm border rounded p-2 ${fontClass} tracking-wide`} 
+      />
+      {file && (
+        <div className="mt-2 flex items-center justify-between py-1 border-b">
+          <span className="text-sm text-gray-600 tracking-wide">📄 {file.name}</span>
+          <button 
+            type="button" 
+            onClick={onRemove}
+            className="text-red-500 hover:text-red-700 ml-2"
+            title="Remove file"
+          >
+            ✕
+          </button>
+        </div>
       )}
     </div>
   )
