@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { DM_Sans } from 'next/font/google'
 import { useState } from 'react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { IoSettings } from "react-icons/io5"
 import { SiStatuspal } from "react-icons/si"
 import { HiOutlineLogout } from "react-icons/hi"
+import { RiStore2Line } from "react-icons/ri"
 import Image from 'next/image'
 
 const dmsans = DM_Sans({ 
@@ -19,13 +20,20 @@ const Sidebar = () => {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isGatepassOpen, setIsGatepassOpen] = useState(false)
 
   const toggleSidebar = () => setIsOpen(!isOpen)
+  const toggleGatepass = () => setIsGatepassOpen(!isGatepassOpen)
 
   const isActive = (href: string) => pathname === href
 
   const navItemClasses = (href: string) =>
     `flex items-center p-3 rounded-lg transition-colors ${
+      isActive(href) ? 'bg-[#8B5E3C] text-white' : 'hover:bg-gray-200 text-gray-700'
+    }`
+
+  const gatepassSubItemClasses = (href: string) =>
+    `flex items-center p-3 pl-8 rounded-lg transition-colors ${
       isActive(href) ? 'bg-[#8B5E3C] text-white' : 'hover:bg-gray-200 text-gray-700'
     }`
 
@@ -90,14 +98,57 @@ const Sidebar = () => {
             <span>Work Order Status</span>
           </Link>
 
-          {/* <Link 
-            href="/Mechanical/drawings" 
-            className={`${navItemClasses('/Mechanical/drawings')} ${dmsans.className}`} 
-            onClick={() => setIsOpen(false)}
-          >
-            <IoSettings className="h-7 w-7 mr-3" />
-            <span className='text-md tracking-wider'>Drawing/Components</span>
-          </Link> */}
+          {/* Gatepass Section with Dropdown */}
+          <div className="space-y-1">
+            <button
+              onClick={toggleGatepass}
+              className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors hover:bg-gray-200 text-gray-700 ${dmsans.className}`}
+            >
+              <div className="flex items-center">
+                <RiStore2Line className="h-5 w-5 mr-3" />
+                <span>Gatepass</span>
+              </div>
+              {isGatepassOpen ? (
+                <ChevronDownIcon className="h-4 w-4" />
+              ) : (
+                <ChevronRightIcon className="h-4 w-4" />
+              )}
+            </button>
+            
+            {isGatepassOpen && (
+              <div className="space-y-1 ml-2 border-l-2 border-gray-200">
+                <Link 
+                  href="/gatepass/inward-challan" 
+                  className={`${gatepassSubItemClasses('/Mechanical/gatepass/add-inward-challan')} ${dmsans.className}`} 
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>Add Inward Challan</span>
+                </Link>
+                <Link 
+                  href="/gatepass/outward-challan" 
+                  className={`${gatepassSubItemClasses('/Mechanical/gatepass/add-outward-challan')} ${dmsans.className}`} 
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>Add Outward Challan</span>
+                </Link>
+                <Link 
+                  href="/gatepass/all-inward-challans" 
+                  className={`${gatepassSubItemClasses('/Mechanical/gatepass/all-inward-challans')} ${dmsans.className}`} 
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>All Inward Challans</span>
+                </Link>
+                <Link 
+                  href="/gatepass/all-outward-challans" 
+                  className={`${gatepassSubItemClasses('/Mechanical/gatepass/all-outward-challans')} ${dmsans.className}`} 
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>All Outward Challans</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
         </nav>
 
         {/* Logout Button & Footer */}
