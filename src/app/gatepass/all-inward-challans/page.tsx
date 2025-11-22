@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { DM_Sans } from 'next/font/google'
+import ProtectedRoute from "@/app/Components/ProtectedRoute";
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+})
 
 
 interface InwardItem {
@@ -37,7 +44,7 @@ interface InwardChallan {
 
 export default function InwardChallanPage() {
   const [challans, setChallans] = useState<InwardChallan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -535,17 +542,18 @@ export default function InwardChallanPage() {
     handlePrintChallan(challan);
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg font-dm-sans tracking-wide">Loading inward challans...</div>
-        </div>
+   if (isLoading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center bg-white text-gray-800 ${dmSans.className} font-sans`}>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-black border-t-transparent shadow-lg"></div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
+    <ProtectedRoute allowedUser="mechanical" >
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 font-dm-sans tracking-wide">Inward Challans</h1>
@@ -715,5 +723,6 @@ export default function InwardChallanPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

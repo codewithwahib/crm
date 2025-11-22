@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import React from 'react';
 
 // Error Boundary Component
@@ -564,6 +565,7 @@ function NewInwardChallanContent() {
   };
 
   return (
+    <ProtectedRoute allowedUser="mechanical">
     <div className="container mx-auto px-4 py-8 font-dm-sans tracking-wider relative">
       {/* Notifications Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
@@ -1006,6 +1008,7 @@ function NewInwardChallanContent() {
         </div>
       </form>
     </div>
+    </ProtectedRoute>
   );
 }
 
