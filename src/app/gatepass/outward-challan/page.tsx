@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from "@/app/Components/ProtectedRoute";
+import Sidebar from "@/app/Mechanical/Components/sidebar";
+
 
 
 interface OutwardItem {
@@ -370,6 +372,7 @@ export default function NewOutwardChallanPage() {
   return (
     <ProtectedRoute allowedUser='="mechanical'>
     <div className="container mx-auto px-4 py-8 font-dm-sans tracking-wider relative">
+      <Sidebar/>
       {/* Notifications Container */}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
         {notifications.map((notification) => (

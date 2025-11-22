@@ -4,6 +4,7 @@ import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { DM_Sans } from 'next/font/google'
+import Sidebar from "@/app/Mechanical/Components/sidebar";
 
 
 const dmSans = DM_Sans({
@@ -569,6 +570,7 @@ export default function OutwardChallanPage() {
   return (
     <ProtectedRoute allowedUser="mechanical" >
     <div className="container mx-auto px-4 py-8">
+      <Sidebar/>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 font-dm-sans tracking-wide">Outward Challans</h1>
         <Link
