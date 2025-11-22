@@ -123,6 +123,11 @@ const Sidebar = () => {
             <span>Inventory</span>
           </Link>
 
+          <Link href="/gatepass" className={`${navItemClasses('/inventory')} ${dmsans.className}`} onClick={() => setIsOpen(false)}>
+            <RiStore2Line className="h-5 w-5 mr-3" />
+            <span>Gatepass</span>
+          </Link>
+
           
 
 
