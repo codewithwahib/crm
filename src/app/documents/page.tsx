@@ -139,7 +139,10 @@ export default function DocumentFilesPage() {
           </Link> */}
         </div>
 
-        {/* Stats Overview - Moved to top */}
+        {/* Stats Overview - Moved to top */}]
+        <div></div>
+
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
