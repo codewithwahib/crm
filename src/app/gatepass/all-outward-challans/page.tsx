@@ -1711,7 +1711,7 @@ export default function OutwardChallanPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 font-dm-sans tracking-wide">Outward Challans</h1>
         <Link
-          href="#"
+          href="/gatepass/outward-challan"
           className="bg-[#8B5E3C] text-white px-6 py-2 rounded-md hover:bg-[#7A4F32] transition-colors font-medium flex items-center gap-2 font-dm-sans tracking-wide"
         >
           <span>➕</span>

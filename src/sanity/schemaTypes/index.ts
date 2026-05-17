@@ -1,3 +1,5 @@
+// schemaTypes/index.ts
+
 import { type SchemaTypeDefinition } from "sanity";
 
 // 🔹 Core Schemas
@@ -20,30 +22,47 @@ import inquiryRegister from "./ir";
 // 🔹 Gatepass Schemas
 import { inwardChallan } from "./inward";
 import { outwardChallan } from "./outward";
+import { cost } from "./todaycosts";
+import { mechanicalop } from "./wo";
+import { paintoutop } from "./paint-out";
+import { paintinop } from "./paint-in";
+import { assembly } from "./assembly";
+import { sr } from "./sr";
+import { storeReturn } from "./storereturn";
+import { storeSchema } from "./store";
+// import { returnStockSchema } from "./returnstock";
 
-// ✅ Export schema types array (optional helper)
-export const schemaTypes = [
+// ✅ Export schema types array
+export const schemaTypes: SchemaTypeDefinition[] = [
   quotation,
   outwardChallan,
   inwardChallan,
-  // gatepassChallan,
   attendance,
   workOrder,
+  storeReturn,
+  assembly,
+  paintoutop,
+  paintinop,
+  mechanicalop,
   documents,
+  storeSchema,
   paymentDetails,
+  sr,
   inventory,
   directorpassword,
   gmSalesPassword,
   salesManagerPassword,
+  cost,
   executionPassword,
   mechanicalPassword,
   storePassword,
   jobApplication,
   button,
   inquiryRegister,
+  // returnStockSchema,
 ];
 
-// ✅ Export final schema object (used by Sanity)
-export const schema: { types: SchemaTypeDefinition[] } = {
+// ✅ Export final schema object
+export const schema = {
   types: schemaTypes,
 };

@@ -21,9 +21,12 @@ export default defineConfig({
     colorInput()
   ],
   auth: {
-    // If using custom auth
-    mode: 'replace',
-    redirectOnSingle: true,
-    providers: () => []
+    providers: [
+      {
+        name: 'sanity',
+        title: 'Sanity',
+        url: 'https://www.sanity.io',  // ✅ Add url property
+      }
+    ]
   }
 })
