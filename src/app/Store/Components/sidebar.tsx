@@ -119,8 +119,8 @@ const Sidebar = () => {
 
           {/* Paint Outward */}
           <Link 
-            href="/paint-out-opr" 
-            className={`${navItemClasses('/paint-out-opr')} ${dmsans.className}`} 
+            href="/paint-out" 
+            className={`${navItemClasses('/paint-out')} ${dmsans.className}`} 
             onClick={() => setIsOpen(false)}
           >
             <RiPaintBrushLine className="h-5 w-5 mr-3" />
