@@ -8,7 +8,7 @@ interface Part {
   partName: string;
   category: string;
   storeLocation: string;
-    _key?: string; 
+  _key?: string; 
   blankWidth?: number;
   blankLength?: number;
   blankSizeSqft?: number;
@@ -62,6 +62,11 @@ interface InwardPart {
   qty: number;
   receivedQty?: number;
   remainingQty?: number;
+  blankWidth?: number;
+  blankLength?: number;
+  blankSizeSqft?: number;
+  gauge?: string;
+  material?: string;
 }
 
 interface InwardOrder {
@@ -99,7 +104,6 @@ async function checkStoreStock(parts: Part[]): Promise<{ valid: boolean; error?:
         continue
       }
 
-      // Search for store item by partNumber as well
       const storeItem = await client.fetch(
         `*[_type in ["storeItem", "store"] && (storeItemId == $storeItemId || partNumber == $partNumber)][0] { 
           _id, 
@@ -137,7 +141,6 @@ async function updateStoreStock(parts: Part[], operation: 'add' | 'restore') {
   const results: { success: boolean; partName?: string; newStock?: number; error?: string }[] = []
   
   for (const part of parts) {
-    // Use receivedQty for stock addition, not outward qty
     const qtyToAdd = part.receivedQty || part.qty || 0
     
     if (qtyToAdd <= 0) {
@@ -151,7 +154,6 @@ async function updateStoreStock(parts: Part[], operation: 'add' | 'restore') {
     }
 
     try {
-      // Search for store item by storeItemId or partNumber
       const storeItem = await client.fetch(
         `*[_type in ["storeItem", "store"] && (storeItemId == $storeItemId || partNumber == $partNumber)][0] { 
           _id, 
@@ -175,11 +177,9 @@ async function updateStoreStock(parts: Part[], operation: 'add' | 'restore') {
 
       let newStock: number
       if (operation === 'add') {
-        // For outward: ADD received quantity to store (store receives the outward items)
         newStock = (storeItem.stockInStore || 0) + qtyToAdd
         console.log(`📦 Adding ${qtyToAdd} to store for ${storeItem.partName}: ${storeItem.stockInStore || 0} -> ${newStock}`)
       } else {
-        // For restore (delete operation): SUBTRACT the quantity back
         newStock = (storeItem.stockInStore || 0) - qtyToAdd
         if (newStock < 0) {
           console.warn(`⚠️ Restore would make stock negative for ${storeItem.partName}, setting to 0 instead`)
@@ -204,10 +204,9 @@ async function updateStoreStock(parts: Part[], operation: 'add' | 'restore') {
   return results
 }
 
-// Helper function to update inward order - ONLY updates receivedQty and remainingQty
+// Helper function to update inward order - updates receivedQty, remainingQty AND preserves dimensions
 async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
   try {
-    // Fetch current inward order with latest values from database
     const inwardOrder = await client.fetch(
       `*[_type == "paint-in-opr" && _id == $id][0] {
         _id,
@@ -218,7 +217,13 @@ async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
           partName,
           qty,
           receivedQty,
-          remainingQty
+          remainingQty,
+          blankWidth,
+          blankLength,
+          blankSizeSqft,
+          gauge,
+          material,
+          storeItemId
         }
       }`,
       { id: inwardOrderId }
@@ -234,10 +239,12 @@ async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
       partName: p.partName,
       qty: p.qty,
       receivedQty: p.receivedQty || 0,
-      remainingQty: p.remainingQty
+      remainingQty: p.remainingQty,
+      blankWidth: p.blankWidth,
+      blankLength: p.blankLength,
+      blankSizeSqft: p.blankSizeSqft
     })), null, 2))
 
-    // Create a map of outward parts by partNo
     const outwardPartsMap = new Map<string, { qty: number; inwardPartId?: string }>()
     for (const outPart of outwardParts) {
       outwardPartsMap.set(outPart.partNo, {
@@ -251,16 +258,13 @@ async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
     let hasError = false
     let updated = false
     
-    // Update ONLY receivedQty and remainingQty for each part
     const updatedParts = inwardOrder.parts.map((inPart: InwardPart) => {
       const outwardPart = outwardPartsMap.get(inPart.partNo)
       
       if (outwardPart) {
-        // IMPORTANT: Use the current value from database (not from frontend)
         const currentReceivedQty = inPart.receivedQty || 0
         const newReceivedQty = currentReceivedQty + outwardPart.qty
         
-        // Validate: Cannot exceed original quantity
         if (newReceivedQty > inPart.qty) {
           console.error(`❌ Cannot receive more than inward quantity for part: ${inPart.partNo}`)
           console.error(`   Current: ${currentReceivedQty}, Adding: ${outwardPart.qty}, Max: ${inPart.qty}`)
@@ -275,7 +279,8 @@ async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
           oldReceived: currentReceivedQty,
           outwardQty: outwardPart.qty,
           newReceived: newReceivedQty,
-          newRemaining: newRemainingQty
+          newRemaining: newRemainingQty,
+          dimensions: { blankWidth: inPart.blankWidth, blankLength: inPart.blankLength, sqft: inPart.blankSizeSqft }
         })
         
         updated = true
@@ -297,7 +302,6 @@ async function updateInwardOrder(inwardOrderId: string, outwardParts: Part[]) {
       return true
     }
 
-    // Only update parts array
     await writeClient
       .patch(inwardOrderId)
       .set({ parts: updatedParts })
@@ -329,7 +333,10 @@ async function checkInwardOrderRemainingQuantity(inwardOrderId: string, outwardP
           partName,
           qty,
           receivedQty,
-          remainingQty
+          remainingQty,
+          blankWidth,
+          blankLength,
+          blankSizeSqft
         }
       }`,
       { id: inwardOrderId }
@@ -346,7 +353,6 @@ async function checkInwardOrderRemainingQuantity(inwardOrderId: string, outwardP
         return { valid: false, error: `Part ${outPart.partNo} not found in inward order` }
       }
       
-      // Use remainingQty directly from database
       let availableQty = inPart.remainingQty
       
       if (availableQty === undefined || availableQty === null) {
@@ -357,6 +363,7 @@ async function checkInwardOrderRemainingQuantity(inwardOrderId: string, outwardP
       const requestedQty = outPart.receivedQty || outPart.qty || 0
       
       console.log(`🔍 Checking ${inPart.partName}: Total: ${inPart.qty}, Received: ${inPart.receivedQty || 0}, Remaining: ${availableQty}, Requested: ${requestedQty}`)
+      console.log(`📏 Dimensions for ${inPart.partName}: Width: ${inPart.blankWidth}, Length: ${inPart.blankLength}, SQFT: ${inPart.blankSizeSqft}`)
       
       if (availableQty <= 0) {
         return { 
@@ -419,6 +426,18 @@ export async function GET(_req: NextRequest) {
       }
     `)
 
+    // Log sample data for debugging
+    if (paintOutwardOps && paintOutwardOps.length > 0 && paintOutwardOps[0].parts && paintOutwardOps[0].parts.length > 0) {
+      console.log('📊 Sample outward part data:', {
+        partName: paintOutwardOps[0].parts[0].partName,
+        blankWidth: paintOutwardOps[0].parts[0].blankWidth,
+        blankLength: paintOutwardOps[0].parts[0].blankLength,
+        blankSizeSqft: paintOutwardOps[0].parts[0].blankSizeSqft,
+        material: paintOutwardOps[0].parts[0].material,
+        gauge: paintOutwardOps[0].parts[0].gauge
+      })
+    }
+
     return NextResponse.json({ 
       data: paintOutwardOps || [], 
       success: true 
@@ -460,6 +479,9 @@ export async function POST(req: NextRequest) {
       partNo: p.partNo, 
       partName: p.partName, 
       receivedQty: p.receivedQty || p.qty,
+      blankWidth: p.blankWidth,
+      blankLength: p.blankLength,
+      blankSizeSqft: p.blankSizeSqft,
       storeItemId: p.storeItemId 
     })))
 
@@ -492,7 +514,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // FIRST: Check if all parts exist in store - THIS IS MANDATORY
+    // Check if all parts exist in store
     const stockCheck = await checkStoreStock(parts)
     if (!stockCheck.valid) {
       return NextResponse.json(
@@ -501,7 +523,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // SECOND: Check if inward order has sufficient remaining quantity
+    // Check if inward order has sufficient remaining quantity
     if (inwardOrderId) {
       const quantityCheck = await checkInwardOrderRemainingQuantity(inwardOrderId, parts)
       if (!quantityCheck.valid) {
@@ -512,7 +534,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // THIRD: Check for existing work order
+    // Check for existing work order
     const existingWorkOrder = await client.fetch(
       `*[_type == "paint-out-opr" && workOrderNo == $workOrderNo][0] { _id }`,
       { workOrderNo }
@@ -525,7 +547,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // FOURTH: Check for existing gatepass
+    // Check for existing gatepass
     const existingGatepass = await client.fetch(
       `*[_type == "paint-out-opr" && gatepassNo == $gatepassNo][0] { _id }`,
       { gatepassNo }
@@ -538,11 +560,18 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Process parts with all fields - use receivedQty as the outward quantity
+    // Process parts with all fields - preserve dimensions from inward
     const formattedParts: FormattedPart[] = parts.map((part: Part, index: number) => {
       const outwardQty = part.receivedQty || part.qty || 0
       const partForCalc = { ...part, qty: outwardQty }
       const { paintCostPerPiece, totalPrice, totalWeight: partTotalWeight } = calculatePartValues(partForCalc)
+      
+      console.log(`📦 Formatting part ${part.partName}:`, {
+        blankWidth: part.blankWidth,
+        blankLength: part.blankLength,
+        blankSizeSqft: part.blankSizeSqft,
+        outwardQty: outwardQty
+      })
       
       return {
         _key: `${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`,
@@ -572,7 +601,7 @@ export async function POST(req: NextRequest) {
     const total = calculateOrderTotal(formattedParts)
     const calculatedTotalWeight = totalWeight || calculateOrderTotalWeight(formattedParts)
 
-    // FIFTH: Create paint outward operation
+    // Create paint outward operation
     const result = await writeClient.create({
       _type: 'paint-out-opr',
       workOrderNo: workOrderNo.trim(),
@@ -588,14 +617,14 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Paint outward operation created:', result._id)
 
-    // SIXTH: Update store stock - ADD the received quantity to store
+    // Update store stock - ADD the received quantity to store
     const stockUpdateResults = await updateStoreStock(parts, 'add')
     const failedStockUpdates = stockUpdateResults.filter(r => !r.success)
     if (failedStockUpdates.length > 0) {
       console.error('Some stock updates failed:', failedStockUpdates)
     }
 
-    // SEVENTH: Update inward order's receivedQty and remainingQty
+    // Update inward order's receivedQty and remainingQty
     if (inwardOrderId) {
       const updated = await updateInwardOrder(inwardOrderId, parts)
       if (!updated) {
@@ -671,7 +700,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // FIRST: Check if all parts exist in store
+    // Check if all parts exist in store
     const stockCheck = await checkStoreStock(parts)
     if (!stockCheck.valid) {
       return NextResponse.json(
@@ -680,7 +709,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // SECOND: Fetch existing document to restore stock
+    // Fetch existing document to restore stock
     const existingDoc = await client.fetch(
       `*[_type == "paint-out-opr" && _id == $id][0] { 
         _id,
@@ -702,18 +731,17 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // THIRD: Restore stock for old parts (subtract what was previously added)
+    // Restore stock for old parts
     if (existingDoc.parts && existingDoc.parts.length > 0) {
       await updateStoreStock(existingDoc.parts, 'restore')
     }
 
-    // FOURTH: Process parts with all fields
+    // Process parts with all fields
     const formattedParts: FormattedPart[] = parts.map((part: Part, index: number) => {
       const outwardQty = part.receivedQty || part.qty || 0
       const partForCalc = { ...part, qty: outwardQty }
       const { paintCostPerPiece, totalPrice, totalWeight: partTotalWeight } = calculatePartValues(partForCalc)
       
-      // Find existing part to preserve _key if it exists
       const existingPart = existingDoc.parts?.find((p: Part) => p.storeItemId === part.storeItemId)
       
       return {
@@ -743,10 +771,10 @@ export async function PUT(req: NextRequest) {
     const total = calculateOrderTotal(formattedParts)
     const calculatedTotalWeight = totalWeight || calculateOrderTotalWeight(formattedParts)
 
-    // FIFTH: Add stock for new/updated parts
+    // Add stock for new/updated parts
     await updateStoreStock(parts, 'add')
 
-    // SIXTH: Update the outward operation
+    // Update the outward operation
     const result = await writeClient
       .patch(id)
       .set({
@@ -817,7 +845,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    // Restore stock for all parts (subtract what was added)
+    // Restore stock for all parts
     if (workOrder.parts && workOrder.parts.length > 0) {
       await updateStoreStock(workOrder.parts, 'restore')
     }

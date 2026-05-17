@@ -59,7 +59,6 @@ interface StoreItem {
   _id: string
   stockInStore: number
   partName: string
-  partNumber?: string
 }
 
 // Helper function to calculate values for a part
@@ -81,7 +80,7 @@ function calculateOrderTotalWeight(parts: FormattedPart[]): number {
 }
 
 // GET - Fetch all paint inward operations
-export async function GET() {
+export async function GET(_req: NextRequest) {
   try {
     const query = `*[_type == "paint-in-opr"] | order(_createdAt desc) {
       _id,
@@ -148,7 +147,7 @@ export async function GET() {
 }
 
 // POST - Create new paint inward operation
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     if (!canWrite()) {
       return NextResponse.json(
@@ -297,7 +296,7 @@ export async function POST(req: NextRequest) {
           const storeItem = await client.fetch(
             `*[_type == "store" && _id == $storeItemId][0] { _id, stockInStore, partNumber, partName }`,
             { storeItemId: part.storeItemId }
-          ) as StoreItem | null
+          )
           
           if (storeItem) {
             const newStock = Math.max(0, storeItem.stockInStore - Number(part.qty))
@@ -334,7 +333,7 @@ export async function POST(req: NextRequest) {
 }
 
 // PUT - Update existing paint inward operation
-export async function PUT(req: NextRequest) {
+export async function PUT(req: Request) {
   try {
     if (!canWrite()) {
       return NextResponse.json(
@@ -539,7 +538,7 @@ export async function DELETE(req: NextRequest) {
         }
       }`,
       { id }
-    ) as { _id: string; parts: Array<{ storeItemId?: string; partNo: string; qty: number }> } | null
+    )
 
     if (!workOrder) {
       return NextResponse.json(

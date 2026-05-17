@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { DM_Sans } from 'next/font/google'
-import Sidebar from '../Components/sidebar'
+import Sidebar from '@/app/Mechanical/Components/sidebar'
 import { HiSearch, HiPrinter, HiPlus, HiRefresh, HiTrash } from 'react-icons/hi'
 import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import toast, { Toaster } from 'react-hot-toast'
