@@ -191,20 +191,10 @@ export async function POST(req: Request) {
       )
     }
 
-    // Check if work order already exists
-    const existingWorkOrder = await client.fetch(
-      `*[_type == "paint-in-opr" && workOrderNo == $workOrderNo][0] { _id }`,
-      { workOrderNo }
-    )
-
-    if (existingWorkOrder) {
-      return NextResponse.json(
-        { error: 'Work order number already exists' },
-        { status: 400 }
-      )
-    }
-
-    // Check if gatepass already exists
+    // ===== DUPLICATE WORK ORDER CHECK REMOVED - Now multiple same work order numbers allowed =====
+    // Removed: existingWorkOrder check for workOrderNo
+    
+    // Check for existing gatepass only (gatepass must be unique)
     const existingGatepass = await client.fetch(
       `*[_type == "paint-in-opr" && gatepassNo == $gatepassNo][0] { _id }`,
       { gatepassNo }

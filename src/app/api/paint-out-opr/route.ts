@@ -534,20 +534,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check for existing work order
-    const existingWorkOrder = await client.fetch(
-      `*[_type == "paint-out-opr" && workOrderNo == $workOrderNo][0] { _id }`,
-      { workOrderNo }
-    )
-
-    if (existingWorkOrder) {
-      return NextResponse.json(
-        { error: 'Work order number already exists', success: false },
-        { status: 400 }
-      )
-    }
-
-    // Check for existing gatepass
+    // ===== DUPLICATE WORK ORDER CHECK REMOVED - Now multiple same work order numbers allowed =====
+    // Removed: existingWorkOrder check for workOrderNo
+    
+    // Check for existing gatepass only (gatepass must be unique)
     const existingGatepass = await client.fetch(
       `*[_type == "paint-out-opr" && gatepassNo == $gatepassNo][0] { _id }`,
       { gatepassNo }
@@ -857,7 +847,7 @@ export async function DELETE(req: NextRequest) {
       message: 'Paint outward operation deleted successfully. Store stock restored.'
     }, { status: 200 })
 
-  } catch (error) {
+  }catch (error) {
     console.error('Error deleting paint outward operation:', error)
     return NextResponse.json(
       { error: 'Failed to delete paint outward operation', success: false },
