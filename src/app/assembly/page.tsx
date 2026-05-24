@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { DM_Sans } from 'next/font/google'
 import ProtectedRoute from "@/app/Components/ProtectedRoute";
 import Sidebar from '@/app/Store/Components/sidebar'
-import { HiSearch, HiX, HiPrinter } from 'react-icons/hi'
+import { HiSearch, HiX, HiPrinter, HiEye } from 'react-icons/hi'
 import toast, { Toaster } from 'react-hot-toast'
 
 const dmSans = DM_Sans({
@@ -13,6 +13,41 @@ const dmSans = DM_Sans({
   weight: ['400', '500', '700'],
   variable: '--font-dm-sans',
 })
+
+// Helper function to convert inches to mm
+const inchesToMM = (inches: number): number => {
+  return Math.round(inches * 25.4)
+}
+
+// Helper function to get dimension from store item
+const getStoreItemDimension = (item: StoreItem): string => {
+  // Priority 1: blankWidthMM and blankLengthMM
+  if (item.blankWidthMM && item.blankLengthMM && item.blankWidthMM > 0 && item.blankLengthMM > 0) {
+    return `${item.blankWidthMM}mm x ${item.blankLengthMM}mm`
+  }
+  // Priority 2: blankWidthInch and blankLengthInch
+  const widthInch = (item as { blankWidthInch?: number; blankWidth?: number }).blankWidthInch || item.blankWidth || 0
+  const lengthInch = (item as { blankLengthInch?: number; blankLength?: number }).blankLengthInch || item.blankLength || 0
+  if (widthInch > 0 && lengthInch > 0) {
+    return `${inchesToMM(widthInch)}mm x ${inchesToMM(lengthInch)}mm`
+  }
+  // Priority 3: blankWidth and blankLength (as inches)
+  if (item.blankWidth && item.blankLength && item.blankWidth > 0 && item.blankLength > 0) {
+    return `${inchesToMM(item.blankWidth)}mm x ${inchesToMM(item.blankLength)}mm`
+  }
+  return '-'
+}
+
+// Helper function to get part dimension display
+const getPartDimensionDisplay = (part: AssemblyPartItem): string => {
+  if (part.blankWidthMM && part.blankLengthMM && part.blankWidthMM > 0 && part.blankLengthMM > 0) {
+    return `${part.blankWidthMM}mm x ${part.blankLengthMM}mm`
+  }
+  if (part.blankWidth && part.blankLength && part.blankWidth > 0 && part.blankLength > 0) {
+    return `${inchesToMM(part.blankWidth)}mm x ${inchesToMM(part.blankLength)}mm`
+  }
+  return '-'
+}
 
 interface StoreItem {
   _id: string
@@ -24,6 +59,10 @@ interface StoreItem {
   material?: string
   blankWidth?: number
   blankLength?: number
+  blankWidthMM?: number
+  blankLengthMM?: number
+  blankWidthInch?: number
+  blankLengthInch?: number
   sqft?: number
   sheetCostPerPiece?: number
   paintCostPerPiece?: number
@@ -41,6 +80,8 @@ interface AssemblyPartItem {
   storeLocation: string
   blankWidth?: number
   blankLength?: number
+  blankWidthMM?: number
+  blankLengthMM?: number
   blankSizeSqft: number
   sheetCost: number
   gauge: string
@@ -96,6 +137,9 @@ export default function AssemblyPage() {
   const [editCompletedQty, setEditCompletedQty] = useState(0)
   const [printFormatModal, setPrintFormatModal] = useState(false)
   const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<AssemblyOp | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [viewingOrder, setViewingOrder] = useState<AssemblyOp | null>(null)
+  const [viewFormat, setViewFormat] = useState<'commercial' | 'floor'>('commercial')
   
   const [formData, setFormData] = useState<FormData>({
     workOrderNo: '',
@@ -151,7 +195,19 @@ export default function AssemblyPage() {
           throw new Error('Failed to fetch store items')
         }
         const storeResult = await storeResponse.json()
-        setStoreItems(Array.isArray(storeResult) ? storeResult : [])
+        
+        // Process store items to ensure dimensions are properly mapped
+        const processedStoreItems = (Array.isArray(storeResult) ? storeResult : []).map((item: Record<string, unknown>) => ({
+          ...item,
+          blankWidthMM: (item.blankWidthMM as number) || 0,
+          blankLengthMM: (item.blankLengthMM as number) || 0,
+          blankWidthInch: (item.blankWidthInch as number) || (item.blankWidth as number) || 0,
+          blankLengthInch: (item.blankLengthInch as number) || (item.blankLength as number) || 0,
+          blankWidth: (item.blankWidthInch as number) || (item.blankWidth as number) || 0,
+          blankLength: (item.blankLengthInch as number) || (item.blankLength as number) || 0,
+        })) as StoreItem[]
+        
+        setStoreItems(processedStoreItems)
 
         await fetchAssemblyOps()
         
@@ -213,6 +269,12 @@ export default function AssemblyPage() {
   const openPrintFormatModal = (order: AssemblyOp) => {
     setSelectedOrderForPrint(order)
     setPrintFormatModal(true)
+  }
+
+  const openViewModal = (order: AssemblyOp, format: 'commercial' | 'floor') => {
+    setViewingOrder(order)
+    setViewFormat(format)
+    setIsViewModalOpen(true)
   }
 
   // Commercial Format Print
@@ -287,24 +349,26 @@ export default function AssemblyPage() {
                   </div>
                   <div style="overflow-x: auto;">
                     <table class="data-table">
-                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions</th><th>Qty</th><th>Cost/Piece</th><th>Total Cost</th></tr></thead>
+                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions (mm)</th><th>Qty</th><th>Cost/Piece</th><th>Total Cost</th></tr></thead>
                       <tbody>
-                        ${order.parts.map((part, idx) => `
+                        ${order.parts.map((part, idx) => {
+                          const dimensionDisplay = getPartDimensionDisplay(part)
+                          return `
                           <tr>
                             <td class="center-cell">${idx + 1}</td>
                             <td>${part.partName}</td>
                             <td>${part.partNo}</td>
                             <td>${part.material}/${part.gauge}</td>
-                            <td class="center-cell">${part.blankWidth || 0}" x ${part.blankLength || 0}"</td>
+                            <td class="center-cell">${dimensionDisplay}</td>
                             <td class="center-cell">${part.qty}</td>
                             <td class="numeric-cell">Rs ${part.sheetCost.toLocaleString()}</td>
                             <td class="numeric-cell">Rs ${(part.sheetCost * part.qty).toLocaleString()}</td>
                           </tr>
-                        `).join('')}
+                        `}).join('')}
                       </tbody>
                       <tfoot>
                         <tr class="total-row">
-                          <td colspan="5" class="numeric-cell">GRAND TOTAL:</td>
+                          <td colspan="4" class="numeric-cell">GRAND TOTAL:</td>
                           <td class="center-cell">${totalQty}</td>
                           <td class="numeric-cell">-</td>
                           <td class="numeric-cell">Rs ${totalCost.toLocaleString()}</td>
@@ -410,22 +474,24 @@ export default function AssemblyPage() {
                   </div>
                   <div style="overflow-x: auto;">
                     <table class="data-table">
-                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions</th><th>Qty</th></tr></thead>
+                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions (mm)</th><th>Qty</th></tr></thead>
                       <tbody>
-                        ${order.parts.map((part, idx) => `
+                        ${order.parts.map((part, idx) => {
+                          const dimensionDisplay = getPartDimensionDisplay(part)
+                          return `
                           <tr>
                             <td class="center-cell">${idx + 1}</td>
                             <td>${part.partName}</td>
                             <td>${part.partNo}</td>
                             <td>${part.material}/${part.gauge}</td>
-                            <td class="center-cell">${part.blankWidth || 0}" x ${part.blankLength || 0}"</td>
+                            <td class="center-cell">${dimensionDisplay}</td>
                             <td class="center-cell">${part.qty}</td>
                           </tr>
-                        `).join('')}
+                        `}).join('')}
                       </tbody>
                       <tfoot>
                         <tr class="total-row">
-                          <td colspan="5" class="numeric-cell">GRAND TOTAL:</td>
+                          <td colspan="4" class="numeric-cell">GRAND TOTAL:</td>
                           <td class="center-cell">${totalQty}</td>
                         </tr>
                       </tfoot>
@@ -554,6 +620,8 @@ export default function AssemblyPage() {
         ...part, 
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
+        blankWidthMM: part.blankWidthMM || 0,
+        blankLengthMM: part.blankLengthMM || 0,
         completedQty: part.completedQty || 0, 
         remainingQty: (part.qty - (part.completedQty || 0)) 
       })),
@@ -607,14 +675,20 @@ export default function AssemblyPage() {
     }
 
     const costPerPiece = selectedStoreItem.sheetCostPerPiece || 0
+    const blankWidthMM = selectedStoreItem.blankWidthMM || 0
+    const blankLengthMM = selectedStoreItem.blankLengthMM || 0
+    const blankWidthInch = selectedStoreItem.blankWidthInch || selectedStoreItem.blankWidth || 0
+    const blankLengthInch = selectedStoreItem.blankLengthInch || selectedStoreItem.blankLength || 0
 
     const newPart: AssemblyPartItem = {
       partNo: selectedStoreItem.partNumber,
       partName: selectedStoreItem.partName,
       category: selectedStoreItem.category,
       storeLocation: selectedStoreItem.storeLocation,
-      blankWidth: selectedStoreItem.blankWidth || 0,
-      blankLength: selectedStoreItem.blankLength || 0,
+      blankWidth: blankWidthInch,
+      blankLength: blankLengthInch,
+      blankWidthMM: blankWidthMM,
+      blankLengthMM: blankLengthMM,
       blankSizeSqft: selectedStoreItem.sqft || 0,
       sheetCost: costPerPiece,
       gauge: selectedStoreItem.gauge || '',
@@ -743,6 +817,8 @@ export default function AssemblyPage() {
           storeLocation: part.storeLocation,
           blankWidth: part.blankWidth || 0,
           blankLength: part.blankLength || 0,
+          blankWidthMM: part.blankWidthMM || 0,
+          blankLengthMM: part.blankLengthMM || 0,
           blankSizeSqft: part.blankSizeSqft,
           sheetCost: part.sheetCost,
           gauge: part.gauge,
@@ -789,6 +865,8 @@ export default function AssemblyPage() {
         storeLocation: part.storeLocation,
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
+        blankWidthMM: part.blankWidthMM || 0,
+        blankLengthMM: part.blankLengthMM || 0,
         blankSizeSqft: part.blankSizeSqft,
         sheetCost: part.sheetCost,
         gauge: part.gauge,
@@ -860,7 +938,8 @@ export default function AssemblyPage() {
     <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
       <Toaster position="top-center" />
       <Sidebar />
-      <main className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-all duration-300 ${isAddModalOpen || isEditModalOpen || isPartModalOpen || isEditPartModalOpen || printFormatModal ? 'blur-sm pointer-events-none' : ''}`}>
+      <main className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-all duration-300 ${isAddModalOpen || isEditModalOpen || isPartModalOpen || isEditPartModalOpen || printFormatModal || isViewModalOpen ? 'blur-sm pointer-events-none' : ''}`}>
+        {/* Header Section */}
         <div className="flex flex-col gap-6 border-b pb-6">
           <div className="space-y-2">
             <h1 className={`text-2xl sm:text-3xl pt-8 font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>Assembly Operations Management</h1>
@@ -876,6 +955,8 @@ export default function AssemblyPage() {
             <button onClick={openAddModal} className="px-4 py-2 bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition text-sm font-medium">+ Create Assembly Order</button>
           </div>
         </div>
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Orders</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.length}</p></div>
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Parts</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)}</p></div>
@@ -883,6 +964,8 @@ export default function AssemblyPage() {
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Cost (PKR)</p><p className="text-2xl font-bold text-[#8B5E3C]">Rs {assemblyOps.reduce((sum, op) => sum + calculateTotalCost(op.parts), 0).toLocaleString()}</p></div>
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Completion Rate</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.length > 0 ? Math.round((assemblyOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0) / assemblyOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)) * 100) : 0}%</p></div>
         </div>
+
+        {/* Table Section */}
         <div className="overflow-x-auto">
           {isMobile ? (
             <div className="space-y-4">
@@ -898,7 +981,8 @@ export default function AssemblyPage() {
                           <p className="text-xs text-gray-500">GP: {item.gatepassNo}</p>
                         </div>
                         <div className="flex space-x-2">
-                          <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 text-sm">🖨️ Print</button>
+                          <button onClick={() => openViewModal(item, 'commercial')} className="text-blue-600 hover:text-blue-800 text-sm"><HiEye className="inline w-4 h-4 mr-0.5" /> View</button>
+                          <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 text-sm"><HiPrinter className="inline w-4 h-4 mr-0.5" /> Print</button>
                           <button onClick={() => openEditModal(item)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
                           <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id} className={`text-red-600 hover:text-red-800 text-sm ${deletingId === item._id ? 'opacity-50 cursor-not-allowed' : ''}`}>{deletingId === item._id ? 'Deleting...' : 'Delete'}</button>
                         </div>
@@ -937,7 +1021,7 @@ export default function AssemblyPage() {
                   {filteredItems.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-6 py-4 text-center text-sm text-gray-500">No assembly orders found</td>
-                   </tr>
+                  </tr>
                   ) : (
                     filteredItems.map((item) => {
                       const totalQty = calculateTotalQty(item.parts)
@@ -968,7 +1052,8 @@ export default function AssemblyPage() {
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">Rs {calculateTotalCost(item.parts).toLocaleString()}</td>
                           <td className="px-4 py-4 whitespace-nowrap">{getStatusBadge(item.status)}</td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 space-x-3">
-                            <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 font-medium"><HiPrinter className="inline w-4 h-4 mr-1" /> Print</button>
+                            <button onClick={() => openViewModal(item, 'commercial')} className="text-blue-600 hover:text-blue-800 font-medium"><HiEye className="inline w-4 h-4 mr-0.5" /> View</button>
+                            <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 font-medium"><HiPrinter className="inline w-4 h-4 mr-0.5" /> Print</button>
                             <button onClick={() => openEditModal(item)} className="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
                             <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id} className={`text-red-600 hover:text-red-800 font-medium ${deletingId === item._id ? 'opacity-50 cursor-not-allowed' : ''}`}>{deletingId === item._id ? 'Deleting...' : 'Delete'}</button>
                           </td>
@@ -982,6 +1067,187 @@ export default function AssemblyPage() {
           )}
         </div>
       </main>
+
+      {/* View Assembly Order Modal */}
+      {isViewModalOpen && viewingOrder && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setIsViewModalOpen(false)}></div>
+          <div className="relative min-h-screen flex items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <div>
+                  <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Assembly Order Details</h2>
+                  <p className="text-sm text-gray-500 mt-1">{viewingOrder.workOrderNo}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewFormat('commercial')}
+                      className={`px-3 py-1.5 text-sm rounded-md transition ${
+                        viewFormat === 'commercial' 
+                          ? 'bg-[#8B5E3C] text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      💰 Commercial
+                    </button>
+                    <button
+                      onClick={() => setViewFormat('floor')}
+                      className={`px-3 py-1.5 text-sm rounded-md transition ${
+                        viewFormat === 'floor' 
+                          ? 'bg-[#8B5E3C] text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      🏭 Floor
+                    </button>
+                  </div>
+                  <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Commercial Format View */}
+                {viewFormat === 'commercial' && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 p-4 border-b">
+                      <h3 className="font-bold text-lg">ASSEMBLY ORDER</h3>
+                      <p className="text-sm text-gray-600">COMMERCIAL - ASSEMBLY OPERATION</p>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <div><span className="font-semibold">Order No:</span> {viewingOrder.workOrderNo}</div>
+                        <div><span className="font-semibold">Gate Pass No:</span> {viewingOrder.gatepassNo}</div>
+                        <div><span className="font-semibold">Date Issued:</span> {formatDateTime(viewingOrder.dateIssued)}</div>
+                        {viewingOrder.assemblyDate && <div><span className="font-semibold">Assembly Date:</span> {formatDate(viewingOrder.assemblyDate)}</div>}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="px-3 py-2 border text-left">S.No</th>
+                              <th className="px-3 py-2 border text-left">Part Name</th>
+                              <th className="px-3 py-2 border text-left">Part No</th>
+                              <th className="px-3 py-2 border text-left">Material/Gauge</th>
+                              <th className="px-3 py-2 border text-left">Dimensions (mm)</th>
+                              <th className="px-3 py-2 border text-right">Qty</th>
+                              <th className="px-3 py-2 border text-right">Cost/Piece</th>
+                              <th className="px-3 py-2 border text-right">Total Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {viewingOrder.parts.map((part, idx) => {
+                              const dimensionDisplay = getPartDimensionDisplay(part)
+                              return (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                  <td className="px-3 py-2 border text-center">{idx + 1}</td>
+                                  <td className="px-3 py-2 border">{part.partName}</td>
+                                  <td className="px-3 py-2 border">{part.partNo}</td>
+                                  <td className="px-3 py-2 border">{part.material}/{part.gauge}</td>
+                                  <td className="px-3 py-2 border text-center">{dimensionDisplay}</td>
+                                  <td className="px-3 py-2 border text-center">{part.qty}</td>
+                                  <td className="px-3 py-2 border text-right">Rs {part.sheetCost.toLocaleString()}</td>
+                                  <td className="px-3 py-2 border text-right">Rs {(part.sheetCost * part.qty).toLocaleString()}</td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                          <tfoot className="bg-green-50 font-semibold">
+                            <tr>
+                              <td colSpan={5} className="px-3 py-2 border text-right">GRAND TOTAL:</td>
+                              <td className="px-3 py-2 border text-center">{calculateTotalQty(viewingOrder.parts)}</td>
+                              <td className="px-3 py-2 border text-right">-</td>
+                              <td className="px-3 py-2 border text-right">Rs {calculateTotalCost(viewingOrder.parts).toLocaleString()}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      {viewingOrder.remarks && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <p className="font-semibold text-sm">REMARKS:</p>
+                          <p className="text-sm mt-1">{viewingOrder.remarks}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Floor Format View */}
+                {viewFormat === 'floor' && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 p-4 border-b">
+                      <h3 className="font-bold text-lg">ASSEMBLY ORDER</h3>
+                      <p className="text-sm text-gray-600">FLOOR TASK</p>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <div><span className="font-semibold">Order No:</span> {viewingOrder.workOrderNo}</div>
+                        <div><span className="font-semibold">Gate Pass No:</span> {viewingOrder.gatepassNo}</div>
+                        <div><span className="font-semibold">Date Issued:</span> {formatDateTime(viewingOrder.dateIssued)}</div>
+                        {viewingOrder.assemblyDate && <div><span className="font-semibold">Assembly Date:</span> {formatDate(viewingOrder.assemblyDate)}</div>}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="px-3 py-2 border text-left">S.No</th>
+                              <th className="px-3 py-2 border text-left">Part Name</th>
+                              <th className="px-3 py-2 border text-left">Part No</th>
+                              <th className="px-3 py-2 border text-left">Material/Gauge</th>
+                              <th className="px-3 py-2 border text-left">Dimensions (mm)</th>
+                              <th className="px-3 py-2 border text-right">Qty</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {viewingOrder.parts.map((part, idx) => {
+                              const dimensionDisplay = getPartDimensionDisplay(part)
+                              return (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                  <td className="px-3 py-2 border text-center">{idx + 1}</td>
+                                  <td className="px-3 py-2 border">{part.partName}</td>
+                                  <td className="px-3 py-2 border">{part.partNo}</td>
+                                  <td className="px-3 py-2 border">{part.material}/{part.gauge}</td>
+                                  <td className="px-3 py-2 border text-center">{dimensionDisplay}</td>
+                                  <td className="px-3 py-2 border text-center">{part.qty}</td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                          <tfoot className="bg-green-50 font-semibold">
+                            <tr>
+                              <td colSpan={4} className="px-3 py-2 border text-right">GRAND TOTAL:</td>
+                              <td className="px-3 py-2 border text-center">{calculateTotalQty(viewingOrder.parts)}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      {viewingOrder.remarks && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <p className="font-semibold text-sm">REMARKS:</p>
+                          <p className="text-sm mt-1">{viewingOrder.remarks}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end">
+                <button
+                  onClick={() => setIsViewModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Print Format Selection Modal */}
       {printFormatModal && selectedOrderForPrint && (
@@ -1027,11 +1293,63 @@ export default function AssemblyPage() {
                   <div className="flex justify-between items-center mb-4"><h3 className={`text-lg font-semibold text-gray-800 ${dmSans.className}`}>Parts List</h3>{!isEditModalOpen && <button type="button" onClick={() => openPartSelection()} className="px-3 py-1.5 text-sm bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition">+ Add Part from Store</button>}</div>
                   {formData.parts.length === 0 ? <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">No parts added yet. Click &quot;Add Part from Store&quot; to add items.</div> : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm"><thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">Part #</th><th className="px-3 py-2 text-left">Part Name</th><th className="px-3 py-2 text-left">Category</th><th className="px-3 py-2 text-left">Material/Gauge</th><th className="px-3 py-2 text-left">Dimensions</th><th className="px-3 py-2 text-right">Cost/Piece</th><th className="px-3 py-2 text-right">Qty</th><th className="px-3 py-2 text-right">Completed</th><th className="px-3 py-2 text-right">Remaining</th><th className="px-3 py-2 text-right">Total</th><th className="px-3 py-2 text-center">Actions</th></tr></thead>
-                      <tbody className="divide-y">{formData.parts.map((part, idx) => (<tr key={idx} className="hover:bg-gray-50"><td className="px-3 py-2">{part.partNo}</td><td className="px-3 py-2 font-medium">{part.partName}</td><td className="px-3 py-2 capitalize">{part.category}</td><td className="px-3 py-2">{part.material}/{part.gauge}</td><td className="px-3 py-2">{part.blankWidth || 0}&quot; x {part.blankLength || 0}&quot;</td><td className="px-3 py-2 text-right">Rs {part.sheetCost.toLocaleString()}</td><td className="px-3 py-2 text-right">{part.qty}</td><td className="px-3 py-2 text-right text-green-600">{part.completedQty || 0}</td><td className="px-3 py-2 text-right text-orange-600">{part.remainingQty || part.qty}</td><td className="px-3 py-2 text-right font-medium">Rs {(part.sheetCost * part.qty).toLocaleString()}</td><td className="px-3 py-2 text-center space-x-2">{isEditModalOpen ? <button type="button" onClick={() => openEditPartModal(part, idx)} className="text-green-600 hover:text-green-800 text-xs">Update Completion</button> : <><button type="button" onClick={() => openPartSelection(idx)} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button><button type="button" onClick={() => removePart(idx)} className="text-red-600 hover:text-red-800 text-xs">Remove</button></>}</td></tr>))}
-                      <tr className="bg-gray-100 font-semibold"><td colSpan={5} className="px-3 py-2 text-right">Totals:</td><td className="px-3 py-2 text-right"></td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + p.qty, 0)}</td><td className="px-3 py-2 text-right text-green-600">{formData.parts.reduce((sum, p) => sum + (p.completedQty || 0), 0)}</td><td className="px-3 py-2 text-right text-orange-600">{formData.parts.reduce((sum, p) => sum + (p.remainingQty || p.qty), 0)}</td><td className="px-3 py-2 text-right">Rs {formData.parts.reduce((sum, p) => sum + (p.sheetCost * p.qty), 0).toLocaleString()}</td><td className="px-3 py-2"></td></tr>
-                      </tbody>
-                    </table>
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left">Part #</th>
+                            <th className="px-3 py-2 text-left">Part Name</th>
+                            <th className="px-3 py-2 text-left">Category</th>
+                            <th className="px-3 py-2 text-left">Material/Gauge</th>
+                            <th className="px-3 py-2 text-left">Dimensions (mm)</th>
+                            <th className="px-3 py-2 text-right">Cost/Piece</th>
+                            <th className="px-3 py-2 text-right">Qty</th>
+                            <th className="px-3 py-2 text-right">Completed</th>
+                            <th className="px-3 py-2 text-right">Remaining</th>
+                            <th className="px-3 py-2 text-right">Total</th>
+                            <th className="px-3 py-2 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {formData.parts.map((part, idx) => {
+                            const dimensionDisplay = getPartDimensionDisplay(part)
+                            return (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-3 py-2">{part.partNo}</td>
+                                <td className="px-3 py-2 font-medium">{part.partName}</td>
+                                <td className="px-3 py-2 capitalize">{part.category}</td>
+                                <td className="px-3 py-2">{part.material}/{part.gauge}</td>
+                                <td className="px-3 py-2">{dimensionDisplay}</td>
+                                <td className="px-3 py-2 text-right">Rs {part.sheetCost.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-right">{part.qty}</td>
+                                <td className="px-3 py-2 text-right text-green-600">{part.completedQty || 0}</td>
+                                <td className="px-3 py-2 text-right text-orange-600">{part.remainingQty || part.qty}</td>
+                                <td className="px-3 py-2 text-right font-medium">Rs {(part.sheetCost * part.qty).toLocaleString()}</td>
+                                <td className="px-3 py-2 text-center space-x-2">
+                                  {isEditModalOpen ? (
+                                    <button type="button" onClick={() => openEditPartModal(part, idx)} className="text-green-600 hover:text-green-800 text-xs">Update Completion</button>
+                                  ) : (
+                                    <>
+                                      <button type="button" onClick={() => openPartSelection(idx)} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
+                                      <button type="button" onClick={() => removePart(idx)} className="text-red-600 hover:text-red-800 text-xs">Remove</button>
+                                    </>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                        <tfoot className="bg-gray-100 font-semibold">
+                          <tr>
+                            <td colSpan={5} className="px-3 py-2 text-right">Totals:</td>
+                            <td className="px-3 py-2 text-right">-</td>
+                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + p.qty, 0)}</td>
+                            <td className="px-3 py-2 text-right text-green-600">{formData.parts.reduce((sum, p) => sum + (p.completedQty || 0), 0)}</td>
+                            <td className="px-3 py-2 text-right text-orange-600">{formData.parts.reduce((sum, p) => sum + (p.remainingQty || p.qty), 0)}</td>
+                            <td className="px-3 py-2 text-right">Rs {formData.parts.reduce((sum, p) => sum + (p.sheetCost * p.qty), 0).toLocaleString()}</td>
+                            <td className="px-3 py-2"></td>
+                          </tr>
+                        </tfoot>
+                      </table>
                     </div>
                   )}
                 </div>
@@ -1091,7 +1409,7 @@ export default function AssemblyPage() {
                         <th className="px-3 py-2 text-left">Part Name</th>
                         <th className="px-3 py-2 text-left">Category</th>
                         <th className="px-3 py-2 text-left">Material</th>
-                        <th className="px-3 py-2 text-left">Dimensions</th>
+                        <th className="px-3 py-2 text-left">Dimensions (mm)</th>
                         <th className="px-3 py-2 text-right">Stock</th>
                         <th className="px-3 py-2 text-right">Cost/Piece</th>
                         <th className="px-3 py-2 text-center">Action</th>
@@ -1103,37 +1421,41 @@ export default function AssemblyPage() {
                           <td colSpan={8} className="px-3 py-8 text-center text-gray-500">No parts found in store</td>
                         </tr>
                       ) : (
-                        filteredStoreItems.map((item) => (
-                          <tr key={item._id} className="hover:bg-gray-50">
-                            <td className="px-3 py-2 font-mono text-xs">{item.partNumber}</td>
-                            <td className="px-3 py-2 font-medium">{item.partName}</td>
-                            <td className="px-3 py-2 capitalize">{item.category}</td>
-                            <td className="px-3 py-2">{item.material}/{item.gauge}</td>
-                            <td className="px-3 py-2 text-xs">{item.blankWidth || 0}&quot; x {item.blankLength || 0}&quot;</td>
-                            <td className="px-3 py-2 text-right">
-                              <span className={item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'}>
-                                {item.stockInStore} {item.unitOfMeasure}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 text-right">
-                              <span className="font-medium text-[#8B5E3C]">Rs {item.sheetCostPerPiece?.toLocaleString() || '0'}</span>
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              {selectedStoreItem?._id === item._id ? (
-                                <div className="flex items-center gap-2">
-                                  <input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))} 
-                                    className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" max={item.stockInStore} />
-                                  <button onClick={addPartToAssembly} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Add</button>
-                                </div>
-                              ) : (
-                                <button onClick={() => selectStoreItem(item)} disabled={item.stockInStore <= 0} 
-                                  className={`px-3 py-1 text-xs rounded-md transition ${item.stockInStore > 0 ? 'bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
-                                  {item.stockInStore > 0 ? 'Select' : 'Out of Stock'}
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))
+                        filteredStoreItems.map((item) => {
+                          const dimensionDisplay = getStoreItemDimension(item)
+                          const costPerPiece = item.sheetCostPerPiece || 0
+                          return (
+                            <tr key={item._id} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 font-mono text-xs">{item.partNumber}</td>
+                              <td className="px-3 py-2 font-medium">{item.partName}</td>
+                              <td className="px-3 py-2 capitalize">{item.category}</td>
+                              <td className="px-3 py-2">{item.material}/{item.gauge}</td>
+                              <td className="px-3 py-2 text-xs">{dimensionDisplay}</td>
+                              <td className="px-3 py-2 text-right">
+                                <span className={item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'}>
+                                  {item.stockInStore} {item.unitOfMeasure}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                <span className="font-medium text-[#8B5E3C]">Rs {costPerPiece.toLocaleString()}</span>
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {selectedStoreItem?._id === item._id ? (
+                                  <div className="flex items-center gap-2">
+                                    <input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))} 
+                                      className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" max={item.stockInStore} />
+                                    <button onClick={addPartToAssembly} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Add</button>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => selectStoreItem(item)} disabled={item.stockInStore <= 0} 
+                                    className={`px-3 py-1 text-xs rounded-md transition ${item.stockInStore > 0 ? 'bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
+                                    {item.stockInStore > 0 ? 'Select' : 'Out of Stock'}
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })
                       )}
                     </tbody>
                   </table>

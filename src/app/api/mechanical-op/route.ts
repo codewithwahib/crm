@@ -75,6 +75,11 @@ interface StoreItem {
   partNumber?: string
 }
 
+// Helper function to calculate paint cost per piece
+function calculatePaintCostPerPiece(blankSizeSqft: number, todayPaintCost: number): number {
+  return blankSizeSqft * todayPaintCost
+}
+
 // GET - Fetch all mechanical operations
 export async function GET() {
   try {
@@ -184,7 +189,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // Process parts with ALL fields including weight, blankWidth, blankLength
+    // Process parts with ALL fields including weight, blankWidth, blankLength, and paint costs
     const processedParts: ProcessedPart[] = body.parts.map((part: Part, index: number) => {
       const completedQty = part.completedQty || 0
       const qty = part.qty || 0
@@ -193,15 +198,21 @@ export async function POST(req: Request) {
       const totalWeight = weightPerPiece * qty
       const totalCost = (part.sheetCost || 0) * qty
       
+      // CRITICAL: Preserve paint cost values
+      const blankSizeSqft = part.blankSizeSqft || 0
+      const todayPaintCost = part.todayPaintCost || 0
+      const paintCostPerPiece = part.paintCostPerPiece || calculatePaintCostPerPiece(blankSizeSqft, todayPaintCost)
+      
       console.log(`Processing part ${index}:`, {
         partName: part.partName,
         blankWidth: part.blankWidth,
         blankLength: part.blankLength,
-        blankSizeSqft: part.blankSizeSqft,
+        blankSizeSqft: blankSizeSqft,
         weight: part.weight,
         sheetCost: part.sheetCost,
-        paintCostPerPiece: part.paintCostPerPiece,
-        todayPaintCost: part.todayPaintCost
+        todayPaintCost: todayPaintCost,
+        paintCostPerPiece: paintCostPerPiece,
+        qty: qty
       })
       
       return {
@@ -212,11 +223,11 @@ export async function POST(req: Request) {
         storeLocation: part.storeLocation,
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
-        blankSizeSqft: part.blankSizeSqft || 0,
+        blankSizeSqft: blankSizeSqft,
         weight: weightPerPiece,
         sheetCost: part.sheetCost || 0,
-        paintCostPerPiece: part.paintCostPerPiece || 0,
-        todayPaintCost: part.todayPaintCost || 0,
+        paintCostPerPiece: paintCostPerPiece,
+        todayPaintCost: todayPaintCost,
         gauge: part.gauge || '',
         material: part.material || '',
         qty: qty,
@@ -250,7 +261,7 @@ export async function POST(req: Request) {
       parts: processedParts
     }
 
-    console.log('Creating work order with parts that have weight, dimensions, and costs:', 
+    console.log('Creating work order with parts that have weight, dimensions, and paint costs:', 
       processedParts.map((p: ProcessedPart) => ({ 
         name: p.partName, 
         weight: p.weight,
@@ -258,7 +269,7 @@ export async function POST(req: Request) {
         blankLength: p.blankLength,
         blankSizeSqft: p.blankSizeSqft,
         totalWeight: p.totalWeight,
-        todayPaintCost: p.todayPaintCost, 
+        todayPaintCost: p.todayPaintCost,
         paintCostPerPiece: p.paintCostPerPiece 
       })))
 
@@ -379,7 +390,7 @@ export async function PUT(req: Request) {
       oldPartsMap.set(oldPart.storeItemId, oldPart)
     }
 
-    // Process parts for update - INCLUDING weight, dimensions, and costs
+    // Process parts for update - INCLUDING weight, dimensions, and paint costs
     const processedParts: ProcessedPart[] = updates.parts.map((part: Part, index: number) => {
       const completedQty = part.completedQty || 0
       const qty = part.qty || 0
@@ -387,6 +398,11 @@ export async function PUT(req: Request) {
       const weightPerPiece = part.weight || 0
       const totalWeight = weightPerPiece * qty
       const totalCost = (part.sheetCost || 0) * qty
+      
+      // CRITICAL: Preserve paint cost values
+      const blankSizeSqft = part.blankSizeSqft || 0
+      const todayPaintCost = part.todayPaintCost || 0
+      const paintCostPerPiece = part.paintCostPerPiece || calculatePaintCostPerPiece(blankSizeSqft, todayPaintCost)
       
       // Find existing part to preserve _key if it exists
       const existingPart = existingWorkOrder.parts?.find((p: ExistingPart) => p.storeItemId === part.storeItemId)
@@ -399,11 +415,11 @@ export async function PUT(req: Request) {
         storeLocation: part.storeLocation,
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
-        blankSizeSqft: part.blankSizeSqft || 0,
+        blankSizeSqft: blankSizeSqft,
         weight: weightPerPiece,
         sheetCost: part.sheetCost || 0,
-        paintCostPerPiece: part.paintCostPerPiece || 0,
-        todayPaintCost: part.todayPaintCost || 0,
+        paintCostPerPiece: paintCostPerPiece,
+        todayPaintCost: todayPaintCost,
         gauge: part.gauge || '',
         material: part.material || '',
         qty: qty,
@@ -462,14 +478,14 @@ export async function PUT(req: Request) {
       overallStatus: updates.overallStatus || overallStatus
     }
 
-    console.log('Updating work order with parts that have weight and dimensions:', 
+    console.log('Updating work order with parts that have weight, dimensions, and paint costs:', 
       processedParts.map((p: ProcessedPart) => ({ 
         name: p.partName, 
         weight: p.weight,
         blankWidth: p.blankWidth,
         blankLength: p.blankLength,
         totalWeight: p.totalWeight,
-        todayPaintCost: p.todayPaintCost, 
+        todayPaintCost: p.todayPaintCost,
         paintCostPerPiece: p.paintCostPerPiece 
       })))
 
@@ -597,6 +613,7 @@ async function updateStock(storeItemId: string, quantity: number, operation: 'ad
         .set({ stockInStore: newStock })
         .commit()
       
+      console.log(`Stock updated for ${storeItem.partName}: ${newStock} (${operation === 'add' ? '+' : '-'}${quantity})`)
       return true
     }
     return false

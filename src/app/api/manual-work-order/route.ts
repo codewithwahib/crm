@@ -2,148 +2,152 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client, writeClient, canWrite } from '@/sanity/lib/client'
 
-// Define types
+// Define interfaces
 interface Part {
-  partNo: string;
-  partName: string;
-  category?: string;
-  storeLocation?: string;
-  blankWidth?: number;
-  blankLength?: number;
-  blankSizeSqft?: number;
-  paintCostPerSqft?: number;
-  paintCostPerPiece?: number;
-  gauge?: string;
-  material?: string;
-  qty: number;
-  totalPrice?: number;
-  totalSqft?: number;
-  storeItemId?: string;
-  _key?: string;
+  partNo: string
+  partName: string
+  category: string
+  storeLocation: string
+  blankWidth?: number
+  blankLength?: number
+  blankSizeSqft?: number
+  weight?: number
+  paintCostPerSqft?: number
+  gauge?: string
+  material?: string
+  qty: number
+  storeItemId?: string
 }
 
-interface FormattedPart extends Part {
-  _key: string;
-  category: string;
-  storeLocation: string;
-  blankWidth: number;
-  blankLength: number;
-  blankSizeSqft: number;
-  paintCostPerSqft: number;
-  paintCostPerPiece: number;
-  gauge: string;
-  material: string;
-  totalPrice: number;
-  totalSqft: number;
-  storeItemId: string;
+interface FormattedPart {
+  _key: string
+  partNo: string
+  partName: string
+  category: string
+  storeLocation: string
+  blankWidth: number
+  blankLength: number
+  blankSizeSqft: number
+  weight: number
+  paintCostPerSqft: number
+  paintCostPerPiece: number
+  gauge: string
+  material: string
+  qty: number
+  receivedQty: number
+  remainingQty: number
+  totalPrice: number
+  totalWeight: number
+  storeItemId: string
 }
 
 interface ExistingPart {
-  _key?: string;
-  partNo: string;
-  qty: number;
-  storeItemId?: string;
+  _key: string
+  partNo: string
+  qty: number
+  storeItemId?: string
 }
 
 interface ExistingDocument {
-  _id: string;
-  workOrderNo: string;
-  gatepassNo: string;
-  parts?: ExistingPart[];
+  _id: string
+  workOrderNo: string
+  gatepassNo: string
+  parts: ExistingPart[]
 }
 
-interface StockItem {
-  _id: string;
-  stockInStore: number;
-  partName: string;
-  partNumber: string;
+interface StoreItem {
+  _id: string
+  stockInStore: number
+  partName: string
 }
 
-// Helper function to calculate paint cost for a part
-function calculatePartValues(part: Partial<Part>) {
-  const paintCostPerPiece = (part.blankSizeSqft || 0) * (part.paintCostPerSqft || 0)
-  const totalPrice = paintCostPerPiece * (part.qty || 0)
-  const totalSqft = (part.blankSizeSqft || 0) * (part.qty || 0)
-  return { paintCostPerPiece, totalPrice, totalSqft }
-}
+// Helper function to calculate values for a part
+// function calculatePartValues(part: Part): { paintCostPerPiece: number; totalPrice: number; totalWeight: number } {
+//   const paintCostPerPiece = (part.blankSizeSqft || 0) * (part.paintCostPerSqft || 0)
+//   const totalPrice = paintCostPerPiece * (part.qty || 0)
+//   const totalWeight = (part.weight || 0) * (part.qty || 0)
+//   return { paintCostPerPiece, totalPrice, totalWeight }
+// }
 
 // Helper function to calculate order total
-function calculateOrderTotal(parts: FormattedPart[]) {
-  return parts.reduce((sum, part) => sum + (part.totalPrice || 0), 0)
+function calculateOrderTotal(parts: FormattedPart[]): number {
+  return parts.reduce((sum: number, part: FormattedPart) => sum + (part.totalPrice || 0), 0)
 }
 
+// Helper function to calculate order total weight
+function calculateOrderTotalWeight(parts: FormattedPart[]): number {
+  return parts.reduce((sum: number, part: FormattedPart) => sum + (part.totalWeight || 0), 0)
+}
+
+// GET - Fetch all paint inward operations
 export async function GET(_req: NextRequest) {
   try {
-    // Fetch paint inward operations (manual work orders)
-    const workOrders = await client.fetch(`
-      *[_type == "paint-in-opr"] | order(_createdAt desc) {
-        _id,
-        _createdAt,
-        workOrderNo,
-        gatepassNo,
-        dateIssued,
-        remarks,
-        total,
-        parts[] {
-          _key,
-          partNo,
-          partName,
-          category,
-          storeLocation,
-          blankWidth,
-          blankLength,
-          blankSizeSqft,
-          paintCostPerSqft,
-          paintCostPerPiece,
-          gauge,
-          material,
-          qty,
-          totalPrice
-        }
+    const query = `*[_type == "paint-in-opr"] | order(_createdAt desc) {
+      _id,
+      _createdAt,
+      workOrderNo,
+      gatepassNo,
+      dateIssued,
+      remarks,
+      total,
+      totalWeight,
+      parts[] {
+        _key,
+        partNo,
+        partName,
+        category,
+        storeLocation,
+        blankWidth,
+        blankLength,
+        blankSizeSqft,
+        weight,
+        paintCostPerSqft,
+        paintCostPerPiece,
+        gauge,
+        material,
+        qty,
+        receivedQty,
+        remainingQty,
+        totalPrice,
+        totalWeight,
+        storeItemId
       }
-    `)
-
-    // Fetch mechanical operations for reference
-    const mechanicalOps = await client.fetch(`
-      *[_type == "mechanical-op"] | order(_createdAt desc) {
-        _id,
-        workOrderNo,
-        gatepassNo,
-        dateIssued,
-        remarks,
-        parts[] {
-          partNo,
-          partName,
-          category,
-          storeLocation,
-          blankWidth,
-          blankLength,
-          blankSizeSqft,
-          sheetCost,
-          gauge,
-          material,
-          qty,
-          todayPaintCost,
-          paintCostPerPiece
-        }
-      }
-    `)
-
+    }`
+    
+    const paintInwardOps = await client.fetch(query)
+    
+    console.log('Paint Inward Ops fetched:', paintInwardOps.length)
+    if (paintInwardOps.length > 0 && paintInwardOps[0].parts) {
+      console.log('Sample part from inward:', {
+        partName: paintInwardOps[0].parts[0]?.partName,
+        blankWidth: paintInwardOps[0].parts[0]?.blankWidth,
+        blankLength: paintInwardOps[0].parts[0]?.blankLength,
+        blankSizeSqft: paintInwardOps[0].parts[0]?.blankSizeSqft,
+        paintCostPerSqft: paintInwardOps[0].parts[0]?.paintCostPerSqft,
+        paintCostPerPiece: paintInwardOps[0].parts[0]?.paintCostPerPiece
+      })
+    }
+    
     return NextResponse.json({ 
-      data: workOrders || [], 
-      mechanicalOps: mechanicalOps || [] 
+      data: paintInwardOps || [], 
+      success: true 
     }, { status: 200 })
 
   } catch (error) {
-    console.error('Error fetching work orders:', error)
+    console.error('Error fetching paint inward operations:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch work orders' },
+      { 
+        error: 'Failed to fetch paint inward operations', 
+        success: false,
+        data: []
+      },
       { status: 500 }
     )
   }
 }
 
-export async function POST(req: NextRequest) {
+// POST - Create new paint inward operation
+export async function POST(req: Request) {
   try {
     if (!canWrite()) {
       return NextResponse.json(
@@ -152,11 +156,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const body = await req.json() as { workOrderNo: string; gatepassNo: string; dateIssued: string; remarks?: string; parts: Partial<Part>[] }
+    const body = await req.json()
     const { workOrderNo, gatepassNo, dateIssued, remarks, parts } = body
 
     console.log('=== POST: Creating Paint Inward Work Order ===')
-    console.log('Received parts:', JSON.stringify(parts, null, 2))
+    console.log('Parts count:', parts?.length)
+    console.log('Parts with paintCostPerSqft:', parts?.map((p: Part) => ({
+      name: p.partName,
+      paintCostPerSqft: p.paintCostPerSqft,
+      blankSizeSqft: p.blankSizeSqft,
+      qty: p.qty
+    })))
 
     // Validate required fields
     if (!workOrderNo || workOrderNo.trim() === '') {
@@ -187,20 +197,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check if work order already exists
-    const existingWorkOrder = await client.fetch(
-      `*[_type == "paint-in-opr" && workOrderNo == $workOrderNo][0] { _id }`,
-      { workOrderNo }
-    )
-
-    if (existingWorkOrder) {
-      return NextResponse.json(
-        { error: 'Work order number already exists' },
-        { status: 400 }
-      )
-    }
-
-    // Check if gatepass already exists
+    // Check for existing gatepass only (gatepass must be unique)
     const existingGatepass = await client.fetch(
       `*[_type == "paint-in-opr" && gatepassNo == $gatepassNo][0] { _id }`,
       { gatepassNo }
@@ -213,46 +210,62 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Format parts with all required fields
-    const formattedParts: FormattedPart[] = parts.map((part: Partial<Part>, index: number) => {
-      const { paintCostPerPiece, totalPrice, totalSqft } = calculatePartValues(part)
+    // Calculate values for each part - CRITICAL: Preserve paintCostPerSqft
+    const formattedParts: FormattedPart[] = parts.map((part: Part, index: number) => {
+      const blankSizeSqft = part.blankSizeSqft || 0
+      const paintCostPerSqft = part.paintCostPerSqft || 0
+      const paintCostPerPiece = blankSizeSqft * paintCostPerSqft
+      const totalPrice = paintCostPerPiece * (part.qty || 0)
+      const totalWeight = (part.weight || 0) * (part.qty || 0)
       
       console.log(`Processing part ${index}:`, {
         partName: part.partName,
         blankWidth: part.blankWidth,
         blankLength: part.blankLength,
-        blankSizeSqft: part.blankSizeSqft,
-        paintCostPerSqft: part.paintCostPerSqft,
+        blankSizeSqft: blankSizeSqft,
+        paintCostPerSqft: paintCostPerSqft,
+        paintCostPerPiece: paintCostPerPiece,
         qty: part.qty,
-        paintCostPerPiece,
-        totalPrice
+        totalPrice: totalPrice
       })
       
       return {
         _key: `${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`,
-        partNo: part.partNo || '',
-        partName: part.partName || '',
-        category: part.category || 'raw',
-        storeLocation: part.storeLocation || '',
+        partNo: part.partNo,
+        partName: part.partName,
+        category: part.category,
+        storeLocation: part.storeLocation,
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
-        blankSizeSqft: part.blankSizeSqft || 0,
-        paintCostPerSqft: part.paintCostPerSqft || 0,
+        blankSizeSqft: blankSizeSqft,
+        weight: part.weight || 0,
+        paintCostPerSqft: paintCostPerSqft, // CRITICAL: Save paint cost per sqft
         paintCostPerPiece: paintCostPerPiece,
         gauge: part.gauge || '',
-        material: part.material || 'GI',
+        material: part.material || '',
         qty: Number(part.qty),
+        receivedQty: 0,
+        remainingQty: Number(part.qty),
         totalPrice: totalPrice,
-        totalSqft: totalSqft,
+        totalWeight: totalWeight,
         storeItemId: part.storeItemId || ''
       }
     })
 
-    // Calculate order total
+    // Calculate order totals
     const total = calculateOrderTotal(formattedParts)
+    const totalWeight = calculateOrderTotalWeight(formattedParts)
 
-    console.log('Formatted parts:', JSON.stringify(formattedParts, null, 2))
-    console.log('Order total:', total)
+    console.log('Formatted parts with all fields:', formattedParts.map((p: FormattedPart) => ({
+      name: p.partName,
+      blankWidth: p.blankWidth,
+      blankLength: p.blankLength,
+      blankSizeSqft: p.blankSizeSqft,
+      paintCostPerSqft: p.paintCostPerSqft,
+      paintCostPerPiece: p.paintCostPerPiece,
+      qty: p.qty,
+      totalPrice: p.totalPrice
+    })))
 
     // Create new document
     const result = await writeClient.create({
@@ -263,19 +276,21 @@ export async function POST(req: NextRequest) {
       remarks: remarks || '',
       parts: formattedParts,
       total: total,
-      createdAt: new Date().toISOString()
+      totalWeight: totalWeight
     })
     
-    console.log('Successfully created work order:', result._id)
+    console.log('Successfully created paint inward work order:', result._id)
+    console.log('Total order value:', total)
+    console.log('Total order weight:', totalWeight)
 
     // Update stock for each part (deduct quantity)
     for (const part of parts) {
       if (part.storeItemId) {
         try {
           const storeItem = await client.fetch(
-            `*[_type == "store" && _id == $storeItemId][0] { _id, stockInStore, partName, partNumber }`,
+            `*[_type == "store" && _id == $storeItemId][0] { _id, stockInStore, partNumber, partName }`,
             { storeItemId: part.storeItemId }
-          ) as StockItem | null
+          )
           
           if (storeItem) {
             const newStock = Math.max(0, storeItem.stockInStore - Number(part.qty))
@@ -295,15 +310,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Work order created successfully',
+      message: 'Paint inward work order created successfully',
       data: result
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Error creating work order:', error)
+    console.error('Error creating paint inward work order:', error)
     return NextResponse.json(
       { 
-        error: 'Failed to create work order', 
+        error: 'Failed to create paint inward work order', 
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
@@ -311,7 +326,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+// PUT - Update existing paint inward operation
+export async function PUT(req: Request) {
   try {
     if (!canWrite()) {
       return NextResponse.json(
@@ -320,11 +336,11 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const body = await req.json() as { id: string; workOrderNo: string; gatepassNo: string; dateIssued: string; remarks?: string; parts: Partial<Part>[] }
+    const body = await req.json()
     const { id, workOrderNo, gatepassNo, dateIssued, remarks, parts } = body
 
     console.log('=== PUT: Updating Paint Inward Work Order ===')
-    console.log('Received parts:', JSON.stringify(parts, null, 2))
+    console.log('Received PUT request for ID:', id)
 
     if (!id) {
       return NextResponse.json(
@@ -392,62 +408,70 @@ export async function PUT(req: NextRequest) {
 
     // Restore stock for parts that were removed or reduced
     for (const [partNo, oldPart] of oldPartsMap) {
-      const newPart = parts.find((p: Partial<Part>) => p.partNo === partNo)
+      const newPart = parts.find((p: Part) => p.partNo === partNo)
       
-      if (!newPart && oldPart.storeItemId) {
+      if (!newPart) {
         // Part was removed - restore full quantity
         await updateStockByStoreItemId(oldPart.storeItemId, oldPart.qty, 'add')
         console.log(`Restored stock for removed part ${partNo}: +${oldPart.qty}`)
-      } else if (newPart && newPart.qty !== oldPart.qty && oldPart.storeItemId) {
+      } else if (newPart.qty !== oldPart.qty) {
         // Quantity changed - adjust difference
-        const difference = oldPart.qty - (newPart.qty || 0)
+        const difference = oldPart.qty - newPart.qty
         if (difference > 0) {
           await updateStockByStoreItemId(oldPart.storeItemId, difference, 'add')
           console.log(`Restored stock for ${partNo}: +${difference}`)
-        } else if (difference < 0 && oldPart.storeItemId) {
+        } else if (difference < 0) {
           await updateStockByStoreItemId(oldPart.storeItemId, Math.abs(difference), 'deduct')
           console.log(`Deducted stock for ${partNo}: -${Math.abs(difference)}`)
         }
       }
     }
 
-    // Format parts with all required fields
-    const formattedParts: FormattedPart[] = parts.map((part: Partial<Part>, index: number) => {
-      const { paintCostPerPiece, totalPrice, totalSqft } = calculatePartValues(part)
+    // Deduct stock for new parts that weren't in the original order
+    for (const newPart of parts) {
+      if (!oldPartsMap.has(newPart.partNo) && newPart.storeItemId) {
+        await updateStockByStoreItemId(newPart.storeItemId, newPart.qty, 'deduct')
+        console.log(`Deducted stock for new part ${newPart.partNo}: -${newPart.qty}`)
+      }
+    }
+
+    // Calculate values for each part - CRITICAL: Preserve paintCostPerSqft
+    const formattedParts: FormattedPart[] = parts.map((part: Part, index: number) => {
+      const blankSizeSqft = part.blankSizeSqft || 0
+      const paintCostPerSqft = part.paintCostPerSqft || 0
+      const paintCostPerPiece = blankSizeSqft * paintCostPerSqft
+      const totalPrice = paintCostPerPiece * (part.qty || 0)
+      const totalWeight = (part.weight || 0) * (part.qty || 0)
       
       // Find existing part to preserve _key if it exists
       const existingPart = existingDoc.parts?.find((p: ExistingPart) => p.partNo === part.partNo)
       
       return {
         _key: existingPart?._key || `${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`,
-        partNo: part.partNo || '',
-        partName: part.partName || '',
-        category: part.category || 'raw',
-        storeLocation: part.storeLocation || '',
+        partNo: part.partNo,
+        partName: part.partName,
+        category: part.category,
+        storeLocation: part.storeLocation,
         blankWidth: part.blankWidth || 0,
         blankLength: part.blankLength || 0,
-        blankSizeSqft: part.blankSizeSqft || 0,
-        paintCostPerSqft: part.paintCostPerSqft || 0,
+        blankSizeSqft: blankSizeSqft,
+        weight: part.weight || 0,
+        paintCostPerSqft: paintCostPerSqft, // CRITICAL: Save paint cost per sqft
         paintCostPerPiece: paintCostPerPiece,
         gauge: part.gauge || '',
-        material: part.material || 'GI',
+        material: part.material || '',
         qty: Number(part.qty),
+        receivedQty: 0,
+        remainingQty: Number(part.qty),
         totalPrice: totalPrice,
-        totalSqft: totalSqft,
+        totalWeight: totalWeight,
         storeItemId: part.storeItemId || ''
       }
     })
 
-    // Calculate order total
+    // Calculate order totals
     const total = calculateOrderTotal(formattedParts)
-
-    // Deduct stock for new parts that weren't in the original order
-    for (const newPart of parts) {
-      if (!oldPartsMap.has(newPart.partNo || '') && newPart.storeItemId) {
-        await updateStockByStoreItemId(newPart.storeItemId, newPart.qty || 0, 'deduct')
-        console.log(`Deducted stock for new part ${newPart.partNo}: -${newPart.qty}`)
-      }
-    }
+    const totalWeight = calculateOrderTotalWeight(formattedParts)
 
     const result = await writeClient
       .patch(id)
@@ -458,27 +482,28 @@ export async function PUT(req: NextRequest) {
         remarks: remarks || '',
         parts: formattedParts,
         total: total,
-        updatedAt: new Date().toISOString()
+        totalWeight: totalWeight
       })
       .commit()
 
-    console.log('Work order updated successfully:', result._id)
+    console.log('Paint inward work order updated successfully:', result._id)
 
     return NextResponse.json({
       success: true,
-      message: 'Work order updated successfully',
+      message: 'Paint inward work order updated successfully',
       data: result
     }, { status: 200 })
 
   } catch (error) {
-    console.error('Error updating work order:', error)
+    console.error('Error updating paint inward work order:', error)
     return NextResponse.json(
-      { error: 'Failed to update work order' },
+      { error: 'Failed to update paint inward work order' },
       { status: 500 }
     )
   }
 }
 
+// DELETE - Remove paint inward operation
 export async function DELETE(req: NextRequest) {
   try {
     if (!canWrite()) {
@@ -511,7 +536,7 @@ export async function DELETE(req: NextRequest) {
         }
       }`,
       { id }
-    ) as { _id: string; parts: Array<{ storeItemId?: string; partNo: string; qty: number }> } | null
+    )
 
     if (!workOrder) {
       return NextResponse.json(
@@ -534,14 +559,14 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Work order deleted successfully',
+      message: 'Paint inward work order deleted successfully',
       data: result
     }, { status: 200 })
 
   } catch (error) {
-    console.error('Error deleting work order:', error)
+    console.error('Error deleting paint inward work order:', error)
     return NextResponse.json(
-      { error: 'Failed to delete work order' },
+      { error: 'Failed to delete paint inward work order' },
       { status: 500 }
     )
   }
@@ -558,7 +583,7 @@ async function updateStockByStoreItemId(storeItemId: string | undefined, quantit
     const storeItem = await client.fetch(
       `*[_type == "store" && _id == $storeItemId][0] { _id, stockInStore, partName, partNumber }`,
       { storeItemId }
-    ) as StockItem | null
+    ) as StoreItem | null
     
     if (storeItem) {
       let newStock = storeItem.stockInStore
@@ -573,7 +598,7 @@ async function updateStockByStoreItemId(storeItemId: string | undefined, quantit
         .set({ stockInStore: newStock })
         .commit()
       
-      console.log(`Stock updated for ${storeItem.partName}: ${newStock} (${operation === 'add' ? 'added' : 'deducted'} ${quantity})`)
+      console.log(`Stock updated for ${storeItem.partName}: ${newStock} (${operation}ed ${quantity})`)
       return true
     }
     console.warn(`Store item not found for ID: ${storeItemId}`)

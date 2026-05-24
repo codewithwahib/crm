@@ -62,7 +62,7 @@ interface StoreItem {
 interface SheetPriceEntry {
   material: string
   gauge: string
-  pricePerSheet: number
+  pricePerKg: number
 }
 
 interface LivePrices {
@@ -126,7 +126,6 @@ const GAUGE_TO_THICKNESS: Record<string, number> = {
   '24G': 0.607,
   '26G': 0.455,
   '28G': 0.378,
-  '30G': 0.312,
 }
 
 export default function StoreInventoryList() {
@@ -202,7 +201,7 @@ export default function StoreInventoryList() {
             sheetPrices[] {
               material,
               gauge,
-              pricePerSheet
+              pricePerKg
             },
             sheetEffectiveDate
           }
@@ -305,14 +304,16 @@ export default function StoreInventoryList() {
     return Number(weight.toFixed(3))
   }
 
-  const calculateSheetCost = (sqft: number | '') => {
-    if (sqft === '' || !sqft) return 0
-    if (!formData.gauge) return 0
+  // Calculate sheet cost based on weight and price per kg
+  const calculateSheetCost = (weight: number | '') => {
+    if (weight === '' || !weight || weight === 0) return 0
+    if (!formData.gauge || !formData.material) return 0
+    
     const priceEntry = livePrices?.sheetPrices?.find(
       p => p.material === formData.material && p.gauge === formData.gauge
     )
-    const pricePerSqft = priceEntry ? priceEntry.pricePerSheet / 32 : 0
-    return Number((pricePerSqft * sqft).toFixed(2))
+    const pricePerKg = priceEntry?.pricePerKg || 0
+    return Number((pricePerKg * weight).toFixed(2))
   }
 
   const calculatePaintCost = (sqft: number | '') => {
@@ -338,17 +339,19 @@ export default function StoreInventoryList() {
       const newSqft = calculateSqftFromInches(widthInch, lengthInch)
       updated.sqft = newSqft
       
-      updated.sheetCostPerPiece = calculateSheetCost(newSqft)
-      updated.paintCostPerPiece = calculatePaintCost(newSqft)
-      
+      let newWeight = 0
       if (updated.gauge && updated.material) {
-        updated.weight = calculateWeight(
+        newWeight = calculateWeight(
           name === 'blankWidthMM' ? mmValue : updated.blankWidthMM,
           name === 'blankLengthMM' ? mmValue : updated.blankLengthMM,
           updated.gauge,
           updated.material
         )
+        updated.weight = newWeight
       }
+      
+      updated.sheetCostPerPiece = calculateSheetCost(newWeight)
+      updated.paintCostPerPiece = calculatePaintCost(newSqft)
       
       return updated
     })
@@ -359,18 +362,18 @@ export default function StoreInventoryList() {
     setFormData(prev => {
       const updated = { ...prev, [name]: value }
       
+      let newWeight = 0
       if (updated.blankWidthMM && updated.blankLengthMM && updated.gauge) {
-        updated.weight = calculateWeight(
+        newWeight = calculateWeight(
           updated.blankWidthMM,
           updated.blankLengthMM,
           updated.gauge,
           value
         )
+        updated.weight = newWeight
       }
       
-      if (typeof prev.sqft === 'number' && prev.sqft > 0) {
-        updated.sheetCostPerPiece = calculateSheetCost(prev.sqft)
-      }
+      updated.sheetCostPerPiece = calculateSheetCost(newWeight)
       
       return updated
     })
@@ -381,18 +384,18 @@ export default function StoreInventoryList() {
     setFormData(prev => {
       const updated = { ...prev, [name]: value }
       
+      let newWeight = 0
       if (updated.blankWidthMM && updated.blankLengthMM && updated.material) {
-        updated.weight = calculateWeight(
+        newWeight = calculateWeight(
           updated.blankWidthMM,
           updated.blankLengthMM,
           value,
           updated.material
         )
+        updated.weight = newWeight
       }
       
-      if (typeof prev.sqft === 'number' && prev.sqft > 0) {
-        updated.sheetCostPerPiece = calculateSheetCost(prev.sqft)
-      }
+      updated.sheetCostPerPiece = calculateSheetCost(newWeight)
       
       return updated
     })
@@ -428,12 +431,12 @@ export default function StoreInventoryList() {
 
   const handleSheetPriceChange = (index: number, field: keyof SheetPriceEntry, value: string | number) => {
     const updatedSheetPrices = [...costFormData.sheetPrices]
-    updatedSheetPrices[index] = { ...updatedSheetPrices[index], [field]: field === 'pricePerSheet' ? Number(value) : value }
+    updatedSheetPrices[index] = { ...updatedSheetPrices[index], [field]: field === 'pricePerKg' ? Number(value) : value }
     setCostFormData(prev => ({ ...prev, sheetPrices: updatedSheetPrices }))
   }
 
   const addSheetPriceRow = () => {
-    setCostFormData(prev => ({ ...prev, sheetPrices: [...prev.sheetPrices, { material: 'GI', gauge: '20G', pricePerSheet: 0 }] }))
+    setCostFormData(prev => ({ ...prev, sheetPrices: [...prev.sheetPrices, { material: 'GI', gauge: '20G', pricePerKg: 0 }] }))
   }
 
   const removeSheetPriceRow = (index: number) => {
@@ -504,11 +507,11 @@ export default function StoreInventoryList() {
     if (formData.stockInHand === '' || formData.minOrderQty === '') { toast.error('Please enter stock information'); return }
     setIsSubmitting(true)
     try {
-      const currentSheetPrice = livePrices?.sheetPrices?.find(p => p.material === formData.material && p.gauge === formData.gauge)?.pricePerSheet || 0
+      const currentPricePerKg = livePrices?.sheetPrices?.find(p => p.material === formData.material && p.gauge === formData.gauge)?.pricePerKg || 0
       const currentPaintPrice = livePrices?.paintPrice || 0
       const sqftValue = formData.sqft === '' ? 0 : Number(formData.sqft)
-      const sheetPricePerSqft = currentSheetPrice / 32
-      const calculatedSheetCost = sheetPricePerSqft * sqftValue
+      const weightValue = formData.weight === '' ? 0 : Number(formData.weight)
+      const calculatedSheetCost = currentPricePerKg * weightValue
       const calculatedPaintCost = currentPaintPrice * sqftValue
       
       const blankWidthInches = formData.blankWidthInch === '' ? 0 : Number(formData.blankWidthInch)
@@ -533,9 +536,13 @@ export default function StoreInventoryList() {
         blankLengthInch: blankLengthInches,
         sqft: sqftValue,
         weight: calculatedWeight,
-        todaySheetCost: currentSheetPrice, todayPaintCost: currentPaintPrice,
-        sheetCostPerPiece: Math.round(calculatedSheetCost * 100) / 100, paintCostPerPiece: Math.round(calculatedPaintCost * 100) / 100,
-        stockInStore: Number(formData.stockInHand), minimumStockLevel: Number(formData.minOrderQty), unitOfMeasure: formData.unitOfMeasure
+        todaySheetPricePerKg: currentPricePerKg, 
+        todayPaintCost: currentPaintPrice,
+        sheetCostPerPiece: Math.round(calculatedSheetCost * 100) / 100, 
+        paintCostPerPiece: Math.round(calculatedPaintCost * 100) / 100,
+        stockInStore: Number(formData.stockInHand), 
+        minimumStockLevel: Number(formData.minOrderQty), 
+        unitOfMeasure: formData.unitOfMeasure
       }
       const response = await fetch('/api/store/add-item', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newStoreItem) })
       const result = await response.json()
@@ -567,7 +574,9 @@ export default function StoreInventoryList() {
         weight: formData.weight === '' ? 0 : Number(formData.weight),
         sheetCostPerPiece: formData.sheetCostPerPiece === '' ? 0 : Number(formData.sheetCostPerPiece),
         paintCostPerPiece: formData.paintCostPerPiece === '' ? 0 : Number(formData.paintCostPerPiece),
-        stockInStore: Number(formData.stockInHand), minimumStockLevel: Number(formData.minOrderQty), unitOfMeasure: formData.unitOfMeasure
+        stockInStore: Number(formData.stockInHand), 
+        minimumStockLevel: Number(formData.minOrderQty), 
+        unitOfMeasure: formData.unitOfMeasure
       }
       const response = await fetch('/api/store/edit', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData) })
       const result = await response.json()
@@ -584,17 +593,32 @@ export default function StoreInventoryList() {
     if (costFormData.paintPrice === '') { toast.error('Please enter paint price'); return }
     setIsCostSubmitting(true)
     try {
-      const costData = { paintPrice: Number(costFormData.paintPrice), sheetPrices: costFormData.sheetPrices.filter(sp => sp.pricePerSheet > 0), effectiveDate: new Date().toISOString() }
+      const costData = { 
+        paintPrice: Number(costFormData.paintPrice), 
+        sheetPrices: costFormData.sheetPrices.filter(sp => sp.pricePerKg > 0), 
+        effectiveDate: new Date().toISOString() 
+      }
       const response = await fetch('/api/store/costs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(costData) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Failed to update costs')
-      setLivePrices({ paintPrice: costData.paintPrice, paintEffectiveDate: costData.effectiveDate, sheetPrices: costData.sheetPrices, sheetEffectiveDate: costData.effectiveDate, _id: result.data._id })
+      setLivePrices({ 
+        paintPrice: costData.paintPrice, 
+        paintEffectiveDate: costData.effectiveDate, 
+        sheetPrices: costData.sheetPrices, 
+        sheetEffectiveDate: costData.effectiveDate, 
+        _id: result.data._id 
+      })
       toast.success('Costs updated successfully!', { duration: 3000 })
       setIsCostModalOpen(false)
       const storeResponse = await fetch('/api/store/add-item')
       if (storeResponse.ok) {
         const storeResult = await storeResponse.json()
-        const itemsWithNumberCosts = storeResult.map((item: StoreItem) => ({ ...item, sheetCostPerPiece: typeof item.sheetCostPerPiece === 'string' ? parseFloat(item.sheetCostPerPiece) : item.sheetCostPerPiece, paintCostPerPiece: typeof item.paintCostPerPiece === 'string' ? parseFloat(item.paintCostPerPiece) : item.paintCostPerPiece, weight: item.weight || 0 }))
+        const itemsWithNumberCosts = storeResult.map((item: StoreItem) => ({ 
+          ...item, 
+          sheetCostPerPiece: typeof item.sheetCostPerPiece === 'string' ? parseFloat(item.sheetCostPerPiece) : item.sheetCostPerPiece, 
+          paintCostPerPiece: typeof item.paintCostPerPiece === 'string' ? parseFloat(item.paintCostPerPiece) : item.paintCostPerPiece, 
+          weight: item.weight || 0 
+        }))
         setStoreItems(Array.isArray(itemsWithNumberCosts) ? itemsWithNumberCosts : [])
       }
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Failed to update costs') }
@@ -916,16 +940,26 @@ export default function StoreInventoryList() {
             <div className="flex-1">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Current Market Prices</h3>
               <div className="mb-4"><p className="text-xs text-gray-500">Paint Price (per sqft)</p><p className="text-lg font-bold text-blue-700">Rs {livePrices?.paintPrice?.toFixed(2) || '0.00'} PKR</p><p className="text-xs text-gray-400">Updated: {formatDate(livePrices?.paintEffectiveDate)}</p></div>
-              <div><p className="text-xs text-gray-500 mb-2">Sheet Prices (per sheet) - Standard Size: 48&quot; x 96&quot; (32 sqft)</p>
+              <div><p className="text-xs text-gray-500 mb-2">Material Prices (per kg)</p>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
-                    <thead><tr className="text-xs text-gray-600"><th className="text-left py-1">Material</th><th className="text-left py-1">Gauge</th><th className="text-right py-1">Price per Sheet (PKR)</th><th className="text-right py-1">Price per Sqft (PKR)</th></tr></thead>
+                    <thead><tr className="text-xs text-gray-600"><th className="text-left py-1">Material</th><th className="text-left py-1">Gauge</th><th className="text-right py-1">Price per Kg (PKR)</th><th className="text-right py-1">Cost per Piece</th></tr></thead>
                     <tbody>
-                      {livePrices?.sheetPrices?.map((price, idx) => (
-                        <tr key={idx} className="border-t border-green-100"><td className="py-1">{price.material}</td><td className="py-1">{price.gauge}</td><td className="text-right py-1">Rs {price.pricePerSheet.toFixed(2)}</td><td className="text-right py-1">Rs {(price.pricePerSheet / 32).toFixed(2)}</td></tr>
-                      ))}
+                      {livePrices?.sheetPrices?.map((price, idx) => {
+                        // Find matching items to show sample cost
+                        const matchingItem = storeItems.find(item => item.material === price.material && item.gauge === price.gauge)
+                        const sampleCost = matchingItem?.weight ? (price.pricePerKg || 0) * matchingItem.weight : 0
+                        return (
+                          <tr key={idx} className="border-t border-green-100">
+                            <td className="py-1">{price.material}</td>
+                            <td className="py-1">{price.gauge}</td>
+                            <td className="text-right py-1">Rs {(price.pricePerKg || 0).toFixed(2)}</td>
+                            <td className="text-right py-1 text-xs text-gray-500">{matchingItem ? `~Rs ${sampleCost.toFixed(2)}` : '-'}</td>
+                          </tr>
+                        )
+                      })}
                       {(!livePrices?.sheetPrices || livePrices.sheetPrices.length === 0) && (
-                        <tr><td colSpan={4} className="text-center text-gray-400 py-2">No sheet prices configured</td></tr>
+                        <tr><td colSpan={4} className="text-center text-gray-400 py-2">No material prices configured</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -937,7 +971,7 @@ export default function StoreInventoryList() {
           </div>
         </div>
 
-        {/* Main Table - with smaller text for better fit */}
+        {/* Main Table */}
         <div className="overflow-x-auto">
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
             <table className={`w-full table-auto divide-y divide-gray-200 ${dmSans.className} text-xs`}>
@@ -1091,14 +1125,13 @@ export default function StoreInventoryList() {
                 </div>
                 <div className="bg-green-50 rounded-lg p-6 border border-green-200">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className={`text-lg font-semibold text-green-800 ${dmSans.className}`}>📄 Sheet Prices (per sheet)</h3>
+                    <h3 className={`text-lg font-semibold text-green-800 ${dmSans.className}`}>📄 Material Prices (per kg)</h3>
                     <button type="button" onClick={addSheetPriceRow} className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">+ Add Price</button>
                   </div>
                   <div className="mb-4 text-sm text-gray-600 bg-white p-3 rounded border border-green-100">
                     <p className="font-medium">Note:</p>
-                    <p>Standard sheet size is 48&quot; x 96&quot; = 32 sqft</p>
-                    <p>Price per sqft = Price per sheet ÷ 32</p>
-                    <p>Sheet Cost = (Price per sheet ÷ 32) × Part SQFT</p>
+                    <p>Material cost is calculated as: Weight (kg) × Price per kg</p>
+                    <p>Weight is automatically calculated based on part dimensions, material, and gauge</p>
                   </div>
                   <div className="space-y-3">
                     {costFormData.sheetPrices.map((price, index) => (
@@ -1129,17 +1162,16 @@ export default function StoreInventoryList() {
                             </select>
                           </div>
                           <div>
-                            <label className={`block text-sm font-medium text-gray-700 mb-1 ${dmSans.className}`}>Price per Sheet (Rs)</label>
-                            <input type="number" value={price.pricePerSheet} onChange={(e) => handleSheetPriceChange(index, 'pricePerSheet', e.target.value)} step="0.01" min="0" className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] outline-none" placeholder="0.00" />
+                            <label className={`block text-sm font-medium text-gray-700 mb-1 ${dmSans.className}`}>Price per Kg (Rs)</label>
+                            <input type="number" value={price.pricePerKg} onChange={(e) => handleSheetPriceChange(index, 'pricePerKg', e.target.value)} step="0.01" min="0" className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] outline-none" placeholder="0.00" />
                           </div>
                           <div className="flex items-end">
                             <button type="button" onClick={() => removeSheetPriceRow(index)} className="px-3 py-2 text-red-600 hover:text-red-800">Remove ✕</button>
                           </div>
                         </div>
-                        {price.pricePerSheet > 0 && <div className="mt-2 text-sm text-green-600">Price per sqft: Rs {(price.pricePerSheet / 32).toFixed(2)}</div>}
                       </div>
                     ))}
-                    {costFormData.sheetPrices.length === 0 && <div className="text-center text-gray-400 py-4">No sheet prices added. Click &quot;Add Price&quot; to add.</div>}
+                    {costFormData.sheetPrices.length === 0 && <div className="text-center text-gray-400 py-4">No material prices added. Click &quot;Add Price&quot; to add.</div>}
                   </div>
                 </div>
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
@@ -1231,10 +1263,12 @@ export default function StoreInventoryList() {
                     <div className="bg-white rounded-lg p-4 shadow-sm">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Sheet Cost (Rs) — AUTO</label>
                       <p className="text-2xl font-bold text-green-600">Rs {formData.sheetCostPerPiece?.toLocaleString() || '0'}</p>
+                      <p className="text-xs text-gray-500">Weight (kg) × Price per kg</p>
                     </div>
                     <div className="bg-white rounded-lg p-4 shadow-sm">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Paint Cost (Rs) — AUTO</label>
                       <p className="text-2xl font-bold text-purple-600">Rs {formData.paintCostPerPiece?.toLocaleString() || '0'}</p>
+                      <p className="text-xs text-gray-500">SQFT × Paint price per sqft</p>
                     </div>
                   </div>
                 </div>
@@ -1339,7 +1373,7 @@ export default function StoreInventoryList() {
                 </div>
               </form>
             </div>
-          </div>
+          </div >
         </div>
       )}
     </div>

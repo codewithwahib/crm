@@ -5,10 +5,9 @@ import { useState, useEffect } from 'react'
 import { client } from '@/sanity/lib/client'
 import { DM_Sans } from 'next/font/google'
 import Sidebar from '@/app/Mechanical/Components/sidebar'
-import { HiSearch, HiX, HiPrinter } from 'react-icons/hi'
+import { HiSearch, HiX, HiPrinter, HiEye } from 'react-icons/hi'
 import toast, { Toaster } from 'react-hot-toast'
-import ProtectedRoute from "@/app/Components/ProtectedRoute";
-
+import ProtectedRoute from "@/app/Components/ProtectedRoute"
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -97,7 +96,7 @@ export default function MechanicalOpList() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
+  // const [setIsMobile] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MechanicalOp | null>(null)
@@ -113,6 +112,11 @@ export default function MechanicalOpList() {
   const [editCompletedQty, setEditCompletedQty] = useState(0)
   const [printFormatModal, setPrintFormatModal] = useState(false)
   const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<MechanicalOp | null>(null)
+  
+  // New state for View Modal
+  const [viewModalOpen, setViewModalOpen] = useState(false)
+  const [selectedOrderForView, setSelectedOrderForView] = useState<MechanicalOp | null>(null)
+  const [viewFormat, setViewFormat] = useState<'floor' | 'commercial' | 'completion'>('floor')
   
   const [formData, setFormData] = useState<FormData>({
     workOrderNo: '',
@@ -131,15 +135,15 @@ export default function MechanicalOpList() {
     return `M-WO-${year}${month}${day}-${random}`
   }
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     setIsMobile(window.innerWidth < 768)
+  //   }
     
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  //   handleResize()
+  //   window.addEventListener('resize', handleResize)
+  //   return () => window.removeEventListener('resize', handleResize)
+  // }, [])
 
   const fetchMechanicalOps = async () => {
     try {
@@ -186,7 +190,8 @@ export default function MechanicalOpList() {
         }
         const storeResult = await storeResponse.json()
         
-const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({          ...item,
+        const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({
+          ...item,
           weight: item.weight || 0,
           sqft: item.sqft || 0,
           blankWidthMM: item.blankWidthMM || 0,
@@ -287,6 +292,13 @@ const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({        
     setPrintFormatModal(true)
   }
 
+  // Open View Modal
+  const openViewModal = (order: MechanicalOp, format: 'floor' | 'commercial' | 'completion') => {
+    setSelectedOrderForView(order)
+    setViewFormat(format)
+    setViewModalOpen(true)
+  }
+
   // Helper function to get dimension display for screen (shows mm if available)
   const getDimensionDisplay = (part: PartItem) => {
     if (part.blankWidthMM && part.blankLengthMM && part.blankWidthMM > 0 && part.blankLengthMM > 0) {
@@ -308,6 +320,18 @@ const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({        
     }
     
     return `${widthMM}mm x ${lengthMM}mm`
+  }
+
+  // Complete all parts in the order
+  const completeAllParts = () => {
+    const updatedParts = formData.parts.map(part => ({
+      ...part,
+      completedQty: part.qty,
+      remainingQty: 0
+    }))
+    
+    setFormData(prev => ({ ...prev, parts: updatedParts }))
+    toast.success('All parts marked as completed!')
   }
 
   // Floor Format Print
@@ -663,7 +687,7 @@ const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({        
                       <td>${order.gatepassNo}</td>
                       <td class="info-label">Date Issued:</td>
                       <td>${formatDateTime(order.dateIssued)}</td>
-                    </tr></tbody></table>
+                    <tr></tbody></table>
                   </div>
                   <div style="overflow-x: auto;">
                     <table class="data-table">
@@ -868,9 +892,6 @@ const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({        
       return
     }
 
-    // REMOVED: Stock check - allow any quantity including zero
-    // Previous code: if (partQuantity > selectedStoreItem.stockInStore) { ... }
-
     const costPerPiece = selectedStoreItem.sheetCostPerPiece || 0
     const currentPaintCost = globalPaintCost
     const paintCostPerPieceValue = (selectedStoreItem.sqft || 0) * currentPaintCost
@@ -899,7 +920,7 @@ const storeItemsWithDimensions = storeResult.map((item: StoreItem) => ({        
       storeItemId: selectedStoreItem._id
     }
 
-const updatedParts = [...formData.parts]    
+    const updatedParts = [...formData.parts]    
     if (currentPartIndex !== null) {
       updatedParts[currentPartIndex] = newPart
     } else {
@@ -910,7 +931,6 @@ const updatedParts = [...formData.parts]
     setIsPartModalOpen(false)
     resetPartSelection()
     
-    // Updated success message - removed stock reference
     toast.success(`${selectedStoreItem.partName} added to work order with quantity ${partQuantity}`)
   }
 
@@ -1110,137 +1130,96 @@ const updatedParts = [...formData.parts]
     )
   }
 
-   return (
+  return (
     <ProtectedRoute allowedUser="mechanical">
-    <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
-      <Toaster position="top-center" />
-      <Sidebar />
-      
-      <main className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-all duration-300 ${
-        isAddModalOpen || isEditModalOpen || isPartModalOpen || isEditPartModalOpen || printFormatModal ? 'blur-sm pointer-events-none' : ''
-      }`}>
+      <div className={`min-h-screen bg-white text-gray-800 ${dmSans.variable} font-sans`}>
+        <Toaster position="top-center" />
+        <Sidebar />
         
-        <div className="flex flex-col gap-6 border-b pb-6">
-          <div className="space-y-2">
-            <h1 className={`text-2xl sm:text-3xl pt-8 font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
-              Mechanical Operations Management
-            </h1>
-            <p className={`text-gray-600 tracking-wide ${dmSans.className}`}>
-              Manage work orders, gate passes, parts issuance, and track completion status
-            </p>
-          </div>
+        <main className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-all duration-300 ${
+          isAddModalOpen || isEditModalOpen || isPartModalOpen || isEditPartModalOpen || printFormatModal || viewModalOpen ? 'blur-sm pointer-events-none' : ''
+        }`}>
+          
+          <div className="flex flex-col gap-6 border-b pb-6">
+            <div className="space-y-2">
+              <h1 className={`text-2xl sm:text-3xl pt-8 font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>
+                Mechanical Operations Management
+              </h1>
+              <p className={`text-gray-600 tracking-wide ${dmSans.className}`}>
+                Manage work orders, gate passes, parts issuance, and track completion status
+              </p>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <div className="relative w-full sm:w-96">
-              <span className="absolute left-3 top-2.5 text-gray-400">
-                <HiSearch className="w-5 h-5" />
-              </span>
-              <input
-                type="text"
-                placeholder="Search by work order, gate pass, part number, part name..."
-                className={`w-full pl-10 pr-24 py-2 border rounded-lg focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none transition ${dmSans.className} text-sm`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-16 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  <HiX className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+              <div className="relative w-full sm:w-96">
+                <span className="absolute left-3 top-2.5 text-gray-400">
+                  <HiSearch className="w-5 h-5" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search by work order, gate pass, part number, part name..."
+                  className={`w-full pl-10 pr-24 py-2 border rounded-lg focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none transition ${dmSans.className} text-sm`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-16 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <HiX className="w-5 h-5" />
+                  </button>
+                )}
+                <button className="absolute right-1.5 top-1.5 px-3 py-1.5 text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] transition">
+                  Search
                 </button>
-              )}
-              <button className="absolute right-1.5 top-1.5 px-3 py-1.5 text-sm rounded-md bg-[#8B5E3C] text-white hover:bg-[#6d4a2f] transition">
-                Search
+              </div>
+              <button
+                onClick={openAddModal}
+                className="px-4 py-2 bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition text-sm font-medium"
+              >
+                + Create Work Order
               </button>
             </div>
-            <button
-              onClick={openAddModal}
-              className="px-4 py-2 bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition text-sm font-medium"
-            >
-              + Create Work Order
-            </button>
           </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <p className="text-sm text-gray-500">Total Work Orders</p>
-            <p className="text-2xl font-bold text-gray-800">{mechanicalOps.length}</p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <p className="text-sm text-gray-500">Total Parts</p>
-            <p className="text-2xl font-bold text-gray-800">
-              {mechanicalOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <p className="text-sm text-gray-500">Completed</p>
-            <p className="text-2xl font-bold text-green-600">
-              {mechanicalOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0)}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <p className="text-sm text-gray-500">Total Cost</p>
-            <p className="text-2xl font-bold text-[#8B5E3C]">
-              Rs {mechanicalOps.reduce((sum, op) => sum + calculateTotalCost(op.parts), 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <p className="text-sm text-gray-500">Completion Rate</p>
-            <p className="text-2xl font-bold text-gray-800">
-              {mechanicalOps.length > 0 
-                ? Math.round((mechanicalOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0) / 
-                    mechanicalOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)) * 100)
-                : 0}%
-            </p>
-          </div>
-        </div>
-
-        {/* Main Table - Compact version */}
-        <div className="overflow-x-auto">
-          {isMobile ? (
-            <div className="space-y-4">
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">No work orders found</div>
-              ) : (
-                filteredItems.map((item) => (
-                  <div key={item._id} className="bg-white border rounded-lg p-4 shadow-sm">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-[#8B5E3C] text-sm">WO: {item.workOrderNo}</h3>
-                          <p className="text-xs text-gray-500">GP: {item.gatepassNo}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 text-xs">
-                            🖨️ Print
-                          </button>
-                          <button onClick={() => openEditModal(item)} className="text-blue-600 hover:text-blue-800 text-xs">
-                            Edit
-                          </button>
-                          <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id}
-                            className={`text-red-600 hover:text-red-800 text-xs ${deletingId === item._id ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                            {deletingId === item._id ? 'Del' : 'Delete'}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <p><span className="font-medium">Date:</span> {formatDateTime(item.dateIssued)}</p>
-                        <p><span className="font-medium">Parts:</span> {item.parts.length} items</p>
-                        <p><span className="font-medium">Progress:</span> {calculateTotalCompletedQty(item.parts)} / {calculateTotalQty(item.parts)}</p>
-                        <p><span className="font-medium">Cost:</span> Rs {calculateTotalCost(item.parts).toLocaleString()}</p>
-                        <p><span className="font-medium">Wt:</span> {calculateTotalWeight(item.parts).toFixed(2)} kg</p>
-                        <p><span className="font-medium">SQFT:</span> {calculateTotalSqft(item.parts).toFixed(2)}</p>
-                        {item.remarks && <p><span className="font-medium">Remarks:</span> {item.remarks}</p>}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-sm text-gray-500">Total Work Orders</p>
+              <p className="text-2xl font-bold text-gray-800">{mechanicalOps.length}</p>
             </div>
-          ) : (
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-sm text-gray-500">Total Parts</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {mechanicalOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-sm text-gray-500">Completed</p>
+              <p className="text-2xl font-bold text-green-600">
+                {mechanicalOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0)}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-sm text-gray-500">Total Cost</p>
+              <p className="text-2xl font-bold text-[#8B5E3C]">
+                Rs {mechanicalOps.reduce((sum, op) => sum + calculateTotalCost(op.parts), 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-sm text-gray-500">Completion Rate</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {mechanicalOps.length > 0 
+                  ? Math.round((mechanicalOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0) / 
+                      mechanicalOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)) * 100)
+                  : 0}%
+              </p>
+            </div>
+          </div>
+
+          {/* Main Table - Desktop view only for simplicity */}
+          <div className="overflow-x-auto">
             <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
               <table className={`w-full table-auto divide-y divide-gray-200 ${dmSans.className} text-xs`}>
                 <thead className="bg-gray-50">
@@ -1303,6 +1282,9 @@ const updatedParts = [...formData.parts]
                             </span>
                           </td>
                           <td className="px-2 py-2 whitespace-nowrap text-[11px] space-x-1 text-center">
+                            <button onClick={() => openViewModal(item, 'floor')} className="text-blue-600 hover:text-blue-800 font-medium text-[10px]">
+                              <HiEye className="inline w-3 h-3 mr-0.5" /> View
+                            </button>
                             <button onClick={() => openPrintFormatModal(item)} className="text-blue-600 hover:text-blue-800 font-medium text-[10px]">
                               <HiPrinter className="inline w-3 h-3 mr-0.5" /> Print
                             </button>
@@ -1319,431 +1301,324 @@ const updatedParts = [...formData.parts]
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-      </main>
-
-      {/* Print Format Selection Modal */}
-      {printFormatModal && selectedOrderForPrint && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setPrintFormatModal(false)}></div>
-          <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
-              <div className="bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
-                  Select Print Format
-                </h2>
-                <button onClick={() => setPrintFormatModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="p-6 space-y-4">
-                <button onClick={() => handlePrintFloorFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition">
-                  <div className="font-semibold text-gray-800">🏭 Floor Format</div>
-                  <div className="text-sm text-gray-500 mt-1">Production task view - Clean layout with no cost columns</div>
-                </button>
-                <button onClick={() => handlePrintCommercialFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition">
-                  <div className="font-semibold text-gray-800">💰 Commercial Format</div>
-                  <div className="text-sm text-gray-500 mt-1">Complete commercial view with all cost columns</div>
-                </button>
-                <button onClick={() => handlePrintCompletionFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition">
-                  <div className="font-semibold text-gray-800">✅ Completion Format</div>
-                  <div className="text-sm text-gray-500 mt-1">Status report with tick marks for completed items</div>
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
-      )}
+        </main>
 
-      {/* Add/Edit Work Order Modal */}
-      {(isAddModalOpen || isEditModalOpen) && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => {
-            setIsAddModalOpen(false)
-            setIsEditModalOpen(false)
-            resetForm()
-            setEditingItem(null)
-          }}></div>
-          
-          <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
-                  {isEditModalOpen ? 'Edit Work Order' : 'Create New Work Order'}
-                </h2>
-                <button onClick={() => {
-                  setIsAddModalOpen(false)
-                  setIsEditModalOpen(false)
-                  resetForm()
-                  setEditingItem(null)
-                }} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <form onSubmit={isEditModalOpen ? handleEditSubmit : handleSubmit} className="p-6 space-y-6">
-                <div className="bg-gray-50 rounded-lg p-6 border">
-                  <h3 className={`text-lg font-semibold text-gray-800 mb-4 ${dmSans.className}`}>Basic Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>
-                        Work Order Number <span className="text-red-500">*</span>
-                      </label>
-                      <input type="text" name="workOrderNo" value={formData.workOrderNo} onChange={handleChange} required
-                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none"
-                        placeholder="e.g., WO-2024-001" />
+        {/* View Modal */}
+        {viewModalOpen && selectedOrderForView && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setViewModalOpen(false)}></div>
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                  <div>
+                    <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Work Order Details</h2>
+                    <p className="text-sm text-gray-500 mt-1">{selectedOrderForView.workOrderNo}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-2">
+                      <button onClick={() => setViewFormat('floor')} className={`px-3 py-1.5 text-sm rounded-md transition ${viewFormat === 'floor' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>🏭 Floor</button>
+                      <button onClick={() => setViewFormat('commercial')} className={`px-3 py-1.5 text-sm rounded-md transition ${viewFormat === 'commercial' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>💰 Commercial</button>
+                      <button onClick={() => setViewFormat('completion')} className={`px-3 py-1.5 text-sm rounded-md transition ${viewFormat === 'completion' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>✅ Completion</button>
                     </div>
-                    <div>
-                      <label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>
-                        Gate Pass Number <span className="text-red-500">*</span>
-                      </label>
-                      <input 
-                        type="text" 
-                        name="gatepassNo" 
-                        value={formData.gatepassNo} 
-                        onChange={handleChange} 
-                        required
-                        readOnly={!isEditModalOpen}
-                        className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${!isEditModalOpen ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                        placeholder="Auto-generated" />
-                      {!isEditModalOpen && (
-                        <p className="text-xs text-gray-500 mt-1">Gate pass number is auto-generated</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>
-                        Date Issued <span className="text-red-500">*</span>
-                      </label>
-                      <input type="datetime-local" name="dateIssued" value={formData.dateIssued} onChange={handleChange} required
-                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" />
-                    </div>
-                    <div>
-                      <label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Remarks</label>
-                      <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2}
-                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none"
-                        placeholder="Additional notes..." />
-                    </div>
+                    <button onClick={() => setViewModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-6 border">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className={`text-lg font-semibold text-gray-800 ${dmSans.className}`}>Parts List</h3>
-                    {!isEditModalOpen && (
-                      <button type="button" onClick={() => openPartSelection()}
-                        className="px-3 py-1.5 text-sm bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition">
-                        + Add Part from Store
-                      </button>
-                    )}
-                  </div>
-
-                  {formData.parts.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
-No parts added yet. Click &quot;Add Part from Store&quot; to add items.                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="px-3 py-2 text-left">Part #</th>
-                            <th className="px-3 py-2 text-left">Part Name</th>
-                            <th className="px-3 py-2 text-left">Dimensions (mm)</th>
-                            <th className="px-3 py-2 text-right">SQFT</th>
-                            <th className="px-3 py-2 text-right">Weight(kg)</th>
-                            <th className="px-3 py-2 text-right">Total SQFT</th>
-                            <th className="px-3 py-2 text-right">Total Weight(kg)</th>
-                            <th className="px-3 py-2 text-left">Material/Gauge</th>
-                            <th className="px-3 py-2 text-right">Sheet Cost/Piece</th>
-                            <th className="px-3 py-2 text-right">Qty</th>
-                            <th className="px-3 py-2 text-right">Completed</th>
-                            <th className="px-3 py-2 text-right">Remaining</th>
-                            <th className="px-3 py-2 text-right">Total</th>
-                            <th className="px-3 py-2 text-center">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {formData.parts.map((part, idx) => {
-                            const totalPartWeight = (part.weight || 0) * part.qty
-                            const totalPartSqft = (part.blankSizeSqft || 0) * part.qty
-                            const dimensionDisplay = getDimensionDisplay(part)
-                            return (
-                              <tr key={idx} className="hover:bg-gray-50">
-                                <td className="px-3 py-2 font-mono text-xs">{part.partNo}</td>
-                                <td className="px-3 py-2 font-medium">{part.partName}</td>
-                                <td className="px-3 py-2 text-xs">{dimensionDisplay}</td>
-                                <td className="px-3 py-2 text-right">{part.blankSizeSqft || 0}</td>
-                                <td className="px-3 py-2 text-right">{(part.weight || 0).toFixed(3)}</td>
-                                <td className="px-3 py-2 text-right">{totalPartSqft.toFixed(2)}</td>
-                                <td className="px-3 py-2 text-right">{totalPartWeight.toFixed(3)}</td>
-                                <td className="px-3 py-2">{part.material}/{part.gauge}</td>
-                                <td className="px-3 py-2 text-right">Rs {part.sheetCost.toLocaleString()}</td>
-                                <td className="px-3 py-2 text-right">{part.qty}</td>
-                                <td className="px-3 py-2 text-right text-green-600">{part.completedQty || 0}</td>
-                                <td className="px-3 py-2 text-right text-orange-600">{part.remainingQty || part.qty}</td>
-                                <td className="px-3 py-2 text-right font-medium">Rs {(part.sheetCost * part.qty).toLocaleString()}</td>
-                                <td className="px-3 py-2 text-center space-x-2">
-                                  {isEditModalOpen && (
-                                    <button type="button" onClick={() => openEditPartModal(part, idx)} 
-                                      className="text-green-600 hover:text-green-800 text-xs">
-                                      Update Completion
-                                    </button>
-                                  )}
-                                  {!isEditModalOpen && (
-                                    <>
-                                      <button type="button" onClick={() => openPartSelection(idx)} 
-                                        className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
-                                      <button type="button" onClick={() => removePart(idx)} 
-                                        className="text-red-600 hover:text-red-800 text-xs">Remove</button>
-                                    </>
-                                  )}
-                                </td>
+                <div className="p-6">
+                  {/* Floor Format View */}
+                  {viewFormat === 'floor' && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 p-4 border-b">
+                        <h3 className="font-bold text-lg">FLOOR WORK ORDER</h3>
+                        <p className="text-sm text-gray-600">PRODUCTION TASK</p>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div><span className="font-semibold">Work Order No:</span> {selectedOrderForView.workOrderNo}</div>
+                          <div><span className="font-semibold">Gate Pass No:</span> {selectedOrderForView.gatepassNo}</div>
+                          <div><span className="font-semibold">Date Issued:</span> {formatDateTime(selectedOrderForView.dateIssued)}</div>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-3 py-2 border text-left">S.No</th>
+                                <th className="px-3 py-2 border text-left">Part Name</th>
+                                <th className="px-3 py-2 border text-left">Part No</th>
+                                <th className="px-3 py-2 border text-left">Dimensions</th>
+                                <th className="px-3 py-2 border text-right">SQFT/Piece</th>
+                                <th className="px-3 py-2 border text-right">Weight/Piece(kg)</th>
+                                <th className="px-3 py-2 border text-right">Total SQFT</th>
+                                <th className="px-3 py-2 border text-right">Total Weight(kg)</th>
+                                <th className="px-3 py-2 border text-right">Qty</th>
                               </tr>
-                            )
-                          })}
-                          <tr className="bg-gray-100 font-semibold">
-                            <td colSpan={3} className="px-3 py-2 text-right">Totals:</td>
-                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + (p.blankSizeSqft || 0), 0).toFixed(2)}</td>
-                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + (p.weight || 0), 0).toFixed(3)}</td>
-                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + ((p.blankSizeSqft || 0) * p.qty), 0).toFixed(2)}</td>
-                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + ((p.weight || 0) * p.qty), 0).toFixed(3)}</td>
-                            <td className="px-3 py-2"></td>
-                            <td className="px-3 py-2 text-right"></td>
-                            <td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + p.qty, 0)}</td>
-                            <td className="px-3 py-2 text-right text-green-600">{formData.parts.reduce((sum, p) => sum + (p.completedQty || 0), 0)}</td>
-                            <td className="px-3 py-2 text-right text-orange-600">{formData.parts.reduce((sum, p) => sum + (p.remainingQty || p.qty), 0)}</td>
-                            <td className="px-3 py-2 text-right">Rs {formData.parts.reduce((sum, p) => sum + (p.sheetCost * p.qty), 0).toLocaleString()}</td>
-                            <td className="px-3 py-2"></td>
-                          </tr>
-                        </tbody>
-                      </table>
+                            </thead>
+                            <tbody>
+                              {selectedOrderForView.parts.map((part, idx) => {
+                                const totalPartWeight = (part.weight || 0) * part.qty
+                                const totalPartSqft = (part.blankSizeSqft || 0) * part.qty
+                                const dimensionDisplay = getPrintDimensionDisplay(part)
+                                return (
+                                  <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="px-3 py-2 border text-center">{idx + 1}</td>
+                                    <td className="px-3 py-2 border">{part.partName}</td>
+                                    <td className="px-3 py-2 border">{part.partNo}</td>
+                                    <td className="px-3 py-2 border text-center">{dimensionDisplay}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.blankSizeSqft || 0).toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.weight || 0).toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartSqft.toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartWeight.toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-center">{part.qty}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                            <tfoot className="bg-green-50 font-semibold">
+                              <tr><td colSpan={4} className="px-3 py-2 border text-right">GRAND TOTAL:</td><td className="px-3 py-2 border text-right">{calculateTotalSqft(selectedOrderForView.parts).toFixed(2)}</td><td className="px-3 py-2 border text-right">{calculateTotalWeight(selectedOrderForView.parts).toFixed(3)}</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-center">{calculateTotalQty(selectedOrderForView.parts)}</td></tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                        {selectedOrderForView.remarks && <div className="bg-gray-50 p-3 rounded"><p className="font-semibold text-sm">REMARKS:</p><p className="text-sm mt-1">{selectedOrderForView.remarks}</p></div>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Commercial Format View */}
+                  {viewFormat === 'commercial' && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 p-4 border-b">
+                        <h3 className="font-bold text-lg">COMMERCIAL WORK ORDER</h3>
+                        <p className="text-sm text-gray-600">MECHANICAL OPERATION</p>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div><span className="font-semibold">Work Order No:</span> {selectedOrderForView.workOrderNo}</div>
+                          <div><span className="font-semibold">Gate Pass No:</span> {selectedOrderForView.gatepassNo}</div>
+                          <div><span className="font-semibold">Date Issued:</span> {formatDateTime(selectedOrderForView.dateIssued)}</div>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border">
+                            <thead className="bg-gray-100">
+                              <tr><th className="px-3 py-2 border text-left">S.No</th><th className="px-3 py-2 border text-left">Part Name</th><th className="px-3 py-2 border text-left">Part No</th><th className="px-3 py-2 border text-left">Dimensions</th><th className="px-3 py-2 border text-right">SQFT</th><th className="px-3 py-2 border text-right">Weight/Piece</th><th className="px-3 py-2 border text-right">Total SQFT</th><th className="px-3 py-2 border text-right">Total Weight</th><th className="px-3 py-2 border text-right">Qty</th><th className="px-3 py-2 border text-right">Sheet Cost/Piece</th><th className="px-3 py-2 border text-right">Total Cost</th></tr>
+                            </thead>
+                            <tbody>
+                              {selectedOrderForView.parts.map((part, idx) => {
+                                const totalPartWeight = (part.weight || 0) * part.qty
+                                const totalPartSqft = (part.blankSizeSqft || 0) * part.qty
+                                const dimensionDisplay = getPrintDimensionDisplay(part)
+                                return (
+                                  <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="px-3 py-2 border text-center">{idx + 1}</td>
+                                    <td className="px-3 py-2 border">{part.partName}</td>
+                                    <td className="px-3 py-2 border">{part.partNo}</td>
+                                    <td className="px-3 py-2 border text-center">{dimensionDisplay}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.blankSizeSqft || 0).toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.weight || 0).toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartSqft.toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartWeight.toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-center">{part.qty}</td>
+                                    <td className="px-3 py-2 border text-right">Rs {part.sheetCost.toLocaleString()}</td>
+                                    <td className="px-3 py-2 border text-right">Rs {(part.sheetCost * part.qty).toLocaleString()}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                            <tfoot className="bg-green-50 font-semibold">
+                              <tr><td colSpan={4} className="px-3 py-2 border text-right">GRAND TOTAL:</td><td className="px-3 py-2 border text-right">{calculateTotalSqft(selectedOrderForView.parts).toFixed(2)}</td><td className="px-3 py-2 border text-right">{calculateTotalWeight(selectedOrderForView.parts).toFixed(3)}</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-center">{calculateTotalQty(selectedOrderForView.parts)}</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-right">Rs {calculateTotalCost(selectedOrderForView.parts).toLocaleString()}</td></tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                        {selectedOrderForView.remarks && <div className="bg-gray-50 p-3 rounded"><p className="font-semibold text-sm">REMARKS:</p><p className="text-sm mt-1">{selectedOrderForView.remarks}</p></div>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completion Format View */}
+                  {viewFormat === 'completion' && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 p-4 border-b">
+                        <h3 className="font-bold text-lg">COMPLETION REPORT</h3>
+                        <p className="text-sm text-gray-600">PRODUCTION STATUS</p>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div><span className="font-semibold">Work Order No:</span> {selectedOrderForView.workOrderNo}</div>
+                          <div><span className="font-semibold">Gate Pass No:</span> {selectedOrderForView.gatepassNo}</div>
+                          <div><span className="font-semibold">Date Issued:</span> {formatDateTime(selectedOrderForView.dateIssued)}</div>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border">
+                            <thead className="bg-gray-100">
+                              <tr><th className="px-3 py-2 border text-left">S.No</th><th className="px-3 py-2 border text-left">Part Name</th><th className="px-3 py-2 border text-left">Part No</th><th className="px-3 py-2 border text-left">Dimensions</th><th className="px-3 py-2 border text-right">SQFT</th><th className="px-3 py-2 border text-right">Weight/Piece</th><th className="px-3 py-2 border text-right">Total SQFT</th><th className="px-3 py-2 border text-right">Total Weight</th><th className="px-3 py-2 border text-right">Qty</th><th className="px-3 py-2 border text-right">Completed</th><th className="px-3 py-2 border text-right">Remaining</th><th className="px-3 py-2 border text-center">Status ✓</th></tr>
+                            </thead>
+                            <tbody>
+                              {selectedOrderForView.parts.map((part, idx) => {
+                                const totalPartWeight = (part.weight || 0) * part.qty
+                                const totalPartSqft = (part.blankSizeSqft || 0) * part.qty
+                                const isCompleted = (part.completedQty || 0) >= part.qty
+                                const dimensionDisplay = getPrintDimensionDisplay(part)
+                                return (
+                                  <tr key={idx} className={`hover:bg-gray-50 ${isCompleted ? 'bg-green-50' : ''}`}>
+                                    <td className="px-3 py-2 border text-center">{idx + 1}</td>
+                                    <td className="px-3 py-2 border">{part.partName}</td>
+                                    <td className="px-3 py-2 border">{part.partNo}</td>
+                                    <td className="px-3 py-2 border text-center">{dimensionDisplay}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.blankSizeSqft || 0).toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{(part.weight || 0).toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartSqft.toFixed(2)}</td>
+                                    <td className="px-3 py-2 border text-right">{totalPartWeight.toFixed(3)}</td>
+                                    <td className="px-3 py-2 border text-center">{part.qty}</td>
+                                    <td className="px-3 py-2 border text-center text-green-600">{part.completedQty || 0}</td>
+                                    <td className="px-3 py-2 border text-center text-orange-600">{part.remainingQty || part.qty}</td>
+                                    <td className="px-3 py-2 border text-center text-xl">{isCompleted ? '✓' : '□'}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                            <tfoot className="bg-yellow-50 font-semibold">
+                              <tr><td colSpan={4} className="px-3 py-2 border text-right">GRAND TOTAL:</td><td className="px-3 py-2 border text-right">{calculateTotalSqft(selectedOrderForView.parts).toFixed(2)}</td><td className="px-3 py-2 border text-right">{calculateTotalWeight(selectedOrderForView.parts).toFixed(3)}</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-right">-</td><td className="px-3 py-2 border text-center">{calculateTotalQty(selectedOrderForView.parts)}</td><td className="px-3 py-2 border text-center">{calculateTotalCompletedQty(selectedOrderForView.parts)}</td><td className="px-3 py-2 border text-center">{calculateTotalQty(selectedOrderForView.parts) - calculateTotalCompletedQty(selectedOrderForView.parts)}</td><td className="px-3 py-2 border text-center"></td></tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                        {selectedOrderForView.remarks && <div className="bg-gray-50 p-3 rounded"><p className="font-semibold text-sm">REMARKS:</p><p className="text-sm mt-1">{selectedOrderForView.remarks}</p></div>}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4 sticky bottom-0 bg-white py-4 border-t">
-                  <button type="button" onClick={() => {
-                    setIsAddModalOpen(false)
-                    setIsEditModalOpen(false)
-                    resetForm()
-                    setEditingItem(null)
-                  }} className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={isSubmitting}
-                    className="px-6 py-2 text-sm font-medium text-white bg-[#8B5E3C] rounded-md hover:bg-[#6d4a2f] transition disabled:opacity-50">
-                    {isSubmitting ? (isEditModalOpen ? 'Updating...' : 'Creating...') : (isEditModalOpen ? 'Update Work Order' : 'Create Work Order')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Part Completion Modal */}
-      {isEditPartModalOpen && editingPart && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => {
-            setIsEditPartModalOpen(false)
-            setEditingPart(null)
-          }}></div>
-          
-          <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
-              <div className="bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
-                  Update Completion Status
-                </h2>
-                <button onClick={() => {
-                  setIsEditPartModalOpen(false)
-                  setEditingPart(null)
-                }} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Part Name</p>
-                  <p className="font-medium text-gray-800">{editingPart.partName}</p>
-                  <p className="text-sm text-gray-600 mt-2">Part Number</p>
-                  <p className="font-mono text-sm text-gray-800">{editingPart.partNo}</p>
-                  <p className="text-sm text-gray-600 mt-2">Dimensions</p>
-                  <p className="text-sm text-gray-800">{getDimensionDisplay(editingPart)}</p>
-                  <p className="text-sm text-gray-600 mt-2">SQFT / Weight per Piece</p>
-                  <p className="text-sm text-gray-800">{editingPart.blankSizeSqft || 0} sqft / {(editingPart.weight || 0).toFixed(3)} kg</p>
-                  <p className="text-sm text-gray-600 mt-2">Total Quantity Required</p>
-                  <p className="font-semibold text-gray-800">{editingPart.qty} units</p>
-                  <p className="text-sm text-gray-600 mt-2">Currently Completed</p>
-                  <p className="font-semibold text-green-600">{editingPart.completedQty || 0} units</p>
-                  <p className="text-sm text-gray-600 mt-2">Remaining</p>
-                  <p className="font-semibold text-orange-600">{editingPart.remainingQty || editingPart.qty} units</p>
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>
-                    Update Completed Quantity
-                  </label>
-                  <input
-                    type="number"
-                    value={editCompletedQty}
-                    onChange={(e) => setEditCompletedQty(Math.min(Number(e.target.value), editingPart.qty))}
-                    min="0"
-                    max={editingPart.qty}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Maximum: {editingPart.qty} units</p>
-                </div>
-
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    After update: Completed = {editCompletedQty} | Remaining = {editingPart.qty - editCompletedQty}
-                  </p>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditPartModalOpen(false)
-                      setEditingPart(null)
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={updatePartCompletion}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#8B5E3C] rounded-md hover:bg-[#6d4a2f] transition"
-                  >
-                    Update Completion
-                  </button>
+                <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end">
+                  <button onClick={() => setViewModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Close</button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Part Selection Modal - UPDATED: Removed stock check */}
-      {isPartModalOpen && !isEditModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => {
-            setIsPartModalOpen(false)
-            resetPartSelection()
-          }}></div>
-          
-          <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>
-                  Select Part from Store Inventory
-                </h2>
-                <button onClick={() => {
-                  setIsPartModalOpen(false)
-                  resetPartSelection()
-                }} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        {/* Print Format Selection Modal */}
+        {printFormatModal && selectedOrderForPrint && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setPrintFormatModal(false)}></div>
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div className="bg-white border-b px-6 py-4 flex justify-between items-center">
+                  <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Select Print Format</h2>
+                  <button onClick={() => setPrintFormatModal(false)} className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <button onClick={() => handlePrintFloorFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition"><div className="font-semibold text-gray-800">🏭 Floor Format</div><div className="text-sm text-gray-500 mt-1">Production task view - Clean layout with no cost columns</div></button>
+                  <button onClick={() => handlePrintCommercialFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition"><div className="font-semibold text-gray-800">💰 Commercial Format</div><div className="text-sm text-gray-500 mt-1">Complete commercial view with all cost columns</div></button>
+                  <button onClick={() => handlePrintCompletionFormat(selectedOrderForPrint)} className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border transition"><div className="font-semibold text-gray-800">✅ Completion Format</div><div className="text-sm text-gray-500 mt-1">Status report with tick marks for completed items</div></button>
+                </div>
               </div>
+            </div>
+          </div>
+        )}
 
-              <div className="p-6">
-                <div className="mb-4">
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-gray-400">
-                      <HiSearch className="w-5 h-5" />
-                    </span>
-                    <input type="text" placeholder="Search by part number, name, category, material..."
-                      className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${dmSans.className}`}
-                      value={partSearchTerm} onChange={(e) => setPartSearchTerm(e.target.value)} />
+        {/* Add/Edit Work Order Modal */}
+        {(isAddModalOpen || isEditModalOpen) && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); resetForm(); setEditingItem(null); }}></div>
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                  <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>{isEditModalOpen ? 'Edit Work Order' : 'Create New Work Order'}</h2>
+                  <button onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); resetForm(); setEditingItem(null); }} className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <form onSubmit={isEditModalOpen ? handleEditSubmit : handleSubmit} className="p-6 space-y-6">
+                  <div className="bg-gray-50 rounded-lg p-6 border">
+                    <h3 className={`text-lg font-semibold text-gray-800 mb-4 ${dmSans.className}`}>Basic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Work Order Number <span className="text-red-500">*</span></label><input type="text" name="workOrderNo" value={formData.workOrderNo} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" placeholder="e.g., WO-2024-001" /></div>
+                      <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Gate Pass Number <span className="text-red-500">*</span></label><input type="text" name="gatepassNo" value={formData.gatepassNo} onChange={handleChange} required readOnly={!isEditModalOpen} className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${!isEditModalOpen ? 'bg-gray-100 cursor-not-allowed' : ''}`} placeholder="Auto-generated" />{!isEditModalOpen && <p className="text-xs text-gray-500 mt-1">Gate pass number is auto-generated</p>}</div>
+                      <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Date Issued <span className="text-red-500">*</span></label><input type="datetime-local" name="dateIssued" value={formData.dateIssued} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" /></div>
+                      <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Remarks</label><textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" placeholder="Additional notes..." /></div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-6 border">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className={`text-lg font-semibold text-gray-800 ${dmSans.className}`}>Parts List</h3>
+                      <div className="flex gap-2">
+                        {isEditModalOpen && <button type="button" onClick={completeAllParts} className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition">✓ Complete Order</button>}
+                        {!isEditModalOpen && <button type="button" onClick={() => openPartSelection()} className="px-3 py-1.5 text-sm bg-[#8B5E3C] text-white rounded-md hover:bg-[#6d4a2f] transition">+ Add Part from Store</button>}
+                      </div>
+                    </div>
+                    {formData.parts.length === 0 ? <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">No parts added yet. Click &quot;Add Part from Store&quot; to add items.</div> : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-100"><tr><th className="px-3 py-2 text-left">Part #</th><th className="px-3 py-2 text-left">Part Name</th><th className="px-3 py-2 text-left">Dimensions (mm)</th><th className="px-3 py-2 text-right">SQFT</th><th className="px-3 py-2 text-right">Weight(kg)</th><th className="px-3 py-2 text-right">Total SQFT</th><th className="px-3 py-2 text-right">Total Weight(kg)</th><th className="px-3 py-2 text-left">Material/Gauge</th><th className="px-3 py-2 text-right">Sheet Cost/Piece</th><th className="px-3 py-2 text-right">Qty</th><th className="px-3 py-2 text-right">Completed</th><th className="px-3 py-2 text-right">Remaining</th><th className="px-3 py-2 text-right">Total</th><th className="px-3 py-2 text-center">Actions</th></tr></thead>
+                          <tbody className="divide-y">
+                            {formData.parts.map((part, idx) => {
+                              const totalPartWeight = (part.weight || 0) * part.qty
+                              const totalPartSqft = (part.blankSizeSqft || 0) * part.qty
+                              const dimensionDisplay = getDimensionDisplay(part)
+                              return (<tr key={idx} className="hover:bg-gray-50"><td className="px-3 py-2 font-mono text-xs">{part.partNo}</td><td className="px-3 py-2 font-medium">{part.partName}</td><td className="px-3 py-2 text-xs">{dimensionDisplay}</td><td className="px-3 py-2 text-right">{part.blankSizeSqft || 0}</td><td className="px-3 py-2 text-right">{(part.weight || 0).toFixed(3)}</td><td className="px-3 py-2 text-right">{totalPartSqft.toFixed(2)}</td><td className="px-3 py-2 text-right">{totalPartWeight.toFixed(3)}</td><td className="px-3 py-2">{part.material}/{part.gauge}</td><td className="px-3 py-2 text-right">Rs {part.sheetCost.toLocaleString()}</td><td className="px-3 py-2 text-right">{part.qty}</td><td className="px-3 py-2 text-right text-green-600">{part.completedQty || 0}</td><td className="px-3 py-2 text-right text-orange-600">{part.remainingQty || part.qty}</td><td className="px-3 py-2 text-right font-medium">Rs {(part.sheetCost * part.qty).toLocaleString()}</td><td className="px-3 py-2 text-center space-x-2">{isEditModalOpen ? <button type="button" onClick={() => openEditPartModal(part, idx)} className="text-green-600 hover:text-green-800 text-xs">Update Completion</button> : <><button type="button" onClick={() => openPartSelection(idx)} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button><button type="button" onClick={() => removePart(idx)} className="text-red-600 hover:text-red-800 text-xs">Remove</button></>}</td></tr>)
+                            })}
+                            <tr className="bg-gray-100 font-semibold"><td colSpan={3} className="px-3 py-2 text-right">Totals:</td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + (p.blankSizeSqft || 0), 0).toFixed(2)}</td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + (p.weight || 0), 0).toFixed(3)}</td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + ((p.blankSizeSqft || 0) * p.qty), 0).toFixed(2)}</td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + ((p.weight || 0) * p.qty), 0).toFixed(3)}</td><td className="px-3 py-2"></td><td className="px-3 py-2 text-right"></td><td className="px-3 py-2 text-right">{formData.parts.reduce((sum, p) => sum + p.qty, 0)}</td><td className="px-3 py-2 text-right text-green-600">{formData.parts.reduce((sum, p) => sum + (p.completedQty || 0), 0)}</td><td className="px-3 py-2 text-right text-orange-600">{formData.parts.reduce((sum, p) => sum + (p.remainingQty || p.qty), 0)}</td><td className="px-3 py-2 text-right">Rs {formData.parts.reduce((sum, p) => sum + (p.sheetCost * p.qty), 0).toLocaleString()}</td><td className="px-3 py-2"></td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-4 pt-4 sticky bottom-0 bg-white py-4 border-t">
+                    <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); resetForm(); setEditingItem(null); }} className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="px-6 py-2 text-sm font-medium text-white bg-[#8B5E3C] rounded-md hover:bg-[#6d4a2f] transition disabled:opacity-50">{isSubmitting ? (isEditModalOpen ? 'Updating...' : 'Creating...') : (isEditModalOpen ? 'Update Work Order' : 'Create Work Order')}</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Part Completion Modal */}
+        {isEditPartModalOpen && editingPart && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => { setIsEditPartModalOpen(false); setEditingPart(null); }}></div>
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div className="bg-white border-b px-6 py-4 flex justify-between items-center"><h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Update Completion Status</h2><button onClick={() => { setIsEditPartModalOpen(false); setEditingPart(null); }} className="text-gray-400 hover:text-gray-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+                <div className="p-6 space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg"><p className="text-sm text-gray-600">Part Name</p><p className="font-medium text-gray-800">{editingPart.partName}</p><p className="text-sm text-gray-600 mt-2">Part Number</p><p className="font-mono text-sm text-gray-800">{editingPart.partNo}</p><p className="text-sm text-gray-600 mt-2">Dimensions</p><p className="text-sm text-gray-800">{getDimensionDisplay(editingPart)}</p><p className="text-sm text-gray-600 mt-2">SQFT / Weight per Piece</p><p className="text-sm text-gray-800">{editingPart.blankSizeSqft || 0} sqft / {(editingPart.weight || 0).toFixed(3)} kg</p><p className="text-sm text-gray-600 mt-2">Total Quantity Required</p><p className="font-semibold text-gray-800">{editingPart.qty} units</p><p className="text-sm text-gray-600 mt-2">Currently Completed</p><p className="font-semibold text-green-600">{editingPart.completedQty || 0} units</p><p className="text-sm text-gray-600 mt-2">Remaining</p><p className="font-semibold text-orange-600">{editingPart.remainingQty || editingPart.qty} units</p></div>
+                  <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Update Completed Quantity</label><input type="number" value={editCompletedQty} onChange={(e) => setEditCompletedQty(Math.min(Number(e.target.value), editingPart.qty))} min="0" max={editingPart.qty} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" /><p className="text-xs text-gray-500 mt-1">Maximum: {editingPart.qty} units</p></div>
+                  <div className="bg-blue-50 p-3 rounded-lg"><p className="text-sm text-blue-800">After update: Completed = {editCompletedQty} | Remaining = {editingPart.qty - editCompletedQty}</p></div>
+                  <div className="flex justify-end space-x-3 pt-4"><button type="button" onClick={() => { setIsEditPartModalOpen(false); setEditingPart(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Cancel</button><button type="button" onClick={updatePartCompletion} className="px-4 py-2 text-sm font-medium text-white bg-[#8B5E3C] rounded-md hover:bg-[#6d4a2f] transition">Update Completion</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Part Selection Modal */}
+        {isPartModalOpen && !isEditModalOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => { setIsPartModalOpen(false); resetPartSelection(); }}></div>
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center"><h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Select Part from Store Inventory</h2><button onClick={() => { setIsPartModalOpen(false); resetPartSelection(); }} className="text-gray-400 hover:text-gray-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+                <div className="p-6">
+                  <div className="mb-4"><div className="relative"><span className="absolute left-3 top-2.5 text-gray-400"><HiSearch className="w-5 h-5" /></span><input type="text" placeholder="Search by part number, name, category, material..." className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${dmSans.className}`} value={partSearchTerm} onChange={(e) => setPartSearchTerm(e.target.value)} /></div></div>
+                  <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0"><tr><th className="px-3 py-2 text-left">Part #</th><th className="px-3 py-2 text-left">Part Name</th><th className="px-3 py-2 text-left">Dimensions (mm)</th><th className="px-3 py-2 text-right">SQFT/Piece</th><th className="px-3 py-2 text-right">Weight/Piece(kg)</th><th className="px-3 py-2 text-left">Material/Gauge</th><th className="px-3 py-2 text-right">Stock</th><th className="px-3 py-2 text-right">Sheet Cost/Piece</th><th className="px-3 py-2 text-center">Action</th></tr></thead>
+                      <tbody className="divide-y">
+                        {filteredStoreItems.length === 0 ? <tr><td colSpan={9} className="px-3 py-8 text-center text-gray-500">No parts found in store</td></tr> : filteredStoreItems.map((item) => { const dimensionDisplay = `${item.blankWidthMM || 0}mm x ${item.blankLengthMM || 0}mm`; const stockStatus = item.stockInStore <= 0 ? 'Out of Stock' : `${item.stockInStore} ${item.unitOfMeasure}`; const stockColor = item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'; return (<tr key={item._id} className="hover:bg-gray-50"><td className="px-3 py-2 font-mono text-xs">{item.partNumber}</td><td className="px-3 py-2 font-medium">{item.partName}</td><td className="px-3 py-2 text-xs">{dimensionDisplay}</td><td className="px-3 py-2 text-right">{item.sqft || 0}</td><td className="px-3 py-2 text-right">{(item.weight || 0).toFixed(3)}</td><td className="px-3 py-2">{item.material}/{item.gauge}</td><td className="px-3 py-2 text-right"><span className={stockColor}>{stockStatus}</span></td><td className="px-3 py-2 text-right"><span className="font-medium text-[#8B5E3C]">Rs {item.sheetCostPerPiece?.toLocaleString() || '0'}</span></td><td className="px-3 py-2 text-center">{selectedStoreItem?._id === item._id ? <div className="flex items-center gap-2"><input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))} className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" /><button onClick={addPartToWorkOrder} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Add</button></div> : <button onClick={() => selectStoreItem(item)} className="px-3 py-1 text-xs rounded-md transition bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]">Select</button>}</td></tr>) })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-
-                <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Part #</th>
-                        <th className="px-3 py-2 text-left">Part Name</th>
-                        <th className="px-3 py-2 text-left">Dimensions (mm)</th>
-                        <th className="px-3 py-2 text-right">SQFT/Piece</th>
-                        <th className="px-3 py-2 text-right">Weight/Piece(kg)</th>
-                        <th className="px-3 py-2 text-left">Material/Gauge</th>
-                        <th className="px-3 py-2 text-right">Stock</th>
-                        <th className="px-3 py-2 text-right">Sheet Cost/Piece</th>
-                        <th className="px-3 py-2 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {filteredStoreItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={9} className="px-3 py-8 text-center text-gray-500">No parts found in store</td>
-                        </tr>
-                      ) : (
-                        filteredStoreItems.map((item) => {
-                          const dimensionDisplay = `${item.blankWidthMM || 0}mm x ${item.blankLengthMM || 0}mm`
-                          // UPDATED: Show stock but don't disable based on stock - allow zero quantity selection
-                          const stockStatus = item.stockInStore <= 0 ? 'Out of Stock' : `${item.stockInStore} ${item.unitOfMeasure}`
-                          const stockColor = item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'
-                          
-                          return (
-                            <tr key={item._id} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 font-mono text-xs">{item.partNumber}</td>
-                              <td className="px-3 py-2 font-medium">{item.partName}</td>
-                              <td className="px-3 py-2 text-xs">{dimensionDisplay}</td>
-                              <td className="px-3 py-2 text-right">{item.sqft || 0}</td>
-                              <td className="px-3 py-2 text-right">{(item.weight || 0).toFixed(3)}</td>
-                              <td className="px-3 py-2">{item.material}/{item.gauge}</td>
-                              <td className="px-3 py-2 text-right">
-                                <span className={stockColor}>
-                                  {stockStatus}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <span className="font-medium text-[#8B5E3C]">
-                                  Rs {item.sheetCostPerPiece?.toLocaleString() || '0'}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2 text-center">
-                                {selectedStoreItem?._id === item._id ? (
-                                  <div className="flex items-center gap-2">
-                                    <input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))}
-                                      className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" />
-                                    <button onClick={addPartToWorkOrder}
-                                      className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
-                                      Add
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button onClick={() => selectStoreItem(item)}
-                                    className="px-3 py-1 text-xs rounded-md transition bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]">
-                                    Select
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </ProtectedRoute>
   )
 }
