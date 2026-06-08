@@ -104,7 +104,7 @@ export const storeSchema = defineType({
     
     // Cost Details
     defineField({
-      name: 'todaySheetCost',
+      name: 'todaySheetPricePerKg',
       type: 'number',
       title: "Today's Sheet Cost",
       description: 'Current market price at the time of creating this part',

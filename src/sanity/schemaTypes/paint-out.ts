@@ -40,6 +40,14 @@ export const paintoutop = defineType({
     }),
 
     defineField({
+          name: 'mwo',
+          title: 'Document Ref No#',
+          type: 'string',
+          description: 'Reference to Mechanical Work Order Number',
+          validation: (Rule) => Rule.required(),
+        }),
+
+    defineField({
       name: 'dateIssued',
       title: 'Date Issued',
       type: 'datetime',

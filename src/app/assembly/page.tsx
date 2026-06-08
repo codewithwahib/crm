@@ -21,17 +21,14 @@ const inchesToMM = (inches: number): number => {
 
 // Helper function to get dimension from store item
 const getStoreItemDimension = (item: StoreItem): string => {
-  // Priority 1: blankWidthMM and blankLengthMM
   if (item.blankWidthMM && item.blankLengthMM && item.blankWidthMM > 0 && item.blankLengthMM > 0) {
     return `${item.blankWidthMM}mm x ${item.blankLengthMM}mm`
   }
-  // Priority 2: blankWidthInch and blankLengthInch
   const widthInch = (item as { blankWidthInch?: number; blankWidth?: number }).blankWidthInch || item.blankWidth || 0
   const lengthInch = (item as { blankLengthInch?: number; blankLength?: number }).blankLengthInch || item.blankLength || 0
   if (widthInch > 0 && lengthInch > 0) {
     return `${inchesToMM(widthInch)}mm x ${inchesToMM(lengthInch)}mm`
   }
-  // Priority 3: blankWidth and blankLength (as inches)
   if (item.blankWidth && item.blankLength && item.blankWidth > 0 && item.blankLength > 0) {
     return `${inchesToMM(item.blankWidth)}mm x ${inchesToMM(item.blankLength)}mm`
   }
@@ -98,7 +95,6 @@ interface AssemblyOp {
   workOrderNo: string
   gatepassNo: string
   dateIssued: string
-  assemblyDate?: string
   remarks?: string
   parts: AssemblyPartItem[]
   status: string
@@ -108,7 +104,6 @@ interface FormData {
   workOrderNo: string
   gatepassNo: string
   dateIssued: string
-  assemblyDate: string
   remarks: string
   parts: AssemblyPartItem[]
   status: string
@@ -145,7 +140,6 @@ export default function AssemblyPage() {
     workOrderNo: '',
     gatepassNo: '',
     dateIssued: '',
-    assemblyDate: '',
     remarks: '',
     parts: [],
     status: 'pending'
@@ -196,7 +190,6 @@ export default function AssemblyPage() {
         }
         const storeResult = await storeResponse.json()
         
-        // Process store items to ensure dimensions are properly mapped
         const processedStoreItems = (Array.isArray(storeResult) ? storeResult : []).map((item: Record<string, unknown>) => ({
           ...item,
           blankWidthMM: (item.blankWidthMM as number) || 0,
@@ -208,7 +201,6 @@ export default function AssemblyPage() {
         })) as StoreItem[]
         
         setStoreItems(processedStoreItems)
-
         await fetchAssemblyOps()
         
       } catch (err) {
@@ -231,16 +223,6 @@ export default function AssemblyPage() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    })
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
     })
   }
 
@@ -277,7 +259,6 @@ export default function AssemblyPage() {
     setIsViewModalOpen(true)
   }
 
-  // Commercial Format Print
   const handlePrintCommercialFormat = (order: AssemblyOp) => {
     setPrintFormatModal(false)
     setTimeout(() => {
@@ -295,7 +276,7 @@ export default function AssemblyPage() {
                 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
                 * { font-family: 'DM Sans', sans-serif !important; letter-spacing: 0.05em; margin: 0; padding: 0; box-sizing: border-box; }
                 body { margin: 0; padding: 8px; color: #000; background: white; font-size: 12px; }
-                .print-container { max-width: 1100px; margin: 0 auto; border: 1px solid #000; display: flex; flex-direction: column; min-height: 95vh; }
+                .print-container { max-width: 1200px; margin: 0 auto; border: 1px solid #000; display: flex; flex-direction: column; min-height: 95vh; }
                 .header-section { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 15px 10px 15px; border-bottom: 2px solid #000; background: #fff; }
                 .logo-placeholder { width: 250px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000; font-weight: 600; text-transform: uppercase; }
                 .logo-img { width: 250px; height: 100px; object-fit: contain; }
@@ -307,8 +288,8 @@ export default function AssemblyPage() {
                 .info-table td { padding: 3px 8px; vertical-align: top; }
                 .info-label { font-weight: bold; white-space: nowrap; }
                 .data-table { width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 10px; margin-top: 10px; margin-bottom: 0; }
-                .data-table th { background: #f0f0f0; padding: 6px 4px; text-align: center; font-weight: bold; border: 1px solid #000; }
-                .data-table td { padding: 4px 4px; border: 1px solid #000; }
+                .data-table th { background: #f0f0f0; padding: 8px 4px; text-align: center; font-weight: bold; border: 1px solid #000; }
+                .data-table td { padding: 6px 4px; border: 1px solid #000; }
                 .numeric-cell { text-align: right; }
                 .center-cell { text-align: center; }
                 .total-row { background: #e8f5e8 !important; font-weight: bold; }
@@ -343,32 +324,43 @@ export default function AssemblyPage() {
                 <div class="content-wrapper">
                   <div class="info-section">
                     <table class="info-table"><tbody>
-                      <tr><td class="info-label">Order Number:</td><td>${order.workOrderNo}</td><td class="info-label">Gate Pass No:</td><td>${order.gatepassNo}</td><td class="info-label">Date Issued:</td><td>${formatDateTime(order.dateIssued)}</td></tr>
-                      ${order.assemblyDate ? `<tr><td class="info-label">Assembly Date:</td><td colspan="5">${formatDate(order.assemblyDate)}</td></tr>` : ''}
+                      <tr><td class="info-label">Order Number:</td><td colspan="3">${order.workOrderNo}</td><td class="info-label">Assembly Order No:</td><td colspan="3">${order.gatepassNo}</td><td class="info-label">Date Issued:</td><td>${formatDateTime(order.dateIssued)}</td></tr>
                     </tbody></table>
                   </div>
                   <div style="overflow-x: auto;">
                     <table class="data-table">
-                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions (mm)</th><th>Qty</th><th>Cost/Piece</th><th>Total Cost</th></tr></thead>
+                      <thead>
+                        <tr>
+                          <th>S.No</th>
+                          <th>Part Name</th>
+                          <th>Part No</th>
+                          <th>Material/Gauge</th>
+                          <th>Dimensions (mm)</th>
+                          <th>Qty</th>
+                          <th>Cost/Piece</th>
+                          <th>Total Cost</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         ${order.parts.map((part, idx) => {
                           const dimensionDisplay = getPartDimensionDisplay(part)
                           return `
-                          <tr>
-                            <td class="center-cell">${idx + 1}</td>
-                            <td>${part.partName}</td>
-                            <td>${part.partNo}</td>
-                            <td>${part.material}/${part.gauge}</td>
-                            <td class="center-cell">${dimensionDisplay}</td>
-                            <td class="center-cell">${part.qty}</td>
-                            <td class="numeric-cell">Rs ${part.sheetCost.toLocaleString()}</td>
-                            <td class="numeric-cell">Rs ${(part.sheetCost * part.qty).toLocaleString()}</td>
-                          </tr>
-                        `}).join('')}
+                            <tr>
+                              <td class="center-cell">${idx + 1}</td>
+                              <td>${part.partName}</td>
+                              <td>${part.partNo}</td>
+                              <td>${part.material}/${part.gauge}</td>
+                              <td class="center-cell">${dimensionDisplay}</td>
+                              <td class="center-cell">${part.qty}</td>
+                              <td class="numeric-cell">Rs ${part.sheetCost.toLocaleString()}</td>
+                              <td class="numeric-cell">Rs ${(part.sheetCost * part.qty).toLocaleString()}</td>
+                            </tr>
+                          `
+                        }).join('')}
                       </tbody>
                       <tfoot>
                         <tr class="total-row">
-                          <td colspan="4" class="numeric-cell">GRAND TOTAL:</td>
+                          <td colspan="5" class="numeric-cell">GRAND TOTAL:</td>
                           <td class="center-cell">${totalQty}</td>
                           <td class="numeric-cell">-</td>
                           <td class="numeric-cell">Rs ${totalCost.toLocaleString()}</td>
@@ -404,7 +396,6 @@ export default function AssemblyPage() {
     }, 100)
   }
 
-  // Floor Format Print
   const handlePrintFloorFormat = (order: AssemblyOp) => {
     setPrintFormatModal(false)
     setTimeout(() => {
@@ -421,7 +412,7 @@ export default function AssemblyPage() {
                 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
                 * { font-family: 'DM Sans', sans-serif !important; letter-spacing: 0.05em; margin: 0; padding: 0; box-sizing: border-box; }
                 body { margin: 0; padding: 8px; color: #000; background: white; font-size: 12px; }
-                .print-container { max-width: 1100px; margin: 0 auto; border: 1px solid #000; display: flex; flex-direction: column; min-height: 95vh; }
+                .print-container { max-width: 1200px; margin: 0 auto; border: 1px solid #000; display: flex; flex-direction: column; min-height: 95vh; }
                 .header-section { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 15px 10px 15px; border-bottom: 2px solid #000; background: #fff; }
                 .logo-placeholder { width: 250px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000; font-weight: 600; text-transform: uppercase; }
                 .logo-img { width: 250px; height: 100px; object-fit: contain; }
@@ -433,9 +424,10 @@ export default function AssemblyPage() {
                 .info-table td { padding: 3px 8px; vertical-align: top; }
                 .info-label { font-weight: bold; white-space: nowrap; }
                 .data-table { width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 10px; margin-top: 10px; margin-bottom: 0; }
-                .data-table th { background: #f0f0f0; padding: 6px 4px; text-align: center; font-weight: bold; border: 1px solid #000; }
-                .data-table td { padding: 4px 4px; border: 1px solid #000; }
+                .data-table th { background: #f0f0f0; padding: 8px 4px; text-align: center; font-weight: bold; border: 1px solid #000; }
+                .data-table td { padding: 6px 4px; border: 1px solid #000; }
                 .center-cell { text-align: center; }
+                .numeric-cell { text-align: right; }
                 .total-row { background: #e8f5e8 !important; font-weight: bold; }
                 .remarks-section { padding: 8px 15px; margin: 5px 15px; }
                 .remarks-label { font-weight: bold; font-size: 11px; }
@@ -468,30 +460,39 @@ export default function AssemblyPage() {
                 <div class="content-wrapper">
                   <div class="info-section">
                     <table class="info-table"><tbody>
-                      <tr><td class="info-label">Order Number:</td><td>${order.workOrderNo}</td><td class="info-label">Gate Pass No:</td><td>${order.gatepassNo}</td><td class="info-label">Date Issued:</td><td>${formatDateTime(order.dateIssued)}</td></tr>
-                      ${order.assemblyDate ? `<tr><td class="info-label">Assembly Date:</td><td colspan="5">${formatDate(order.assemblyDate)}</td></tr>` : ''}
+                      <tr><td class="info-label">Order Number:</td><td colspan="3">${order.workOrderNo}</td><td class="info-label">Assembly Order No:</td><td colspan="3">${order.gatepassNo}</td><td class="info-label">Date Issued:</td><td>${formatDateTime(order.dateIssued)}</td></tr>
                     </tbody></table>
                   </div>
                   <div style="overflow-x: auto;">
                     <table class="data-table">
-                      <thead><tr><th>S.No</th><th>Part Name</th><th>Part No</th><th>Material/Gauge</th><th>Dimensions (mm)</th><th>Qty</th></tr></thead>
+                      <thead>
+                        <tr>
+                          <th>S.No</th>
+                          <th>Part No</th>
+                          <th>Part Name</th>
+                          <th>Material/Gauge</th>
+                          <th>Dimensions (mm)</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         ${order.parts.map((part, idx) => {
                           const dimensionDisplay = getPartDimensionDisplay(part)
                           return `
-                          <tr>
-                            <td class="center-cell">${idx + 1}</td>
-                            <td>${part.partName}</td>
-                            <td>${part.partNo}</td>
-                            <td>${part.material}/${part.gauge}</td>
-                            <td class="center-cell">${dimensionDisplay}</td>
-                            <td class="center-cell">${part.qty}</td>
-                          </tr>
-                        `}).join('')}
+                            <tr>
+                              <td class="center-cell">${idx + 1}</td>
+                              <td>${part.partNo}</td>
+                              <td>${part.partName}</td>
+                              <td>${part.material}/${part.gauge}</td>
+                              <td class="center-cell">${dimensionDisplay}</td>
+                              <td class="center-cell">${part.qty}</td>
+                            </tr>
+                          `
+                        }).join('')}
                       </tbody>
                       <tfoot>
                         <tr class="total-row">
-                          <td colspan="4" class="numeric-cell">GRAND TOTAL:</td>
+                          <td colspan="5" class="numeric-cell">GRAND TOTAL:</td>
                           <td class="center-cell">${totalQty}</td>
                         </tr>
                       </tfoot>
@@ -507,7 +508,7 @@ export default function AssemblyPage() {
                 <div class="signature-section">
                   <div class="signature-grid">
                     <div><div class="signature-line"></div><div class="signature-label">Store Dept.</div></div>
-                    <div><div class="signature-line"></div><div class="signature-label">Mechanical Dept.</div></div>
+                    <div><div class="signature-line"></div><div class="signature-label">Accounts Dept.</div></div>
                     <div><div class="signature-line"></div><div class="signature-label">Prepared By</div></div>
                     <div><div class="signature-line"></div><div class="signature-label">Received By</div></div>
                   </div>
@@ -589,7 +590,6 @@ export default function AssemblyPage() {
       workOrderNo: '',
       gatepassNo: generateGatepassNumber(),
       dateIssued: new Date().toISOString().slice(0, 16),
-      assemblyDate: '',
       remarks: '',
       parts: [],
       status: 'pending'
@@ -614,7 +614,6 @@ export default function AssemblyPage() {
       workOrderNo: item.workOrderNo,
       gatepassNo: item.gatepassNo,
       dateIssued: item.dateIssued.slice(0, 16),
-      assemblyDate: item.assemblyDate ? item.assemblyDate.slice(0, 10) : '',
       remarks: item.remarks || '',
       parts: item.parts.map(part => ({ 
         ...part, 
@@ -657,7 +656,6 @@ export default function AssemblyPage() {
     setPartQuantity(1)
   }
 
-  // Add part to assembly with stock deduction
   const addPartToAssembly = async () => {
     if (!selectedStoreItem) {
       toast.error('Please select a part first')
@@ -738,7 +736,6 @@ export default function AssemblyPage() {
     }
   }
 
-  // Remove part and restore stock
   const removePart = async (index: number) => {
     const partToRemove = formData.parts[index]
     
@@ -808,7 +805,6 @@ export default function AssemblyPage() {
         workOrderNo: formData.workOrderNo,
         gatepassNo: formData.gatepassNo,
         dateIssued: formData.dateIssued,
-        assemblyDate: formData.assemblyDate || undefined,
         remarks: formData.remarks || undefined,
         parts: formData.parts.map(part => ({
           partNo: part.partNo,
@@ -881,7 +877,6 @@ export default function AssemblyPage() {
         workOrderNo: formData.workOrderNo, 
         gatepassNo: formData.gatepassNo, 
         dateIssued: formData.dateIssued, 
-        assemblyDate: formData.assemblyDate, 
         remarks: formData.remarks, 
         parts: partsForUpdate, 
         status: overallStatus 
@@ -939,7 +934,6 @@ export default function AssemblyPage() {
       <Toaster position="top-center" />
       <Sidebar />
       <main className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-all duration-300 ${isAddModalOpen || isEditModalOpen || isPartModalOpen || isEditPartModalOpen || printFormatModal || isViewModalOpen ? 'blur-sm pointer-events-none' : ''}`}>
-        {/* Header Section */}
         <div className="flex flex-col gap-6 border-b pb-6">
           <div className="space-y-2">
             <h1 className={`text-2xl sm:text-3xl pt-8 font-bold text-[#8B5E3C] tracking-wide ${dmSans.className}`}>Assembly Operations Management</h1>
@@ -956,16 +950,13 @@ export default function AssemblyPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Orders</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.length}</p></div>
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Parts</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)}</p></div>
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Completed Parts</p><p className="text-2xl font-bold text-green-600">{assemblyOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0)}</p></div>
           <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Total Cost (PKR)</p><p className="text-2xl font-bold text-[#8B5E3C]">Rs {assemblyOps.reduce((sum, op) => sum + calculateTotalCost(op.parts), 0).toLocaleString()}</p></div>
-          <div className="bg-gray-50 rounded-lg p-4 border"><p className="text-sm text-gray-500">Completion Rate</p><p className="text-2xl font-bold text-gray-800">{assemblyOps.length > 0 ? Math.round((assemblyOps.reduce((sum, op) => sum + calculateTotalCompletedQty(op.parts), 0) / assemblyOps.reduce((sum, op) => sum + calculateTotalQty(op.parts), 0)) * 100) : 0}%</p></div>
         </div>
 
-        {/* Table Section */}
         <div className="overflow-x-auto">
           {isMobile ? (
             <div className="space-y-4">
@@ -989,7 +980,6 @@ export default function AssemblyPage() {
                       </div>
                       <div className="text-sm space-y-1">
                         <p><span className="font-medium">Date Issued:</span> {formatDateTime(item.dateIssued)}</p>
-                        {item.assemblyDate && <p><span className="font-medium">Assembly Date:</span> {formatDate(item.assemblyDate)}</p>}
                         <p><span className="font-medium">Parts:</span> {item.parts.length} items</p>
                         <p><span className="font-medium">Progress:</span> {calculateTotalCompletedQty(item.parts)} / {calculateTotalQty(item.parts)} completed</p>
                         <p><span className="font-medium">Total Cost:</span> Rs {calculateTotalCost(item.parts).toLocaleString()}</p>
@@ -1009,7 +999,6 @@ export default function AssemblyPage() {
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Order #</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Gate Pass #</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date Issued</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assembly Date</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Parts</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Progress</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Total Cost</th>
@@ -1020,7 +1009,7 @@ export default function AssemblyPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-6 py-4 text-center text-sm text-gray-500">No assembly orders found</td>
+                      <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">No assembly orders found</td>
                   </tr>
                   ) : (
                     filteredItems.map((item) => {
@@ -1032,7 +1021,6 @@ export default function AssemblyPage() {
                           <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.workOrderNo}</td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">{item.gatepassNo}</td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">{formatDateTime(item.dateIssued)}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(item.assemblyDate)}</td>
                           <td className="px-4 py-4 text-sm text-gray-700">
                             <div className="space-y-1">
                               {item.parts.slice(0, 2).map((part, idx) => (
@@ -1081,49 +1069,24 @@ export default function AssemblyPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => setViewFormat('commercial')}
-                      className={`px-3 py-1.5 text-sm rounded-md transition ${
-                        viewFormat === 'commercial' 
-                          ? 'bg-[#8B5E3C] text-white' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      💰 Commercial
-                    </button>
-                    <button
-                      onClick={() => setViewFormat('floor')}
-                      className={`px-3 py-1.5 text-sm rounded-md transition ${
-                        viewFormat === 'floor' 
-                          ? 'bg-[#8B5E3C] text-white' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      🏭 Floor
-                    </button>
+                    <button onClick={() => setViewFormat('commercial')} className={`px-3 py-1.5 text-sm rounded-md transition ${viewFormat === 'commercial' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>💰 Commercial</button>
+                    <button onClick={() => setViewFormat('floor')} className={`px-3 py-1.5 text-sm rounded-md transition ${viewFormat === 'floor' ? 'bg-[#8B5E3C] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>🏭 Floor</button>
                   </div>
                   <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               </div>
 
               <div className="p-6">
-                {/* Commercial Format View */}
                 {viewFormat === 'commercial' && (
                   <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 p-4 border-b">
-                      <h3 className="font-bold text-lg">ASSEMBLY ORDER</h3>
-                      <p className="text-sm text-gray-600">COMMERCIAL - ASSEMBLY OPERATION</p>
-                    </div>
+                    <div className="bg-gray-50 p-4 border-b"><h3 className="font-bold text-lg">ASSEMBLY ORDER</h3><p className="text-sm text-gray-600">COMMERCIAL - ASSEMBLY OPERATION</p></div>
                     <div className="p-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div><span className="font-semibold">Order No:</span> {viewingOrder.workOrderNo}</div>
                         <div><span className="font-semibold">Gate Pass No:</span> {viewingOrder.gatepassNo}</div>
                         <div><span className="font-semibold">Date Issued:</span> {formatDateTime(viewingOrder.dateIssued)}</div>
-                        {viewingOrder.assemblyDate && <div><span className="font-semibold">Assembly Date:</span> {formatDate(viewingOrder.assemblyDate)}</div>}
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm border">
@@ -1166,29 +1129,19 @@ export default function AssemblyPage() {
                           </tfoot>
                         </table>
                       </div>
-                      {viewingOrder.remarks && (
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="font-semibold text-sm">REMARKS:</p>
-                          <p className="text-sm mt-1">{viewingOrder.remarks}</p>
-                        </div>
-                      )}
+                      {viewingOrder.remarks && (<div className="bg-gray-50 p-3 rounded"><p className="font-semibold text-sm">REMARKS:</p><p className="text-sm mt-1">{viewingOrder.remarks}</p></div>)}
                     </div>
                   </div>
                 )}
 
-                {/* Floor Format View */}
                 {viewFormat === 'floor' && (
                   <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 p-4 border-b">
-                      <h3 className="font-bold text-lg">ASSEMBLY ORDER</h3>
-                      <p className="text-sm text-gray-600">FLOOR TASK</p>
-                    </div>
+                    <div className="bg-gray-50 p-4 border-b"><h3 className="font-bold text-lg">ASSEMBLY ORDER</h3><p className="text-sm text-gray-600">FLOOR TASK</p></div>
                     <div className="p-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div><span className="font-semibold">Order No:</span> {viewingOrder.workOrderNo}</div>
                         <div><span className="font-semibold">Gate Pass No:</span> {viewingOrder.gatepassNo}</div>
                         <div><span className="font-semibold">Date Issued:</span> {formatDateTime(viewingOrder.dateIssued)}</div>
-                        {viewingOrder.assemblyDate && <div><span className="font-semibold">Assembly Date:</span> {formatDate(viewingOrder.assemblyDate)}</div>}
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm border">
@@ -1225,24 +1178,14 @@ export default function AssemblyPage() {
                           </tfoot>
                         </table>
                       </div>
-                      {viewingOrder.remarks && (
-                        <div className="bg-gray-50 p-3 rounded">
-                          <p className="font-semibold text-sm">REMARKS:</p>
-                          <p className="text-sm mt-1">{viewingOrder.remarks}</p>
-                        </div>
-                      )}
+                      {viewingOrder.remarks && (<div className="bg-gray-50 p-3 rounded"><p className="font-semibold text-sm">REMARKS:</p><p className="text-sm mt-1">{viewingOrder.remarks}</p></div>)}
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end">
-                <button
-                  onClick={() => setIsViewModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
-                >
-                  Close
-                </button>
+                <button onClick={() => setIsViewModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Close</button>
               </div>
             </div>
           </div>
@@ -1285,7 +1228,6 @@ export default function AssemblyPage() {
                     <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Order Number <span className="text-red-500">*</span></label><input type="text" name="workOrderNo" value={formData.workOrderNo} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" placeholder="e.g., ASM-2024-001" /></div>
                     <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Gate Pass Number <span className="text-red-500">*</span></label><input type="text" name="gatepassNo" value={formData.gatepassNo} onChange={handleChange} required readOnly={!isEditModalOpen} className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${!isEditModalOpen ? 'bg-gray-100 cursor-not-allowed' : ''}`} placeholder="Auto-generated" />{!isEditModalOpen && <p className="text-xs text-gray-500 mt-1">Gate pass number is auto-generated</p>}</div>
                     <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Date Issued <span className="text-red-500">*</span></label><input type="datetime-local" name="dateIssued" value={formData.dateIssued} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" /></div>
-                    <div><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Assembly Date</label><input type="date" name="assemblyDate" value={formData.assemblyDate} onChange={handleChange} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" /></div>
                     <div className="md:col-span-2"><label className={`block text-sm font-medium text-gray-700 mb-2 ${dmSans.className}`}>Remarks</label><textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none" placeholder="Additional notes..." /></div>
                   </div>
                 </div>
@@ -1325,14 +1267,7 @@ export default function AssemblyPage() {
                                 <td className="px-3 py-2 text-right text-orange-600">{part.remainingQty || part.qty}</td>
                                 <td className="px-3 py-2 text-right font-medium">Rs {(part.sheetCost * part.qty).toLocaleString()}</td>
                                 <td className="px-3 py-2 text-center space-x-2">
-                                  {isEditModalOpen ? (
-                                    <button type="button" onClick={() => openEditPartModal(part, idx)} className="text-green-600 hover:text-green-800 text-xs">Update Completion</button>
-                                  ) : (
-                                    <>
-                                      <button type="button" onClick={() => openPartSelection(idx)} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
-                                      <button type="button" onClick={() => removePart(idx)} className="text-red-600 hover:text-red-800 text-xs">Remove</button>
-                                    </>
-                                  )}
+                                  {isEditModalOpen ? (<button type="button" onClick={() => openEditPartModal(part, idx)} className="text-green-600 hover:text-green-800 text-xs">Update Completion</button>) : (<><button type="button" onClick={() => openPartSelection(idx)} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button><button type="button" onClick={() => removePart(idx)} className="text-red-600 hover:text-red-800 text-xs">Remove</button></>)}
                                 </td>
                               </tr>
                             )
@@ -1386,21 +1321,10 @@ export default function AssemblyPage() {
             <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                 <h2 className={`text-xl font-bold text-[#8B5E3C] ${dmSans.className}`}>Select Part from Store Inventory</h2>
-                <button onClick={() => { setIsPartModalOpen(false); resetPartSelection(); }} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <button onClick={() => { setIsPartModalOpen(false); resetPartSelection(); }} className="text-gray-400 hover:text-gray-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
               </div>
               <div className="p-6">
-                <div className="mb-4">
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-gray-400"><HiSearch className="w-5 h-5" /></span>
-                    <input type="text" placeholder="Search by part number, name, category, material..." 
-                      className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${dmSans.className}`} 
-                      value={partSearchTerm} onChange={(e) => setPartSearchTerm(e.target.value)} />
-                  </div>
-                </div>
+                <div className="mb-4"><div className="relative"><span className="absolute left-3 top-2.5 text-gray-400"><HiSearch className="w-5 h-5" /></span><input type="text" placeholder="Search by part number, name, category, material..." className={`w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-[#8B5E3C] focus:border-[#8B5E3C] outline-none ${dmSans.className}`} value={partSearchTerm} onChange={(e) => setPartSearchTerm(e.target.value)} /></div></div>
                 <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
@@ -1417,9 +1341,7 @@ export default function AssemblyPage() {
                     </thead>
                     <tbody className="divide-y">
                       {filteredStoreItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="px-3 py-8 text-center text-gray-500">No parts found in store</td>
-                        </tr>
+                        <tr><td colSpan={8} className="px-3 py-8 text-center text-gray-500">No parts found in store</td></tr>
                       ) : (
                         filteredStoreItems.map((item) => {
                           const dimensionDisplay = getStoreItemDimension(item)
@@ -1431,27 +1353,12 @@ export default function AssemblyPage() {
                               <td className="px-3 py-2 capitalize">{item.category}</td>
                               <td className="px-3 py-2">{item.material}/{item.gauge}</td>
                               <td className="px-3 py-2 text-xs">{dimensionDisplay}</td>
-                              <td className="px-3 py-2 text-right">
-                                <span className={item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'}>
-                                  {item.stockInStore} {item.unitOfMeasure}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <span className="font-medium text-[#8B5E3C]">Rs {costPerPiece.toLocaleString()}</span>
-                              </td>
+                              <td className="px-3 py-2 text-right"><span className={item.stockInStore <= 0 ? 'text-red-600' : 'text-green-600'}>{item.stockInStore} {item.unitOfMeasure}</span></td>
+                              <td className="px-3 py-2 text-right"><span className="font-medium text-[#8B5E3C]">Rs {costPerPiece.toLocaleString()}</span></td>
                               <td className="px-3 py-2 text-center">
                                 {selectedStoreItem?._id === item._id ? (
-                                  <div className="flex items-center gap-2">
-                                    <input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))} 
-                                      className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" max={item.stockInStore} />
-                                    <button onClick={addPartToAssembly} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Add</button>
-                                  </div>
-                                ) : (
-                                  <button onClick={() => selectStoreItem(item)} disabled={item.stockInStore <= 0} 
-                                    className={`px-3 py-1 text-xs rounded-md transition ${item.stockInStore > 0 ? 'bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
-                                    {item.stockInStore > 0 ? 'Select' : 'Out of Stock'}
-                                  </button>
-                                )}
+                                  <div className="flex items-center gap-2"><input type="number" value={partQuantity} onChange={(e) => setPartQuantity(Number(e.target.value))} className="w-20 px-2 py-1 border rounded text-sm text-center" min="1" max={item.stockInStore} /><button onClick={addPartToAssembly} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">Add</button></div>
+                                ) : (<button onClick={() => selectStoreItem(item)} disabled={item.stockInStore <= 0} className={`px-3 py-1 text-xs rounded-md transition ${item.stockInStore > 0 ? 'bg-[#8B5E3C] text-white hover:bg-[#6d4a2f]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>{item.stockInStore > 0 ? 'Select' : 'Out of Stock'}</button>)}
                               </td>
                             </tr>
                           )
