@@ -630,7 +630,7 @@ if (isLoading) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => [`${value ?? 0} quotations`, 'Count']}
+formatter={(value) => [`${Number(value) || 0} quotations`, 'Count']}
                       contentStyle={{
                         borderRadius: '8px',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
